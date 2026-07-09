@@ -1,0 +1,155 @@
+name: Deploy to Baota Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: hkba-production-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Sync and restart HKBA
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+      SSH_USER: ${{ secrets.DEPLOY_USER }}
+      SSH_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/www/wwwroot/hkba' }}
+      BACKEND_PORT: ${{ secrets.BACKEND_PORT || '37900' }}
+      FRONTEND_PORT: ${{ secrets.FRONTEND_PORT || '3000' }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      SEED_ON_FIRST_DEPLOY: ${{ secrets.SEED_ON_FIRST_DEPLOY || 'false' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          for name in SSH_HOST SSH_USER NEXT_PUBLIC_API_URL ALLOWED_ORIGINS JWT_SECRET; do
+            if [ -z "${!name:-}" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ -z "${DEPLOY_SSH_KEY:-}" ]; then
+            missing+=("DEPLOY_SSH_KEY")
+          fi
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf 'Missing required GitHub secrets: %s\n' "${missing[*]}"
+            exit 1
+          fi
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/hkba_deploy_key
+          chmod 600 ~/.ssh/hkba_deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Prepare server directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/hkba_deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "mkdir -p '$DEPLOY_PATH/backend/db' '$DEPLOY_PATH/backend/uploads'"
+
+      - name: Sync project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsync -az --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='frontend/node_modules/' \
+            --exclude='frontend/.next/' \
+            --exclude='frontend/.env.local' \
+            --exclude='backend/node_modules/' \
+            --exclude='backend/.env' \
+            --exclude='backend/db/*.db' \
+            --exclude='backend/db/*.db-*' \
+            --exclude='backend/uploads/' \
+            -e "ssh -i ~/.ssh/hkba_deploy_key -p $SSH_PORT" \
+            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+
+      - name: Install, build, and restart services
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/hkba_deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "DEPLOY_PATH='$DEPLOY_PATH' \
+             BACKEND_PORT='$BACKEND_PORT' \
+             FRONTEND_PORT='$FRONTEND_PORT' \
+             NEXT_PUBLIC_API_URL='$NEXT_PUBLIC_API_URL' \
+             ALLOWED_ORIGINS='$ALLOWED_ORIGINS' \
+             JWT_SECRET='$JWT_SECRET' \
+             SEED_ON_FIRST_DEPLOY='$SEED_ON_FIRST_DEPLOY' \
+             bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          cd "$DEPLOY_PATH"
+          mkdir -p backend/db backend/uploads
+
+          first_deploy=false
+          if [ ! -f backend/db/hkba.db ]; then
+            first_deploy=true
+          fi
+
+          cat > backend/.env <<EOF
+          PORT=$BACKEND_PORT
+          JWT_SECRET=$JWT_SECRET
+          ALLOWED_ORIGINS=$ALLOWED_ORIGINS
+          EOF
+
+          cat > frontend/.env.local <<EOF
+          NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+          EOF
+
+          cd "$DEPLOY_PATH/backend"
+          if [ -f package-lock.json ]; then
+            npm ci --omit=dev
+          else
+            npm install --omit=dev
+          fi
+
+          if [ "$first_deploy" = "true" ] && [ "$SEED_ON_FIRST_DEPLOY" = "true" ]; then
+            node db/seed.js
+          fi
+
+          if pm2 describe hkba-api >/dev/null 2>&1; then
+            pm2 reload hkba-api --update-env
+          else
+            pm2 start server.js --name hkba-api
+          fi
+
+          cd "$DEPLOY_PATH/frontend"
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+          npm run build
+
+          if pm2 describe hkba-web >/dev/null 2>&1; then
+            PORT="$FRONTEND_PORT" pm2 reload hkba-web --update-env
+          else
+            PORT="$FRONTEND_PORT" pm2 start npm --name hkba-web -- start
+          fi
+
+          pm2 save
+          pm2 status
+          REMOTE

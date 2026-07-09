@@ -145,4 +145,6 @@ For the current Phase 1 app:
 - Set `ALLOWED_ORIGINS` on the backend to the public frontend origins.
 - Keep uploads backed up if using local disk storage.
 
+GitHub Actions auto-deploy for a Baota server is documented in `docs/BAOTA_AUTO_DEPLOY.md`.
+
 Phase 2 can migrate media to Aliyun OSS and data to PostgreSQL/Prisma once the Phase 1 product surface is stable.
