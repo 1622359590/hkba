@@ -47,3 +47,7 @@ export interface EventItem { id: number; title_zh: string; title_en: string; des
 export interface PageContent { id: number; slug: string; title_zh: string; title_en: string; content_zh: string; content_en: string; }
 export interface StatItem { id: number; label_zh: string; label_en: string; value: string; icon: string; }
 export interface Milestone { id: number; year: string; title_zh: string; title_en: string; description_zh: string; description_en: string; }
+
+export function isPlaceholderPartnerName(name: string): boolean {
+  return /^Partner\s+\d+$/i.test(name.trim());
+}

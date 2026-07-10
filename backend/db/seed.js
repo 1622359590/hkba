@@ -79,16 +79,16 @@ const team = [
 // ===== Partners =====
 const partners = [
   { name: 'AsiaMeta', logo_url: 'https://hkba.club/assets/img/home-3/asiameta2.jpg', website_url: '', sort_order: 1 },
-  { name: 'Partner 2000', logo_url: 'https://hkba.club/assets/img/home-3/2000.jpeg', website_url: '', sort_order: 2 },
+  { name: 'Com2000', logo_url: 'https://hkba.club/assets/img/home-3/2000.jpeg', website_url: '', sort_order: 2 },
   { name: 'BTY', logo_url: 'https://hkba.club/assets/img/home-3/0926/bty.png', website_url: '', sort_order: 3 },
-  { name: 'Partner 1', logo_url: 'https://hkba.club/assets/img/home-3/0926/1.jpg', website_url: '', sort_order: 4 },
-  { name: 'SMG', logo_url: 'https://hkba.club/assets/img/home-3/0926/smg.jpg', website_url: '', sort_order: 5 },
-  { name: 'Partner 3', logo_url: 'https://hkba.club/assets/img/home-3/0926/3.jpg', website_url: '', sort_order: 6 },
-  { name: 'Partner 4', logo_url: 'https://hkba.club/assets/img/home-3/0926/4.png', website_url: '', sort_order: 7 },
-  { name: 'Partner 5', logo_url: 'https://hkba.club/assets/img/home-3/0926/5.png', website_url: '', sort_order: 8 },
+  { name: 'TECHUB NEWS', logo_url: 'https://hkba.club/assets/img/home-3/0926/1.jpg', website_url: '', sort_order: 4 },
+  { name: 'Cyberport', logo_url: 'https://hkba.club/assets/img/home-3/0926/smg.jpg', website_url: '', sort_order: 5 },
+  { name: 'IDC Capital Vietnam', logo_url: 'https://hkba.club/assets/img/home-3/0926/3.jpg', website_url: '', sort_order: 6 },
+  { name: 'iDom. Capital', logo_url: 'https://hkba.club/assets/img/home-3/0926/4.png', website_url: '', sort_order: 7 },
+  { name: 'InvestHK FintechHK', logo_url: 'https://hkba.club/assets/img/home-3/0926/5.png', website_url: '', sort_order: 8 },
   { name: 'MetaEra', logo_url: 'https://hkba.club/assets/img/home-3/0926/metaera.png', website_url: '', sort_order: 9 },
   { name: '金色財經', logo_url: 'https://hkba.club/assets/img/home-3/0926/jinsecaijing-logo.jpg', website_url: '', sort_order: 10 },
-  { name: 'Partner 7', logo_url: 'https://hkba.club/assets/img/home-3/0926/7.png', website_url: '', sort_order: 11 },
+  { name: 'Trading Base', logo_url: 'https://hkba.club/assets/img/home-3/0926/7.png', website_url: '', sort_order: 11 },
 ];
 
 // ===== News =====

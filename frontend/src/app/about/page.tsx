@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/useLang';
-import { apiGet, imgUrl, type PageContent, type Milestone, type StatItem, type Partner, type TeamMember, type NewsItem } from '@/lib/api';
+import { apiGet, imgUrl, isPlaceholderPartnerName, type PageContent, type Milestone, type StatItem, type Partner, type TeamMember, type NewsItem } from '@/lib/api';
 import Link from 'next/link';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
 
@@ -112,10 +112,11 @@ export default function AboutPage() {
             <div style={{ maxWidth: 980, margin: '0 auto' }}>
               <div className="member-logo-grid">
                 {partners.map(p => {
+                  const partnerName = isPlaceholderPartnerName(p.name) ? t('合作夥伴', 'Partner Organization') : p.name;
                   const card = (
                     <div className="member-logo-card">
                       <div className="member-logo-card__surface">
-                        <img src={imgUrl(p.logo_url)} alt={p.name} />
+                        <img src={imgUrl(p.logo_url)} alt={partnerName} />
                       </div>
                     </div>
                   );

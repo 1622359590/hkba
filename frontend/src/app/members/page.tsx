@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/useLang';
-import { apiGet, imgUrl, type Partner } from '@/lib/api';
+import { apiGet, imgUrl, isPlaceholderPartnerName, type Partner } from '@/lib/api';
 import Link from 'next/link';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
 
@@ -41,23 +41,24 @@ export default function MembersPage() {
           {!loading && !error && Object.entries(groups).map(([group, members]) => (
             <div key={group} style={{ marginBottom: 48 }}>
               <div className="member-logo-grid">
-                {members.map((p, i) => (
-                  p.website_url ? (
-                    <a key={p.id} href={p.website_url} target="_blank" rel="noopener noreferrer" className="member-logo-link content-reveal" aria-label={`${p.name} website`} style={{ animationDelay: `${0.04 * i}s` }}>
+                {members.map((p, i) => {
+                  const partnerName = isPlaceholderPartnerName(p.name) ? t('合作夥伴', 'Partner Organization') : p.name;
+                  return p.website_url ? (
+                    <a key={p.id} href={p.website_url} target="_blank" rel="noopener noreferrer" className="member-logo-link content-reveal" aria-label={`${partnerName} website`} style={{ animationDelay: `${0.04 * i}s` }}>
                       <div className="member-logo-card">
-                        <div className="member-logo-card__surface"><img src={imgUrl(p.logo_url)} alt={p.name} /></div>
-                        <span className="member-logo-card__name">{p.name}</span>
+                        <div className="member-logo-card__surface"><img src={imgUrl(p.logo_url)} alt={partnerName} /></div>
+                        <span className="member-logo-card__name">{partnerName}</span>
                       </div>
                     </a>
                   ) : (
-                    <Link key={p.id} href="/contact" className="member-logo-link content-reveal" aria-label={`${p.name} contact`} style={{ animationDelay: `${0.04 * i}s` }}>
+                    <Link key={p.id} href="/contact" className="member-logo-link content-reveal" aria-label={`${partnerName} contact`} style={{ animationDelay: `${0.04 * i}s` }}>
                       <div className="member-logo-card">
-                        <div className="member-logo-card__surface"><img src={imgUrl(p.logo_url)} alt={p.name} /></div>
-                        <span className="member-logo-card__name">{p.name}</span>
+                        <div className="member-logo-card__surface"><img src={imgUrl(p.logo_url)} alt={partnerName} /></div>
+                        <span className="member-logo-card__name">{partnerName}</span>
                       </div>
                     </Link>
-                  )
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}

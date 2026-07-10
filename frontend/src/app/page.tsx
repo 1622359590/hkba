@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/useLang';
-import { apiGet, imgUrl, type Banner, type Announcement, type Partner, type TeamMember, type NewsItem, type StatItem, type Milestone } from '@/lib/api';
+import { apiGet, imgUrl, isPlaceholderPartnerName, type Banner, type Announcement, type Partner, type TeamMember, type NewsItem, type StatItem, type Milestone } from '@/lib/api';
 import Link from 'next/link';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
 
@@ -282,19 +282,20 @@ export default function Home() {
             {partners.length > 0 ? <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20 }}>
               {partners.map((p, i) => {
                 const href = p.website_url || '/members';
+                const partnerName = isPlaceholderPartnerName(p.name) ? t('合作夥伴', 'Partner Organization') : p.name;
                 const card = (
                   <div className="partner-card">
-                    <img className="partner-logo" src={imgUrl(p.logo_url)} alt={p.name} />
+                    <img className="partner-logo" src={imgUrl(p.logo_url)} alt={partnerName} />
                   </div>
                 );
                 return (
                   <FadeIn key={p.id} delay={i * 0.04}>
                     {p.website_url ? (
-                      <a href={href} target="_blank" rel="noopener noreferrer" className="partner-link" aria-label={`${p.name} website`}>
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="partner-link" aria-label={`${partnerName} website`}>
                         {card}
                       </a>
                     ) : (
-                      <Link href={href} className="partner-link" aria-label={`${p.name} member profile`}>
+                      <Link href={href} className="partner-link" aria-label={`${partnerName} member profile`}>
                         {card}
                       </Link>
                     )}

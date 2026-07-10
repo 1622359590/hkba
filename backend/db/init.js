@@ -29,6 +29,31 @@ function removeExactDuplicates(conn, table, columns) {
   `).run();
 }
 
+function removeLegacyMilestones(conn) {
+  const legacyRows = [
+    ['2017', '協會成立', '香港區塊鏈協會正式成立'],
+    ['2019', '首屆峰會', '舉辦首屆區塊鏈峰會'],
+    ['2021', '會員突破', '會員數量突破100家'],
+    ['2023', 'Web3 轉型', '全面推動 Web3 生態發展'],
+  ];
+  const remove = conn.prepare('DELETE FROM milestones WHERE year = ? AND title_zh = ? AND description_zh = ?');
+  for (const row of legacyRows) remove.run(...row);
+}
+
+function normalizeLegacyPartnerNames(conn) {
+  const migrations = [
+    ['Com2000', 'Partner 2000', '%/2000.%'],
+    ['TECHUB NEWS', 'Partner 1', '%/0926/1.jpg'],
+    ['Cyberport', 'SMG', '%/0926/smg.jpg'],
+    ['IDC Capital Vietnam', 'Partner 3', '%/0926/3.jpg'],
+    ['iDom. Capital', 'Partner 4', '%/0926/4.png'],
+    ['InvestHK FintechHK', 'Partner 5', '%/0926/5.png'],
+    ['Trading Base', 'Partner 7', '%/0926/7.png'],
+  ];
+  const update = conn.prepare('UPDATE partners SET name = ? WHERE name = ? AND logo_url LIKE ?');
+  for (const migration of migrations) update.run(...migration);
+}
+
 function initDatabase() {
   const conn = getDb();
 
@@ -38,6 +63,8 @@ function initDatabase() {
 
   removeExactDuplicates(conn, 'stats', ['label_zh', 'label_en', 'value', 'icon', 'sort_order', 'is_active']);
   removeExactDuplicates(conn, 'milestones', ['year', 'title_zh', 'title_en', 'description_zh', 'description_en', 'sort_order', 'is_active']);
+  removeLegacyMilestones(conn);
+  normalizeLegacyPartnerNames(conn);
 
   // 插入默认管理员
   const adminExists = conn.prepare('SELECT id FROM admins WHERE username = ?').get('admin');
