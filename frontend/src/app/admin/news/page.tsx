@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { adminGet, adminPost, adminPut, adminDelete } from '@/lib/adminApi';
+import { adminGet, adminPost, adminPut, adminDelete, adminRequestError, notifyAdminDataChanged } from '@/lib/adminApi';
 import { FormField, Input, Textarea, BilingualField, ImageField, Toggle, Select, AdminCard } from '@/components/admin/FormControls';
+import { ActionButton } from '@/components/admin/ActionButton';
+import { ConfirmDialog, EmptyState, ErrorState, LoadingState, Toast } from '@/components/ui/Feedback';
 
 interface NewsItem { id: number; title_zh: string; title_en: string; summary_zh: string; summary_en: string; content_zh: string; content_en: string; cover_image: string; category: string; is_published: number; published_at: string; }
 const empty = { title_zh:'', title_en:'', summary_zh:'', summary_en:'', content_zh:'', content_en:'', cover_image:'', category:'general', is_published:0 };
@@ -12,12 +14,33 @@ export default function NewsAdmin() {
   const [editing, setEditing] = useState<NewsItem | null>(null);
   const [form, setForm] = useState(empty);
   const [showForm, setShowForm] = useState(false);
-  const load = () => adminGet<NewsItem[]>('/api/news/admin/all').then(setItems);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<NewsItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const load = async () => {
+    setLoading(true); setError('');
+    try { setItems(await adminGet<NewsItem[]>('/api/news/admin/all')); } catch (requestError) { setError(adminRequestError(requestError)); } finally { setLoading(false); }
+  };
   useEffect(() => { load(); }, []);
 
   const handleSave = async () => {
-    if (editing) await adminPut(`/api/news/${editing.id}`, form); else await adminPost('/api/news', form);
-    setShowForm(false); setEditing(null); setForm(empty); load();
+    if (!form.title_zh.trim() && !form.title_en.trim()) { setToast({ tone: 'error', message: '請至少填寫一個新聞標題。' }); return; }
+    setSaving(true);
+    try {
+      if (editing) await adminPut(`/api/news/${editing.id}`, form); else await adminPost('/api/news', form);
+      setShowForm(false); setEditing(null); setForm(empty); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: '新聞已保存。' }); await load();
+    } catch (requestError) { setToast({ tone: 'error', message: adminRequestError(requestError) }); } finally { setSaving(false); }
+  };
+
+  const remove = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try { await adminDelete(`/api/news/${deleteTarget.id}`); setDeleteTarget(null); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: '新聞已刪除。' }); await load(); }
+    catch (requestError) { setToast({ tone: 'error', message: adminRequestError(requestError) }); }
+    finally { setDeleting(false); }
   };
 
   return (
@@ -36,10 +59,12 @@ export default function NewsAdmin() {
             <FormField label="分類"><Select value={form.category} onChange={v => setForm(f => ({...f, category: v}))} options={[{value:'general',label:'一般'},{value:'AI＆Web3',label:'AI＆Web3'},{value:'虛擬資產',label:'虛擬資產'},{value:'公告',label:'公告'},{value:'HKDG＆RWA',label:'HKDG＆RWA'}]} /></FormField>
             <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 16 }}><Toggle checked={!!form.is_published} onChange={v => setForm(f => ({...f, is_published: v ? 1 : 0}))} label="發佈" /></div>
           </div>
-          <button onClick={handleSave} className="btn-accent" style={{ fontSize: 13, marginTop: 8 }}>保存</button>
+          <ActionButton type="button" onClick={handleSave} pending={saving} style={{ fontSize: 13, marginTop: 8 }}>保存</ActionButton>
         </AdminCard>
       )}
-      <div className="admin-list-stack">
+      {loading && <LoadingState label="正在載入新聞..." />}
+      {!loading && error && <ErrorState message={error} onRetry={load} />}
+      {!loading && !error && <div className="admin-list-stack">
         {items.map(item => (
           <div key={item.id} className="admin-content-row">
             {item.cover_image && <img src={item.cover_image} alt="" style={{ width: 80, height: 48, objectFit: 'cover', borderRadius: 8 }} />}
@@ -49,11 +74,13 @@ export default function NewsAdmin() {
             </div>
             <span style={badge(!!item.is_published)}>{item.is_published ? '已發佈' : '草稿'}</span>
             <button type="button" onClick={() => { setEditing(item); setForm(item); setShowForm(true); }} className="admin-action">編輯</button>
-            <button type="button" onClick={() => { if (confirm('確定刪除？')) adminDelete(`/api/news/${item.id}`).then(load); }} className="admin-action is-danger">刪除</button>
+            <button type="button" onClick={() => setDeleteTarget(item)} className="admin-action is-danger">刪除</button>
           </div>
         ))}
-        {items.length === 0 && <div className="admin-empty-state">暫無新聞</div>}
-      </div>
+        {items.length === 0 && <EmptyState title="暫無新聞" description="建立一篇新聞後，前台會在最新動態中展示。" action={<button type="button" onClick={() => { setEditing(null); setForm(empty); setShowForm(true); }} className="btn-secondary">新增新聞</button>} />}
+      </div>}
+      {deleteTarget && <ConfirmDialog title="刪除這篇新聞？" description={`刪除「${deleteTarget.title_zh || deleteTarget.title_en || '未命名新聞'}」後將無法復原。`} onCancel={() => setDeleteTarget(null)} onConfirm={remove} pending={deleting} />}
+      {toast && <Toast tone={toast.tone} message={toast.message} onDismiss={() => setToast(null)} />}
     </div>
   );
 }

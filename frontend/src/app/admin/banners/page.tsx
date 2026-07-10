@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { adminGet, adminPost, adminPut, adminDelete } from '@/lib/adminApi';
+import { adminGet, adminPost, adminPut, adminDelete, adminRequestError, notifyAdminDataChanged } from '@/lib/adminApi';
 import { FormField, Input, BilingualField, ImageField, Toggle, AdminCard } from '@/components/admin/FormControls';
+import { ActionButton } from '@/components/admin/ActionButton';
+import { ConfirmDialog, EmptyState, ErrorState, LoadingState, Toast } from '@/components/ui/Feedback';
 
 interface Banner { id: number; title_zh: string; title_en: string; subtitle_zh: string; subtitle_en: string; description_zh: string; description_en: string; image_url: string; link_url: string; video_url: string; sort_order: number; is_active: number; }
 const empty = { title_zh:'', title_en:'', subtitle_zh:'', subtitle_en:'', description_zh:'', description_en:'', image_url:'', link_url:'', video_url:'', sort_order:0, is_active:1 };
@@ -13,12 +15,32 @@ export default function BannersAdmin() {
   const [editing, setEditing] = useState<Banner | null>(null);
   const [form, setForm] = useState(empty);
   const [showForm, setShowForm] = useState(false);
-  const load = () => adminGet<Banner[]>('/api/banners/all').then(setItems);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Banner | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const load = async () => {
+    setLoading(true); setError('');
+    try { setItems(await adminGet<Banner[]>('/api/banners/all')); } catch (requestError) { setError(adminRequestError(requestError)); } finally { setLoading(false); }
+  };
   useEffect(() => { load(); }, []);
 
   const handleSave = async () => {
-    if (editing) await adminPut(`/api/banners/${editing.id}`, form); else await adminPost('/api/banners', form);
-    setShowForm(false); setEditing(null); setForm(empty); load();
+    setSaving(true);
+    try {
+      if (editing) await adminPut(`/api/banners/${editing.id}`, form); else await adminPost('/api/banners', form);
+      setShowForm(false); setEditing(null); setForm(empty); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: 'Banner 已保存。' }); await load();
+    } catch (requestError) { setToast({ tone: 'error', message: adminRequestError(requestError) }); } finally { setSaving(false); }
+  };
+
+  const remove = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try { await adminDelete(`/api/banners/${deleteTarget.id}`); setDeleteTarget(null); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: 'Banner 已刪除。' }); await load(); }
+    catch (requestError) { setToast({ tone: 'error', message: adminRequestError(requestError) }); }
+    finally { setDeleting(false); }
   };
 
   return (
@@ -41,10 +63,12 @@ export default function BannersAdmin() {
             <FormField label="排序"><Input type="number" value={String(form.sort_order)} onChange={v => setForm(f => ({...f, sort_order: +v}))} /></FormField>
             <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 16 }}><Toggle checked={!!form.is_active} onChange={v => setForm(f => ({...f, is_active: v ? 1 : 0}))} label="啟用" /></div>
           </div>
-          <button onClick={handleSave} className="btn-accent" style={{ fontSize: 13, marginTop: 8 }}>保存</button>
+          <ActionButton type="button" onClick={handleSave} pending={saving} style={{ fontSize: 13, marginTop: 8 }}>保存</ActionButton>
         </AdminCard>
       )}
-      <div className="admin-list-stack">
+      {loading && <LoadingState label="正在載入 Banner..." />}
+      {!loading && error && <ErrorState message={error} onRetry={load} />}
+      {!loading && !error && <div className="admin-list-stack">
         {items.map(item => (
           <div key={item.id} className="admin-content-row">
             {item.image_url && <img src={item.image_url} alt="" style={{ width: 96, height: 48, objectFit: 'cover', borderRadius: 8 }} />}
@@ -54,11 +78,13 @@ export default function BannersAdmin() {
             </div>
             <span style={badge(!!item.is_active)}>{item.is_active ? '啟用' : '停用'}</span>
             <button type="button" onClick={() => { setEditing(item); setForm(item); setShowForm(true); }} className="admin-action">編輯</button>
-            <button type="button" onClick={() => { if (confirm('確定刪除？')) adminDelete(`/api/banners/${item.id}`).then(load); }} className="admin-action is-danger">刪除</button>
+            <button type="button" onClick={() => setDeleteTarget(item)} className="admin-action is-danger">刪除</button>
           </div>
         ))}
-        {items.length === 0 && <div className="admin-empty-state">暫無 Banner</div>}
-      </div>
+        {items.length === 0 && <EmptyState title="暫無 Banner" description="新增首頁主視覺後，內容會顯示在前台首頁。" action={<button type="button" onClick={() => { setEditing(null); setForm(empty); setShowForm(true); }} className="btn-secondary">新增 Banner</button>} />}
+      </div>}
+      {deleteTarget && <ConfirmDialog title="刪除這個 Banner？" description={`刪除「${deleteTarget.title_zh || deleteTarget.title_en || '未命名 Banner'}」後將無法復原。`} onCancel={() => setDeleteTarget(null)} onConfirm={remove} pending={deleting} />}
+      {toast && <Toast tone={toast.tone} message={toast.message} onDismiss={() => setToast(null)} />}
     </div>
   );
 }

@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { adminGet, adminPost, adminPut, adminDelete } from '@/lib/adminApi';
+import { adminGet, adminPost, adminPut, adminDelete, adminRequestError, notifyAdminDataChanged } from '@/lib/adminApi';
 import { FormField, Input, BilingualField, ImageField, Select, Toggle, AdminCard } from '@/components/admin/FormControls';
+import { ActionButton } from '@/components/admin/ActionButton';
+import { ConfirmDialog, EmptyState, ErrorState, LoadingState, Toast } from '@/components/ui/Feedback';
 
 interface TeamMember { id: number; name_zh: string; name_en: string; title_zh: string; title_en: string; bio_zh: string; bio_en: string; avatar_url: string; group_name: string; social_facebook: string; social_twitter: string; social_linkedin: string; social_instagram: string; sort_order: number; is_active: number; }
 const groups = [{value:'honorary_chairman',label:'榮譽主席'},{value:'chairman',label:'會長'},{value:'vice_chairman',label:'副會長'},{value:'committee',label:'委員'},{value:'advisor',label:'顧問'}];
@@ -12,12 +14,34 @@ export default function TeamAdmin() {
   const [editing, setEditing] = useState<TeamMember | null>(null);
   const [form, setForm] = useState(empty);
   const [showForm, setShowForm] = useState(false);
-  const load = () => adminGet<TeamMember[]>('/api/team/all').then(setItems);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<TeamMember | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const load = async () => {
+    setLoading(true); setError('');
+    try { setItems(await adminGet<TeamMember[]>('/api/team/all')); } catch (requestError) { setError(adminRequestError(requestError)); } finally { setLoading(false); }
+  };
   useEffect(() => { load(); }, []);
 
   const handleSave = async () => {
-    if (editing) await adminPut(`/api/team/${editing.id}`, form); else await adminPost('/api/team', form);
-    setShowForm(false); setEditing(null); setForm(empty); load();
+    if (!form.name_zh.trim() && !form.name_en.trim()) { setToast({ tone: 'error', message: '請至少填寫一個姓名。' }); return; }
+    if (!form.title_zh.trim() && !form.title_en.trim()) { setToast({ tone: 'error', message: '請至少填寫一個職位。' }); return; }
+    setSaving(true);
+    try {
+      if (editing) await adminPut(`/api/team/${editing.id}`, form); else await adminPost('/api/team', form);
+      setShowForm(false); setEditing(null); setForm(empty); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: '團隊資料已保存。' }); await load();
+    } catch (requestError) { setToast({ tone: 'error', message: adminRequestError(requestError) }); } finally { setSaving(false); }
+  };
+
+  const remove = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try { await adminDelete(`/api/team/${deleteTarget.id}`); setDeleteTarget(null); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: '團隊資料已刪除。' }); await load(); }
+    catch (requestError) { setToast({ tone: 'error', message: adminRequestError(requestError) }); }
+    finally { setDeleting(false); }
   };
 
   return (
@@ -41,10 +65,12 @@ export default function TeamAdmin() {
             <FormField label="LinkedIn"><Input value={form.social_linkedin} onChange={v => setForm(f => ({...f, social_linkedin: v}))} /></FormField>
           </div>
           <Toggle checked={!!form.is_active} onChange={v => setForm(f => ({...f, is_active: v ? 1 : 0}))} label="啟用" />
-          <button onClick={handleSave} className="btn-accent" style={{ fontSize: 13, marginTop: 12 }}>保存</button>
+          <ActionButton type="button" onClick={handleSave} pending={saving} style={{ fontSize: 13, marginTop: 12 }}>保存</ActionButton>
         </AdminCard>
       )}
-      <div className="admin-list-stack">
+      {loading && <LoadingState label="正在載入團隊資料..." />}
+      {!loading && error && <ErrorState message={error} onRetry={load} />}
+      {!loading && !error && <div className="admin-list-stack">
         {items.map(item => (
           <div key={item.id} className="admin-content-row">
             {item.avatar_url && <img src={item.avatar_url} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }} />}
@@ -54,11 +80,13 @@ export default function TeamAdmin() {
             </div>
             <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: item.is_active ? 'rgba(34,197,94,0.1)' : 'rgba(113,113,122,0.1)', color: item.is_active ? '#22c55e' : '#71717a' }}>{item.is_active ? '啟用' : '停用'}</span>
             <button type="button" onClick={() => { setEditing(item); setForm(item); setShowForm(true); }} className="admin-action">編輯</button>
-            <button type="button" onClick={() => { if (confirm('確定刪除？')) adminDelete(`/api/team/${item.id}`).then(load); }} className="admin-action is-danger">刪除</button>
+            <button type="button" onClick={() => setDeleteTarget(item)} className="admin-action is-danger">刪除</button>
           </div>
         ))}
-        {items.length === 0 && <div className="admin-empty-state">暫無團隊成員</div>}
-      </div>
+        {items.length === 0 && <EmptyState title="暫無團隊成員" description="新增顧問或委員資料後，前台會展示正式身份與職位。" action={<button type="button" onClick={() => { setEditing(null); setForm(empty); setShowForm(true); }} className="btn-secondary">新增成員</button>} />}
+      </div>}
+      {deleteTarget && <ConfirmDialog title="刪除這位團隊成員？" description={`刪除「${deleteTarget.name_zh || deleteTarget.name_en || '未命名成員'}」後將無法復原。`} onCancel={() => setDeleteTarget(null)} onConfirm={remove} pending={deleting} />}
+      {toast && <Toast tone={toast.tone} message={toast.message} onDismiss={() => setToast(null)} />}
     </div>
   );
 }
