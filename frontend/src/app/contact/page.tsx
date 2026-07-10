@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/useLang';
 import { apiGet, apiPost } from '@/lib/api';
+import { EmptyState } from '@/components/ui/Feedback';
 
 const c: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
 
@@ -77,7 +78,7 @@ export default function ContactPage() {
               <div><label style={{ display: 'block', fontSize: 12, color: '#71717a', marginBottom: 6 }}>{t('主旨', 'Subject')}</label><input value={form.subject} onChange={e => updateForm('subject', e.target.value)} className="form-input" /></div>
               <div><label style={{ display: 'block', fontSize: 12, color: '#71717a', marginBottom: 6 }}>{t('訊息', 'Message')} *</label><textarea required rows={5} value={form.message} onChange={e => updateForm('message', e.target.value)} className="form-input" style={{ resize: 'vertical' as const }} /></div>
               <button type="submit" disabled={status === 'sending'} className="btn-accent" style={{ width: '100%', justifyContent: 'center', opacity: status === 'sending' ? 0.6 : 1 }}>{status === 'sending' ? t('發送中...', 'Sending...') : t('發送訊息', 'Send Message')}</button>
-              {status === 'sent' && <p style={{ fontSize: 13, color: '#22c55e', textAlign: 'center' }}>{t('訊息已發送！', 'Message sent!')}</p>}
+              {status === 'sent' && <div style={{ marginTop: 4 }}><EmptyState title={t('訊息已發送', 'Message sent')} description={t('我們會盡快與您聯絡。', 'We will get back to you shortly.')} action={<button type="button" className="btn-secondary" onClick={() => { setStatus('idle'); setForm({ name: '', email: '', subject: '', message: '' }); }}>{t('再發送一則訊息', 'Send another message')}</button>} /></div>}
               {status === 'error' && <p style={{ fontSize: 13, color: '#ef4444', textAlign: 'center' }}>{t('發送失敗，請重試', 'Failed, try again')}</p>}
             </form>
           </div>

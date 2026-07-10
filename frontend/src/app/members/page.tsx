@@ -3,13 +3,21 @@ import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/useLang';
 import { apiGet, imgUrl, type Partner } from '@/lib/api';
 import Link from 'next/link';
+import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
 
 const c: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
 
 export default function MembersPage() {
   const { t } = useLang();
   const [partners, setPartners] = useState<Partner[]>([]);
-  useEffect(() => { apiGet<Partner[]>('/api/partners').then(setPartners).catch(() => {}); }, []);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    apiGet<Partner[]>('/api/partners').then(setPartners).catch(() => setError(t('會員資料載入失敗，請重新載入。', 'Unable to load members. Please try again.'))).finally(() => setLoading(false));
+  }, [retry, t]);
 
   const groups = partners.reduce((a, p) => { if (!a[p.group_name]) a[p.group_name] = []; a[p.group_name].push(p); return a; }, {} as Record<string, Partner[]>);
 
@@ -28,7 +36,9 @@ export default function MembersPage() {
       </section>
       <section style={{ paddingBottom: 96 }}>
         <div style={c}>
-          {Object.entries(groups).map(([group, members]) => (
+          {loading && <LoadingState label={t('正在載入會員資料...', 'Loading member organizations...')} />}
+          {!loading && error && <ErrorState message={error} onRetry={() => setRetry(value => value + 1)} />}
+          {!loading && !error && Object.entries(groups).map(([group, members]) => (
             <div key={group} style={{ marginBottom: 48 }}>
               <div className="member-logo-grid">
                 {members.map((p, i) => (
@@ -51,7 +61,7 @@ export default function MembersPage() {
               </div>
             </div>
           ))}
-          {partners.length === 0 && <div style={{ textAlign: 'center', padding: '64px 0', color: '#52525b' }}>{t('暫無會員', 'No members')}</div>}
+          {!loading && !error && partners.length === 0 && <EmptyState title={t('會員資料正在整理中', 'Member directory is being prepared')} description={t('歡迎聯絡協會了解合作及入會方式。', 'Contact HKBA to learn about partnership and membership.')} action={<Link href="/contact" className="btn-secondary">{t('聯絡我們', 'Contact HKBA')}</Link>} />}
         </div>
       </section>
     </>

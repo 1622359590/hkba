@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { useLang } from '@/lib/useLang';
 import { apiGet, imgUrl, type NewsItem } from '@/lib/api';
 import Link from 'next/link';
+import { ErrorState, LoadingState } from '@/components/ui/Feedback';
 
 export default function NewsDetailPage() {
   const { id } = useParams();
@@ -12,6 +13,7 @@ export default function NewsDetailPage() {
   const [latest, setLatest] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -28,10 +30,10 @@ export default function NewsDetailPage() {
       })
       .catch(() => setError(t('新聞載入失敗，請返回列表重試。', 'Failed to load this article. Please return to the news list and try again.')))
       .finally(() => setLoading(false));
-  }, [id, t]);
+  }, [id, retry, t]);
 
-  if (loading) return <div style={{ padding: '160px 0', textAlign: 'center', color: '#71717a' }}>{t('載入中...', 'Loading...')}</div>;
-  if (error || !a) return <div style={{ padding: '160px 24px', textAlign: 'center', color: '#71717a' }}><p style={{ marginBottom: 20 }}>{error || t('未找到新聞', 'Article not found')}</p><Link href="/news" className="btn-secondary">{t('返回新聞列表', 'Back to News')}</Link></div>;
+  if (loading) return <div style={{ padding: '140px 24px' }}><LoadingState label={t('正在載入新聞...', 'Loading article...')} /></div>;
+  if (error || !a) return <div style={{ padding: '140px 24px' }}><ErrorState message={error || t('未找到新聞', 'Article not found')} onRetry={() => setRetry(value => value + 1)} /><div style={{ textAlign: 'center', marginTop: 16 }}><Link href="/news" className="btn-secondary">{t('返回新聞列表', 'Back to News')}</Link></div></div>;
 
   return (
     <>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/useLang';
 import { apiGet, imgUrl, type PageContent, type Milestone, type StatItem, type Partner, type TeamMember, type NewsItem } from '@/lib/api';
 import Link from 'next/link';
+import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
 
 const c: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
 const sec: React.CSSProperties = { padding: '96px 0' };
@@ -17,15 +18,39 @@ export default function AboutPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    apiGet<PageContent>('/api/pages/about').then(setPage).catch(() => {});
-    apiGet<Milestone[]>('/api/milestones').then(setMilestones).catch(() => {});
-    apiGet<StatItem[]>('/api/stats').then(setStats).catch(() => {});
-    apiGet<Partner[]>('/api/partners').then(setPartners).catch(() => {});
-    apiGet<TeamMember[]>('/api/team').then(setTeam).catch(() => {});
-    apiGet<{ items: NewsItem[] }>('/api/news?limit=3').then(d => setNews(d.items)).catch(() => {});
-  }, []);
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    Promise.allSettled([
+      apiGet<PageContent>('/api/pages/about'),
+      apiGet<Milestone[]>('/api/milestones'),
+      apiGet<StatItem[]>('/api/stats'),
+      apiGet<Partner[]>('/api/partners'),
+      apiGet<TeamMember[]>('/api/team'),
+      apiGet<{ items: NewsItem[] }>('/api/news?limit=3'),
+    ]).then(results => {
+      if (cancelled) return;
+      const pageResult = results[0] as PromiseSettledResult<PageContent>;
+      const milestonesResult = results[1] as PromiseSettledResult<Milestone[]>;
+      const statsResult = results[2] as PromiseSettledResult<StatItem[]>;
+      const partnersResult = results[3] as PromiseSettledResult<Partner[]>;
+      const teamResult = results[4] as PromiseSettledResult<TeamMember[]>;
+      const newsResult = results[5] as PromiseSettledResult<{ items: NewsItem[] }>;
+      if (pageResult.status === 'fulfilled') setPage(pageResult.value);
+      if (milestonesResult.status === 'fulfilled') setMilestones(milestonesResult.value);
+      if (statsResult.status === 'fulfilled') setStats(statsResult.value);
+      if (partnersResult.status === 'fulfilled') setPartners(partnersResult.value);
+      if (teamResult.status === 'fulfilled') setTeam(teamResult.value);
+      if (newsResult.status === 'fulfilled') setNews(newsResult.value.items);
+      if (results.every(result => result.status === 'rejected')) setError(t('協會資料載入失敗，請重新載入。', 'Unable to load association information. Please try again.'));
+    }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [retry, t]);
 
   return (
     <>
@@ -42,7 +67,10 @@ export default function AboutPage() {
 
       <section style={{ paddingBottom: 64 }}>
         <div style={{ ...c, maxWidth: 800 }}>
-          {page && <div className="prose" style={{ animation: 'fadeInUp 0.6s 0.2s cubic-bezier(0.22,1,0.36,1) forwards' }} dangerouslySetInnerHTML={{ __html: t(page.content_zh, page.content_en) }} />}
+          {loading && <LoadingState label={t('正在載入協會資料...', 'Loading association information...')} />}
+          {!loading && error && <ErrorState message={error} onRetry={() => setRetry(value => value + 1)} />}
+          {!loading && !error && page && <div className="prose" style={{ animation: 'fadeInUp 0.6s 0.2s cubic-bezier(0.22,1,0.36,1) forwards' }} dangerouslySetInnerHTML={{ __html: t(page.content_zh, page.content_en) }} />}
+          {!loading && !error && !page && <EmptyState title={t('協會介紹正在整理中', 'Association profile is being prepared')} description={t('歡迎先聯絡協會了解更多資訊。', 'Contact HKBA to learn more about the association.')} action={<Link href="/contact" className="btn-secondary">{t('聯絡我們', 'Contact HKBA')}</Link>} />}
         </div>
       </section>
 

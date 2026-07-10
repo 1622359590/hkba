@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/useLang';
 import { apiGet, imgUrl, type NewsItem } from '@/lib/api';
 import Link from 'next/link';
+import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
 
 const c: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
 const sec: React.CSSProperties = { padding: '96px 0' };
@@ -15,6 +16,7 @@ export default function NewsPage() {
   const [category, setCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -23,7 +25,7 @@ export default function NewsPage() {
       .then(d => { setNews(d.items); setTotal(d.total); })
       .catch(() => setError(t('新聞載入失敗，請稍後再試。', 'Failed to load news. Please try again later.')))
       .finally(() => setLoading(false));
-  }, [page, t]);
+  }, [page, retry, t]);
 
   const categories = Array.from(new Set(news.map(item => item.category).filter(Boolean)));
   const visibleNews = category === 'all' ? news : news.filter(item => item.category === category);
@@ -45,14 +47,14 @@ export default function NewsPage() {
           {categories.length > 0 && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
               {[{ value: 'all', label: t('全部', 'All') }, ...categories.map(value => ({ value, label: value }))].map(item => (
-                <button key={item.value} onClick={() => setCategory(item.value)} className="filter-chip" style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: category === item.value ? '#6366f1' : 'rgba(255,255,255,0.03)', color: category === item.value ? '#fff' : '#a1a1aa', fontSize: 13, cursor: 'pointer' }}>
+                <button key={item.value} onClick={() => setCategory(item.value)} disabled={loading} className="filter-chip" style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: category === item.value ? '#6366f1' : 'rgba(255,255,255,0.03)', color: category === item.value ? '#fff' : '#a1a1aa', fontSize: 13, cursor: loading ? 'wait' : 'pointer' }}>
                   {item.label}
                 </button>
               ))}
             </div>
           )}
-          {loading && <div style={{ textAlign: 'center', padding: '64px 0', color: '#52525b' }}>{t('載入中...', 'Loading...')}</div>}
-          {error && <div className="glass-card" style={{ padding: 28, color: '#ef4444', fontSize: 14 }}>{error}</div>}
+          {loading && <LoadingState label={t('正在載入新聞...', 'Loading news...')} />}
+          {error && <ErrorState message={error} onRetry={() => setRetry(value => value + 1)} />}
           {!loading && !error && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }}>
               {visibleNews.map((item, i) => (
@@ -70,11 +72,11 @@ export default function NewsPage() {
               ))}
             </div>
           )}
-          {!loading && !error && visibleNews.length === 0 && <div style={{ textAlign: 'center', padding: '64px 0', color: '#52525b' }}>{t('暫無新聞', 'No news')}</div>}
+          {!loading && !error && visibleNews.length === 0 && <EmptyState title={t('暫無新聞內容', 'No news yet')} description={t('協會新聞正在整理中，歡迎稍後再來。', 'Association news is being prepared. Please check back soon.')} action={<Link href="/contact" className="btn-secondary">{t('聯絡協會', 'Contact HKBA')}</Link>} />}
           {!loading && !error && category === 'all' && total > 9 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 48 }}>
               {Array.from({ length: Math.ceil(total / 9) }, (_, i) => (
-                <button key={i + 1} onClick={() => setPage(i + 1)} className="pagination-button" style={{ width: 36, height: 36, borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid transparent', cursor: 'pointer', background: page === i + 1 ? '#6366f1' : 'rgba(255,255,255,0.04)', color: page === i + 1 ? '#fff' : '#a1a1aa' }}>{i + 1}</button>
+                <button key={i + 1} onClick={() => setPage(i + 1)} disabled={page === i + 1 || loading} aria-current={page === i + 1 ? 'page' : undefined} className="pagination-button" style={{ width: 36, height: 36, borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid transparent', cursor: page === i + 1 || loading ? 'default' : 'pointer', background: page === i + 1 ? '#6366f1' : 'rgba(255,255,255,0.04)', color: page === i + 1 ? '#fff' : '#a1a1aa', opacity: loading ? 0.55 : 1 }}>{i + 1}</button>
               ))}
             </div>
           )}

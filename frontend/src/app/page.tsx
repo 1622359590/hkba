@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/useLang';
 import { apiGet, imgUrl, type Banner, type Announcement, type Partner, type TeamMember, type NewsItem, type StatItem, type Milestone } from '@/lib/api';
 import Link from 'next/link';
+import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
 
 /* ═══ Shared Styles ═══ */
 const container: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
@@ -25,16 +26,42 @@ export default function Home() {
   const [stats, setStats] = useState<StatItem[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [idx, setIdx] = useState(0);
+  const [homeLoading, setHomeLoading] = useState(true);
+  const [homeError, setHomeError] = useState('');
+  const [homeRetry, setHomeRetry] = useState(0);
 
   useEffect(() => {
-    apiGet<Banner[]>('/api/banners').then(setBanners).catch(() => {});
-    apiGet<Announcement[]>('/api/announcements').then(setAnnouncements).catch(() => {});
-    apiGet<Partner[]>('/api/partners').then(setPartners).catch(() => {});
-    apiGet<TeamMember[]>('/api/team').then(setTeam).catch(() => {});
-    apiGet<{ items: NewsItem[] }>('/api/news?limit=6').then(d => setNews(d.items)).catch(() => {});
-    apiGet<StatItem[]>('/api/stats').then(setStats).catch(() => {});
-    apiGet<Milestone[]>('/api/milestones').then(setMilestones).catch(() => {});
-  }, []);
+    let cancelled = false;
+    setHomeLoading(true);
+    setHomeError('');
+    Promise.allSettled([
+      apiGet<Banner[]>('/api/banners'),
+      apiGet<Announcement[]>('/api/announcements'),
+      apiGet<Partner[]>('/api/partners'),
+      apiGet<TeamMember[]>('/api/team'),
+      apiGet<{ items: NewsItem[] }>('/api/news?limit=6'),
+      apiGet<StatItem[]>('/api/stats'),
+      apiGet<Milestone[]>('/api/milestones'),
+    ]).then(results => {
+      if (cancelled) return;
+      const bannersResult = results[0] as PromiseSettledResult<Banner[]>;
+      const announcementsResult = results[1] as PromiseSettledResult<Announcement[]>;
+      const partnersResult = results[2] as PromiseSettledResult<Partner[]>;
+      const teamResult = results[3] as PromiseSettledResult<TeamMember[]>;
+      const newsResult = results[4] as PromiseSettledResult<{ items: NewsItem[] }>;
+      const statsResult = results[5] as PromiseSettledResult<StatItem[]>;
+      const milestonesResult = results[6] as PromiseSettledResult<Milestone[]>;
+      if (bannersResult.status === 'fulfilled') setBanners(bannersResult.value);
+      if (announcementsResult.status === 'fulfilled') setAnnouncements(announcementsResult.value);
+      if (partnersResult.status === 'fulfilled') setPartners(partnersResult.value);
+      if (teamResult.status === 'fulfilled') setTeam(teamResult.value);
+      if (newsResult.status === 'fulfilled') setNews(newsResult.value.items);
+      if (statsResult.status === 'fulfilled') setStats(statsResult.value);
+      if (milestonesResult.status === 'fulfilled') setMilestones(milestonesResult.value);
+      if (results.every(result => result.status === 'rejected')) setHomeError(t('首頁資料暫時無法載入，請重新載入。', 'Homepage data is temporarily unavailable. Please try again.'));
+    }).finally(() => { if (!cancelled) setHomeLoading(false); });
+    return () => { cancelled = true; };
+  }, [homeRetry, t]);
 
   useEffect(() => { if (banners.length > 1) { const id = setInterval(() => setIdx(p => (p + 1) % banners.length), 6000); return () => clearInterval(id); } }, [banners.length]);
 
@@ -76,6 +103,8 @@ export default function Home() {
               {cur?.link_url ? <a href={cur.link_url} target="_blank" rel="noopener noreferrer" className="btn-primary">{t('了解更多', 'Learn More')} →</a> : <Link href="/news" className="btn-primary">{t('查看最新動態', 'Latest Updates')} →</Link>}
               <Link href="/about" className="btn-secondary">{t('關於協會', 'About')}</Link>
             </div>
+            {homeLoading && <div style={{ maxWidth: 280, marginTop: 24 }}><LoadingState label={t('正在同步協會內容...', 'Syncing association content...')} /></div>}
+            {homeError && <div style={{ maxWidth: 520, marginTop: 24 }}><ErrorState message={homeError} onRetry={() => setHomeRetry(value => value + 1)} /></div>}
           </div>
 
           {banners.length > 1 && (
@@ -206,14 +235,14 @@ export default function Home() {
       )}
 
       {/* ═══ TEAM ═══ */}
-      {Object.keys(teamGroups).length > 0 && (
+      {(
         <section style={sectionBorder}>
           <div style={container}>
             <FadeIn style={{ textAlign: 'center', marginBottom: 64 }}>
               <div className="section-label">{t('領導團隊', 'Leadership')}</div>
               <h2 className="section-title">{t('顧問委員會', 'Advisory Board')}</h2>
             </FadeIn>
-            {Object.entries(teamGroups).map(([group, members]) => (
+            {Object.keys(teamGroups).length > 0 ? Object.entries(teamGroups).map(([group, members]) => (
               <div key={group} style={{ marginBottom: 48 }}>
                 <h3 style={{ fontSize: 13, fontWeight: 600, textAlign: 'center', marginBottom: 32, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t(gl[group]?.zh || group, gl[group]?.en || group)}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
@@ -236,21 +265,21 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-            ))}
+            )) : <EmptyState title={t('委員資料正在整理中', 'Committee profiles are being prepared')} description={t('歡迎聯絡協會了解最新團隊資訊。', 'Contact HKBA for the latest leadership information.')} action={<Link href="/contact" className="btn-secondary">{t('聯絡我們', 'Contact HKBA')}</Link>} />}
             <div style={{ textAlign: 'center' }}><Link href="/team" className="btn-secondary">{t('查看全部團隊', 'View Full Team')} →</Link></div>
           </div>
         </section>
       )}
 
       {/* ═══ PARTNERS ═══ */}
-      {partners.length > 0 && (
+      {(
         <section style={sectionBorder}>
           <div style={container}>
             <FadeIn style={{ textAlign: 'center', marginBottom: 64 }}>
               <div className="section-label">{t('合作夥伴', 'Partners')}</div>
               <h2 className="section-title">{t('攜手共建生態', 'Building Together')}</h2>
             </FadeIn>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20 }}>
+            {partners.length > 0 ? <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20 }}>
               {partners.map((p, i) => {
                 const href = p.website_url || '/members';
                 const card = (
@@ -272,7 +301,7 @@ export default function Home() {
                   </FadeIn>
                 );
               })}
-            </div>
+            </div> : <EmptyState title={t('合作夥伴資料正在整理中', 'Partner directory is being prepared')} description={t('歡迎聯絡協會了解合作方式。', 'Contact HKBA to learn about partnership opportunities.')} action={<Link href="/contact" className="btn-secondary">{t('聯絡我們', 'Contact HKBA')}</Link>} />}
           </div>
         </section>
       )}
