@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useLang } from '@/lib/useLang';
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
 
 export default function Header() {
   const { lang, setLang, t } = useLang();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -22,6 +24,18 @@ export default function Header() {
     const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
+  }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   return (
@@ -44,7 +58,7 @@ export default function Header() {
         {/* Desktop Nav */}
         <nav style={{ display: 'flex', gap: 4, alignItems: 'center' }} className="hidden-lg">
           {navItems.map(item => (
-            <Link key={item.href} href={item.href} className="header-nav-link">{t(item.zh, item.en)}</Link>
+            <Link key={item.href} href={item.href} className={`header-nav-link ${pathname === item.href ? 'is-active' : ''}`} aria-current={pathname === item.href ? 'page' : undefined}>{t(item.zh, item.en)}</Link>
           ))}
         </nav>
 
@@ -67,7 +81,7 @@ export default function Header() {
         <div className="mobile-menu" style={{ background: 'rgba(9,9,11,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: 16 }}>
           {navItems.map(item => (
             <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
-              className="mobile-nav-link" style={{ display: 'block', padding: '12px 16px', color: '#d4d4d8', textDecoration: 'none', borderRadius: 8, fontSize: 16 }}
+              className={`mobile-nav-link ${pathname === item.href ? 'is-active' : ''}`} aria-current={pathname === item.href ? 'page' : undefined} style={{ display: 'block', padding: '12px 16px', color: '#d4d4d8', textDecoration: 'none', borderRadius: 8, fontSize: 16 }}
             >{t(item.zh, item.en)}</Link>
           ))}
         </div>

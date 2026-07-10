@@ -9,7 +9,8 @@ interface Info { phone?: string; email?: string; address_zh?: string; address_en
 export default function Footer() {
   const { t } = useLang();
   const [info, setInfo] = useState<Info>({});
-  useEffect(() => { apiGet<Info>('/api/contact/info').then(setInfo).catch(() => {}); }, []);
+  const [infoFailed, setInfoFailed] = useState(false);
+  useEffect(() => { apiGet<Info>('/api/contact/info').then(setInfo).catch(() => setInfoFailed(true)); }, []);
 
   const links = [
     { href: '/about', zh: '關於協會', en: 'About' },
@@ -41,7 +42,7 @@ export default function Footer() {
           <div>
             <h4 style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#71717a', marginBottom: 16 }}>{t('快速連結', 'Quick Links')}</h4>
             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {links.map(l => <li key={l.href}><Link href={l.href} style={{ fontSize: 14, color: '#a1a1aa', textDecoration: 'none', transition: 'color 0.2s' }}>{t(l.zh, l.en)}</Link></li>)}
+              {links.map(l => <li key={l.href}><Link href={l.href} className="footer-link" style={{ fontSize: 14, color: '#a1a1aa', textDecoration: 'none', transition: 'color 0.2s' }}>{t(l.zh, l.en)}</Link></li>)}
             </ul>
           </div>
 
@@ -52,6 +53,7 @@ export default function Footer() {
               {info.phone && <li><a href={`tel:${info.phone}`} style={{ color: '#a1a1aa', textDecoration: 'none' }}>{info.phone}</a></li>}
               {info.email && <li><a href={`mailto:${info.email}`} style={{ color: '#a1a1aa', textDecoration: 'none' }}>{info.email}</a></li>}
               {(info.address_zh || info.address_en) && <li style={{ color: '#71717a' }}>{t(info.address_zh || '', info.address_en || '')}</li>}
+              {infoFailed && <li style={{ color: '#71717a' }}>{t('聯絡資訊暫未提供', 'Contact information is temporarily unavailable.')}</li>}
             </ul>
           </div>
         </div>
