@@ -12,12 +12,32 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   try {
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers, cache: 'no-store' });
     if (res.status === 401) { localStorage.removeItem('hkba_admin_token'); window.location.href = '/admin/login'; throw new Error('Unauthorized'); }
-    if (!res.ok) throw new Error(`Error: ${res.status}`);
+    if (!res.ok) {
+      let message = `Error: ${res.status}`;
+      try {
+        const body = await res.json() as { error?: string };
+        if (body.error) message = body.error;
+      } catch {
+        // Keep the status message when the server response is not JSON.
+      }
+      throw new Error(message);
+    }
     return res.json();
   } catch (err: unknown) {
     if (err instanceof Error && (err.message === 'No token' || err.message === 'Unauthorized')) throw err;
-    throw new Error('網絡錯誤，請確認後端服務是否運行');
+    if (err instanceof Error && (err.message === 'No token' || err.message === 'Unauthorized')) throw err;
+    if (err instanceof TypeError) throw new Error('網絡錯誤，請確認後端服務是否運行');
+    throw err;
   }
+}
+
+export function adminRequestError(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  return '操作失敗，請稍後重試。';
+}
+
+export function notifyAdminDataChanged(event: string): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(`hkba:${event}`));
 }
 
 export async function adminGet<T>(path: string): Promise<T> { return request<T>(path); }
