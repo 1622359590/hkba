@@ -674,6 +674,10 @@ textarea:focus-visible {
   border-color: rgba(129,140,248,0.26);
   background: rgba(255,255,255,0.052);
 }
+.admin-stat-card.has-unread {
+  border-color: rgba(239,68,68,0.28);
+  background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(255,255,255,0.035));
+}
 .admin-stat-card:active {
   transform: scale(0.992);
 }

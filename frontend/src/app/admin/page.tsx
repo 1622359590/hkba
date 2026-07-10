@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { adminGet } from '@/lib/adminApi';
 import Link from 'next/link';
+import { ErrorState, LoadingState } from '@/components/ui/Feedback';
 
 type Counts = {
   banners: number;
@@ -42,9 +43,15 @@ function Icon({ path, size = 18 }: { path: string; size?: number }) {
 export default function AdminDashboard() {
   const [counts, setCounts] = useState<Counts>({ banners: 0, news: 0, team: 0, partners: 0, events: 0, messages: 0, unreadMessages: 0 });
   const [recentNews, setRecentNews] = useState<RecentNews[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
 
-  useEffect(() => {
-    Promise.all([
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [banners, allNews, team, partners, events, messages, unreadMessages] = await Promise.all([
       adminGet<unknown[]>('/api/banners/all').then(d => d.length).catch(() => 0),
       adminGet<RecentNews[]>('/api/news/admin/all').catch(() => []),
       adminGet<unknown[]>('/api/team/all').then(d => d.length).catch(() => 0),
@@ -52,10 +59,26 @@ export default function AdminDashboard() {
       adminGet<unknown[]>('/api/events/admin/all').then(d => d.length).catch(() => 0),
       adminGet<unknown[]>('/api/contact/messages').then(d => d.length).catch(() => 0),
       adminGet<{ count: number }>('/api/contact/messages/unread-count').then(d => d.count).catch(() => 0),
-    ]).then(([banners, allNews, team, partners, events, messages, unreadMessages]) => {
+      ]);
       setCounts({ banners, news: allNews.length, team, partners, events, messages, unreadMessages });
       setRecentNews(allNews.slice(0, 5));
-    });
+    } catch {
+      setError('儀表板資料載入失敗，請重新載入。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, [retry]);
+
+  useEffect(() => {
+    const refresh = () => load();
+    window.addEventListener('hkba:content-updated', refresh);
+    window.addEventListener('hkba:messages-updated', refresh);
+    return () => {
+      window.removeEventListener('hkba:content-updated', refresh);
+      window.removeEventListener('hkba:messages-updated', refresh);
+    };
   }, []);
 
   const cards = [
@@ -84,9 +107,12 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {loading && <LoadingState label="正在同步內容統計..." />}
+      {error && <div style={{ marginBottom: 18 }}><ErrorState message={error} onRetry={() => setRetry(value => value + 1)} /></div>}
+
       <div className="admin-stat-grid">
         {cards.map(c => (
-          <Link key={c.label} href={c.href} className="admin-panel admin-stat-card">
+          <Link key={c.label} href={c.href} className={`admin-panel admin-stat-card ${c.label === '留言' && counts.unreadMessages > 0 ? 'has-unread' : ''}`}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
               <span className="admin-stat-icon"><Icon path={c.icon} /></span>
               <span style={{ color: '#52525b' }}><Icon path={icons.arrow} size={17} /></span>
@@ -115,7 +141,7 @@ export default function AdminDashboard() {
               {recentNews.map(item => (
                 <Link key={item.id} href="/admin/news" className="admin-list-link">
                   <span style={{ minWidth: 0 }}>
-                    <span style={{ display: 'block', color: '#e4e4e7', fontSize: 13, fontWeight: 650, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title_zh || item.title_en || 'Untitled'}</span>
+                    <span style={{ display: 'block', color: '#e4e4e7', fontSize: 13, fontWeight: 650, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title_zh || item.title_en || '未命名新聞'}</span>
                     <span style={{ display: 'block', color: '#71717a', fontSize: 12, marginTop: 2 }}>{item.published_at ? new Date(item.published_at).toLocaleDateString() : '未設定日期'}</span>
                   </span>
                   <span className={`status-pill ${item.is_published ? 'is-live' : 'is-draft'}`}>{item.is_published ? '已發佈' : '草稿'}</span>

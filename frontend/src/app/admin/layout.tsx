@@ -44,8 +44,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handler = () => refreshUnreadMessages();
     window.addEventListener('hkba:messages-updated', handler);
-    return () => window.removeEventListener('hkba:messages-updated', handler);
+    window.addEventListener('hkba:content-updated', handler);
+    return () => {
+      window.removeEventListener('hkba:messages-updated', handler);
+      window.removeEventListener('hkba:content-updated', handler);
+    };
   }, [refreshUnreadMessages]);
+
+  useEffect(() => {
+    if (!token || pathname === '/admin/login') return;
+    const interval = window.setInterval(refreshUnreadMessages, 60000);
+    return () => window.clearInterval(interval);
+  }, [pathname, refreshUnreadMessages, token]);
 
   if (pathname === '/admin/login') return <>{children}</>;
   if (!token) return <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#71717a', fontSize: 13 }}>載入中...</span></div>;

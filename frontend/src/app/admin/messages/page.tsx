@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { adminDelete, adminGet, adminPut } from '@/lib/adminApi';
+import { adminRequestError, notifyAdminDataChanged } from '@/lib/adminApi';
+import { ActionButton } from '@/components/admin/ActionButton';
+import { ConfirmDialog, EmptyState, ErrorState, LoadingState, Toast } from '@/components/ui/Feedback';
 
 interface ContactMessage {
   id: number;
@@ -15,27 +18,52 @@ interface ContactMessage {
 export default function MessagesAdmin() {
   const [items, setItems] = useState<ContactMessage[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [pendingId, setPendingId] = useState('');
+  const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ContactMessage | null>(null);
 
-  const load = () => {
+  const load = async () => {
+    setLoading(true);
     setError('');
-    adminGet<ContactMessage[]>('/api/contact/messages')
-      .then(setItems)
-      .catch(() => setError('留言載入失敗，請確認後端服務是否運行'));
+    try {
+      setItems(await adminGet<ContactMessage[]>('/api/contact/messages'));
+    } catch (requestError) {
+      setError(adminRequestError(requestError));
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
 
   const markRead = async (id: number) => {
-    await adminPut(`/api/contact/messages/${id}/read`, {});
-    window.dispatchEvent(new Event('hkba:messages-updated'));
-    load();
+    setPendingId(`read:${id}`);
+    try {
+      await adminPut(`/api/contact/messages/${id}/read`, {});
+      notifyAdminDataChanged('messages-updated');
+      setToast({ tone: 'success', message: '留言已標記為已讀。' });
+      await load();
+    } catch (requestError) {
+      setToast({ tone: 'error', message: adminRequestError(requestError) });
+    } finally {
+      setPendingId('');
+    }
   };
 
   const remove = async (id: number) => {
-    if (!confirm('確定刪除此留言？')) return;
-    await adminDelete(`/api/contact/messages/${id}`);
-    window.dispatchEvent(new Event('hkba:messages-updated'));
-    load();
+    setPendingId(`delete:${id}`);
+    try {
+      await adminDelete(`/api/contact/messages/${id}`);
+      notifyAdminDataChanged('messages-updated');
+      setDeleteTarget(null);
+      setToast({ tone: 'success', message: '留言已刪除。' });
+      await load();
+    } catch (requestError) {
+      setToast({ tone: 'error', message: adminRequestError(requestError) });
+    } finally {
+      setPendingId('');
+    }
   };
 
   return (
@@ -45,10 +73,11 @@ export default function MessagesAdmin() {
           <h1 className="admin-page-title">留言管理</h1>
           <p className="admin-page-desc">查看前台聯絡表單提交，已處理後可標記已讀或刪除。</p>
         </div>
-        <button onClick={load} className="btn-secondary" style={{ fontSize: 13 }}>刷新</button>
+        <ActionButton type="button" onClick={load} pending={loading} variant="secondary" style={{ fontSize: 13 }}>刷新</ActionButton>
       </div>
-      {error && <div className="admin-error-state">{error}</div>}
-      <div className="admin-list-stack">
+      {loading && <LoadingState label="正在載入留言..." />}
+      {!loading && error && <ErrorState message={error} onRetry={load} />}
+      {!loading && !error && <div className="admin-list-stack">
         {items.map(item => (
           <div key={item.id} className="admin-content-row" style={{ display: 'block', padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 12 }}>
@@ -63,15 +92,17 @@ export default function MessagesAdmin() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                {!item.is_read && <button type="button" onClick={() => markRead(item.id)} className="admin-action">標記已讀</button>}
-                <button type="button" onClick={() => remove(item.id)} className="admin-action is-danger">刪除</button>
+                {!item.is_read && <ActionButton type="button" onClick={() => markRead(item.id)} pending={pendingId === `read:${item.id}`} variant="muted" className="admin-action">標記已讀</ActionButton>}
+                <ActionButton type="button" onClick={() => setDeleteTarget(item)} pending={pendingId === `delete:${item.id}`} variant="danger" className="admin-action is-danger">刪除</ActionButton>
               </div>
             </div>
             <p style={{ fontSize: 14, color: '#a1a1aa', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{item.message}</p>
           </div>
         ))}
-      </div>
-      {items.length === 0 && !error && <div className="admin-empty-state">暫無留言</div>}
+      </div>}
+      {!loading && !error && items.length === 0 && <EmptyState title="暫無留言" description="前台聯絡表單的新提交會在這裡顯示。" />}
+      {deleteTarget && <ConfirmDialog title="刪除這則留言？" description={`刪除「${deleteTarget.subject || '無主旨'}」後將無法復原。`} onCancel={() => setDeleteTarget(null)} onConfirm={() => remove(deleteTarget.id)} pending={pendingId === `delete:${deleteTarget.id}`} />}
+      {toast && <Toast tone={toast.tone} message={toast.message} onDismiss={() => setToast(null)} />}
     </div>
   );
 }
