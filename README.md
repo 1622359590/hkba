@@ -108,6 +108,33 @@ cd backend
 npm start
 ```
 
+Verify that repeated database initialization does not add default records:
+
+```bash
+cd backend
+node - <<'NODE'
+const { initDatabase, getDb, closeDatabase } = require('./db/init');
+initDatabase();
+const first = getDb();
+const before = {
+  stats: first.prepare('SELECT COUNT(*) AS count FROM stats').get().count,
+  milestones: first.prepare('SELECT COUNT(*) AS count FROM milestones').get().count,
+};
+closeDatabase();
+initDatabase();
+const second = getDb();
+const after = {
+  stats: second.prepare('SELECT COUNT(*) AS count FROM stats').get().count,
+  milestones: second.prepare('SELECT COUNT(*) AS count FROM milestones').get().count,
+};
+console.log({ before, after });
+if (before.stats !== after.stats || before.milestones !== after.milestones) process.exit(1);
+closeDatabase();
+NODE
+```
+
+The two count pairs must be identical. A healthy backend responds at `http://localhost:37900/api/health` with a JSON object whose `status` is `ok`.
+
 ## Routes
 
 Public pages:

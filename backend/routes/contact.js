@@ -23,12 +23,18 @@ router.put('/info', authMiddleware, (req, res) => {
 
 // 公开：提交联系表单
 router.post('/message', (req, res) => {
-  const { name, email, subject, message } = req.body;
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+  const email = typeof req.body.email === 'string' ? req.body.email.trim() : '';
+  const subject = typeof req.body.subject === 'string' ? req.body.subject.trim() : '';
+  const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
   if (!name || !email || !message) {
     return res.status(400).json({ error: '請填寫必要信息' });
   }
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ error: '請填寫有效的電郵地址' });
+  }
   const db = getDb();
-  db.prepare('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)').run(name, email, subject || '', message);
+  db.prepare('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)').run(name, email, subject, message);
   res.json({ success: true });
 });
 
