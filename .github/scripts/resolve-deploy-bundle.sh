@@ -46,6 +46,26 @@ mask_value() {
   fi
 }
 
+print_key_diagnostics() {
+  awk '
+    {
+      raw = $0
+      sub(/\r$/, "", raw)
+      trimmed = raw
+      sub(/^[[:space:]]+/, "", trimmed)
+      sub(/[[:space:]]+$/, "", trimmed)
+      if (raw == "-----BEGIN OPENSSH PRIVATE KEY-----") exact_begin++
+      if (raw == "-----END OPENSSH PRIVATE KEY-----") exact_end++
+      if (trimmed == "-----BEGIN OPENSSH PRIVATE KEY-----") trimmed_begin++
+      if (trimmed == "-----END OPENSSH PRIVATE KEY-----") trimmed_end++
+      if (index(raw, "\\n-----BEGIN OPENSSH PRIVATE KEY-----") > 0) literal_newlines = 1
+    }
+    END {
+      printf "Private key diagnostics: exact_begin=%d exact_end=%d trimmed_begin=%d trimmed_end=%d literal_newlines=%d\n", exact_begin, exact_end, trimmed_begin, trimmed_end, literal_newlines
+    }
+  ' "$bundle_file" >&2
+}
+
 while IFS= read -r line; do
   line=${line%$'\r'}
   if [ "$line" = '-----BEGIN OPENSSH PRIVATE KEY-----' ]; then
@@ -119,9 +139,12 @@ awk '
 ' "$bundle_file" > "$key_candidate"
 chmod 600 "$key_candidate"
 
-if ! grep -Fqx -- '-----BEGIN OPENSSH PRIVATE KEY-----' "$key_candidate" ||
-   ! grep -Fqx -- '-----END OPENSSH PRIVATE KEY-----' "$key_candidate" ||
-   ! ssh-keygen -y -f "$key_candidate" >/dev/null 2>&1; then
+validation_error=''
+if ! validation_error=$(ssh-keygen -y -f "$key_candidate" 2>&1 >/dev/null); then
+  print_key_diagnostics
+  if [ -n "$validation_error" ]; then
+    printf 'OpenSSH validator: %s\n' "$validation_error" >&2
+  fi
   printf 'DEPLOY_SSH_KEY does not contain a valid OpenSSH private key.\n' >&2
   exit 1
 fi
