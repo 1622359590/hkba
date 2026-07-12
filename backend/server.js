@@ -36,6 +36,7 @@ app.use((req, res, next) => {
         allowedOrigins: ALLOWED_ORIGINS,
         host: req.get('host'),
         forwardedHost: req.get('x-forwarded-host'),
+        proxyHost: req.get('x-hkba-forwarded-host'),
       });
       cb(allowed ? null : new Error('CORS blocked'), allowed);
     },

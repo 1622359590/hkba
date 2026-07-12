@@ -30,6 +30,16 @@ test('allows the public origin when it matches the forwarded host', () => {
   }), true);
 });
 
+test('allows the public origin when it matches the Next.js proxy host', () => {
+  assert.equal(isOriginAllowed({
+    origin: 'https://hkba.btcsam.com',
+    allowedOrigins: [],
+    host: '127.0.0.1:37900',
+    forwardedHost: '127.0.0.1:37900',
+    proxyHost: 'hkba.btcsam.com',
+  }), true);
+});
+
 test('allows the public origin when it matches the direct host', () => {
   assert.equal(isOriginAllowed({
     origin: 'https://hkba.btcsam.com',
