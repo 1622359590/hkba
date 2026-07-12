@@ -8,7 +8,7 @@ The workflow is stored at:
 .github/workflows/deploy-baota.yml
 ```
 
-It syncs code to the server, keeps production data safe, installs dependencies, builds the Next.js frontend, and reloads PM2 processes.
+It syncs code to the server, keeps production data safe, installs dependencies, builds the Next.js frontend, reloads PM2 processes, and normalizes the deployed project to Baota's `www:www` ownership.
 
 ## Server Requirements
 
@@ -117,6 +117,14 @@ These server-side data paths are preserved during every deploy:
 - `backend/uploads/`
 
 That means production database records and uploaded files are not replaced by GitHub deploys.
+
+The SSH deployment user remains `root` so it can install dependencies and manage PM2. At the end of every successful deploy, the workflow runs:
+
+```bash
+chown -R www:www /www/wwwroot/hkba
+```
+
+The rsync step also disables sender-side owner and group preservation, preventing GitHub Runner numeric IDs from being mapped to unrelated server accounts such as `postgres`.
 
 The workflow regenerates these env files from GitHub Secrets on every deploy:
 

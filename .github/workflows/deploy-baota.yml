@@ -83,7 +83,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rsync -az --delete \
+          rsync -az --delete --no-owner --no-group \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='frontend/node_modules/' \
@@ -160,6 +160,12 @@ jobs:
           else
             PORT="$FRONTEND_PORT" pm2 start npm --name hkba-web -- start
           fi
+
+          if ! id www >/dev/null 2>&1; then
+            printf 'Required Baota user "www" does not exist.\n' >&2
+            exit 1
+          fi
+          chown -R www:www "$DEPLOY_PATH"
 
           pm2 save
           pm2 status
