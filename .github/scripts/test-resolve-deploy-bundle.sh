@@ -86,7 +86,7 @@ EOF
 if bash "$resolver" "$malformed_bundle" "$malformed_env" "$tmp_dir/malformed-key-output" 2>"$malformed_error"; then
   fail 'bundle with a malformed private key succeeded'
 fi
-grep -Fq 'Private key diagnostics: exact_begin=1 exact_end=1 trimmed_begin=1 trimmed_end=1 literal_newlines=0' "$malformed_error" \
+grep -Fq 'Private key diagnostics: exact_begin=1 exact_end=1 trimmed_begin=1 trimmed_end=1 embedded_begin=0 literal_newlines=0' "$malformed_error" \
   || fail 'malformed key diagnostics were not reported'
 test ! -s "$malformed_env" || fail 'failed resolution exported environment values'
 test ! -e "$tmp_dir/malformed-key-output" || fail 'failed resolution left a key file behind'

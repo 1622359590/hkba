@@ -58,10 +58,11 @@ print_key_diagnostics() {
       if (raw == "-----END OPENSSH PRIVATE KEY-----") exact_end++
       if (trimmed == "-----BEGIN OPENSSH PRIVATE KEY-----") trimmed_begin++
       if (trimmed == "-----END OPENSSH PRIVATE KEY-----") trimmed_end++
+      if (index(raw, "-----BEGIN OPENSSH PRIVATE KEY-----") > 1) embedded_begin = 1
       if (index(raw, "\\n-----BEGIN OPENSSH PRIVATE KEY-----") > 0) literal_newlines = 1
     }
     END {
-      printf "Private key diagnostics: exact_begin=%d exact_end=%d trimmed_begin=%d trimmed_end=%d literal_newlines=%d\n", exact_begin, exact_end, trimmed_begin, trimmed_end, literal_newlines
+      printf "Private key diagnostics: exact_begin=%d exact_end=%d trimmed_begin=%d trimmed_end=%d embedded_begin=%d literal_newlines=%d\n", exact_begin, exact_end, trimmed_begin, trimmed_end, embedded_begin, literal_newlines
     }
   ' "$bundle_file" >&2
 }
