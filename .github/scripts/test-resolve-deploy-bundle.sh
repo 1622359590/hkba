@@ -62,6 +62,19 @@ head -n 1 "$output_key" | grep -Fqx -- '-----BEGIN OPENSSH PRIVATE KEY-----' \
 test "$(stat -f '%Lp' "$output_key" 2>/dev/null || stat -c '%a' "$output_key")" = '600' \
   || fail 'private key permissions are not 600'
 
+prefixed_bundle="$tmp_dir/prefixed-bundle"
+prefixed_env="$tmp_dir/prefixed-env"
+prefixed_key="$tmp_dir/prefixed-key"
+{
+  printf 'DEPLOY_USER=root\nDEPLOY_SSH_KEY='
+  head -n 1 "$private_key"
+  tail -n +2 "$private_key"
+} > "$prefixed_bundle"
+: > "$prefixed_env"
+bash "$resolver" "$prefixed_bundle" "$prefixed_env" "$prefixed_key"
+assert_line 'SSH_USER=root' "$prefixed_env"
+ssh-keygen -y -f "$prefixed_key" >/dev/null
+
 missing_bundle="$tmp_dir/missing-key-bundle"
 missing_env="$tmp_dir/missing-key-env"
 printf 'DEPLOY_USER=root\n' > "$missing_bundle"

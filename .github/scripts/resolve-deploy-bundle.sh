@@ -69,9 +69,9 @@ print_key_diagnostics() {
 
 while IFS= read -r line; do
   line=${line%$'\r'}
-  if [ "$line" = '-----BEGIN OPENSSH PRIVATE KEY-----' ]; then
-    break
-  fi
+  case "$line" in
+    '-----BEGIN OPENSSH PRIVATE KEY-----'|'DEPLOY_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----') break ;;
+  esac
 
   case "$line" in
     *=*)
@@ -133,10 +133,19 @@ append_resolved SEED_ON_FIRST_DEPLOY "$bundle_SEED_ON_FIRST_DEPLOY" 'false'
 mkdir -p "$(dirname "$ssh_key_file")"
 rm -f "$ssh_key_file" "$key_candidate"
 awk '
-  { sub(/\r$/, "", $0) }
-  /^-----BEGIN OPENSSH PRIVATE KEY-----$/ { capture = 1 }
-  capture { print }
-  /^-----END OPENSSH PRIVATE KEY-----$/ { exit }
+  {
+    sub(/\r$/, "", $0)
+    if ($0 == "-----BEGIN OPENSSH PRIVATE KEY-----" || $0 == "DEPLOY_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----") {
+      capture = 1
+      print "-----BEGIN OPENSSH PRIVATE KEY-----"
+      next
+    }
+    if (capture && $0 == "-----END OPENSSH PRIVATE KEY-----") {
+      print
+      exit
+    }
+    if (capture) print
+  }
 ' "$bundle_file" > "$key_candidate"
 chmod 600 "$key_candidate"
 
