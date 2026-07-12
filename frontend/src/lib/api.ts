@@ -1,7 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:37900';
-
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { cache: 'no-store' });
+  const res = await fetch(path, { cache: 'no-store' });
   if (!res.ok) throw new Error(`API Error: ${res.status}`);
   return res.json();
 }
@@ -9,7 +7,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 export async function apiPost<T>(path: string, body: unknown, token?: string): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE}${path}`, { method: 'POST', headers, body: JSON.stringify(body) });
+  const res = await fetch(path, { method: 'POST', headers, body: JSON.stringify(body) });
   if (!res.ok) throw new Error(`API Error: ${res.status}`);
   return res.json();
 }
@@ -17,7 +15,7 @@ export async function apiPost<T>(path: string, body: unknown, token?: string): P
 export async function apiPut<T>(path: string, body: unknown, token?: string): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE}${path}`, { method: 'PUT', headers, body: JSON.stringify(body) });
+  const res = await fetch(path, { method: 'PUT', headers, body: JSON.stringify(body) });
   if (!res.ok) throw new Error(`API Error: ${res.status}`);
   return res.json();
 }
@@ -25,7 +23,7 @@ export async function apiPut<T>(path: string, body: unknown, token?: string): Pr
 export async function apiDelete<T>(path: string, token?: string): Promise<T> {
   const headers: Record<string, string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE', headers });
+  const res = await fetch(path, { method: 'DELETE', headers });
   if (!res.ok) throw new Error(`API Error: ${res.status}`);
   return res.json();
 }
@@ -33,7 +31,7 @@ export async function apiDelete<T>(path: string, token?: string): Promise<T> {
 export function imgUrl(url: string): string {
   if (!url) return '';
   if (url.startsWith('http')) return url;
-  return `${API_BASE}${url}`;
+  return url.startsWith('/') ? url : `/${url}`;
 }
 
 export type Lang = 'zh' | 'en';

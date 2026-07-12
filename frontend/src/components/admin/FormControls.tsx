@@ -61,7 +61,7 @@ export function ImageField({ value, onChange, label }: { value: string; onChange
   return (
     <FormField label={label}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        {value && <img src={value.startsWith('http') ? value : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:37900'}${value}`} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }} />}
+        {value && <img src={value.startsWith('http') ? value : (value.startsWith('/') ? value : `/${value}`)} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }} />}
         <label className="admin-action is-muted" style={{ cursor: 'pointer' }}>{uploading ? '上傳中...' : '選擇圖片'}<input type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} /></label>
         {value && <button type="button" onClick={() => onChange('')} className="admin-action is-danger" aria-label={`${label}移除圖片`}>移除</button>}
       </div>

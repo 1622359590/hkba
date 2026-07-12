@@ -7,8 +7,12 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: '/api/:path*',
+        destination: 'http://127.0.0.1:37900/api/:path*',
+      },
+      {
         source: '/uploads/:path*',
-        destination: 'http://localhost:37900/uploads/:path*',
+        destination: 'http://127.0.0.1:37900/uploads/:path*',
       },
     ];
   },

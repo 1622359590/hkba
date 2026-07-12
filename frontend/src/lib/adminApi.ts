@@ -1,5 +1,3 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:37900';
-
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('hkba_admin_token');
@@ -10,7 +8,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!token) { window.location.href = '/admin/login'; throw new Error('No token'); }
   const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}), 'Authorization': `Bearer ${token}` };
   try {
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers, cache: 'no-store' });
+    const res = await fetch(path, { ...options, headers, cache: 'no-store' });
     if (res.status === 401) { localStorage.removeItem('hkba_admin_token'); window.location.href = '/admin/login'; throw new Error('Unauthorized'); }
     if (!res.ok) {
       let message = `Error: ${res.status}`;
@@ -24,7 +22,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
     return res.json();
   } catch (err: unknown) {
-    if (err instanceof Error && (err.message === 'No token' || err.message === 'Unauthorized')) throw err;
     if (err instanceof Error && (err.message === 'No token' || err.message === 'Unauthorized')) throw err;
     if (err instanceof TypeError) throw new Error('網絡錯誤，請確認後端服務是否運行');
     throw err;
@@ -50,7 +47,7 @@ export async function adminUpload(file: File, dir: string = 'general'): Promise<
   if (!token) { window.location.href = '/admin/login'; throw new Error('No token'); }
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`${API_BASE}/api/upload?dir=${dir}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+  const res = await fetch(`/api/upload?dir=${dir}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
   if (!res.ok) throw new Error(`Upload Error: ${res.status}`);
   return res.json();
 }
