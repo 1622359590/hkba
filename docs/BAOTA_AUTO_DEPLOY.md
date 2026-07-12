@@ -52,7 +52,7 @@ Optional secrets:
 | `BACKEND_PORT` | `37900` | Express API port |
 | `FRONTEND_PORT` | `3000` | Next.js port |
 | `ALLOWED_ORIGINS` | empty | Additional comma-separated backend CORS origins; same-domain proxy traffic is allowed automatically |
-| `SEED_ON_FIRST_DEPLOY` | `false` | Set `true` to run `backend/db/seed.js` when no server DB exists |
+| `SEED_ON_FIRST_DEPLOY` | `false` | Set `true` to load initial content when all core content tables are empty; existing CMS content is preserved |
 
 ## SSH Key Setup
 

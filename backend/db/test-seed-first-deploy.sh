@@ -8,9 +8,10 @@ tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT
 
 mkdir -p "$tmp_dir/db"
-cp "$db_dir/init.js" "$db_dir/schema.sql" "$db_dir/seed.js" "$tmp_dir/db/"
+cp "$db_dir/init.js" "$db_dir/schema.sql" "$db_dir/seed.js" "$db_dir/seed-if-empty.js" "$tmp_dir/db/"
 
-NODE_PATH="$backend_dir/node_modules" node "$tmp_dir/db/seed.js" >/dev/null
+NODE_PATH="$backend_dir/node_modules" node "$tmp_dir/db/seed-if-empty.js" >/dev/null
+NODE_PATH="$backend_dir/node_modules" node "$tmp_dir/db/seed-if-empty.js" >/dev/null
 
 NODE_PATH="$backend_dir/node_modules" node - "$tmp_dir/db/hkba.db" <<'NODE'
 const Database = require('better-sqlite3');

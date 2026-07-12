@@ -112,11 +112,6 @@ jobs:
           cd "$DEPLOY_PATH"
           mkdir -p backend/db backend/uploads
 
-          first_deploy=false
-          if [ ! -f backend/db/hkba.db ]; then
-            first_deploy=true
-          fi
-
           cat > backend/.env <<EOF
           PORT=$BACKEND_PORT
           JWT_SECRET=$JWT_SECRET
@@ -130,8 +125,8 @@ jobs:
             npm install --omit=dev
           fi
 
-          if [ "$first_deploy" = "true" ] && [ "$SEED_ON_FIRST_DEPLOY" = "true" ]; then
-            node db/seed.js
+          if [ "$SEED_ON_FIRST_DEPLOY" = "true" ]; then
+            node db/seed-if-empty.js
           fi
 
           if pm2 describe hkba-api >/dev/null 2>&1; then

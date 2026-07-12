@@ -1,6 +1,7 @@
-function isOriginAllowed({ origin, allowedOrigins, host, forwardedHost, proxyHost }) {
+function isOriginAllowed({ origin, allowedOrigins, host, forwardedHost, proxyHost, fetchSite }) {
   if (!origin) return true;
   if (allowedOrigins.includes(origin)) return true;
+  if (fetchSite === 'same-origin') return true;
 
   try {
     const originHost = new URL(origin).host.toLowerCase();

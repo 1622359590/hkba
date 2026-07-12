@@ -40,6 +40,17 @@ test('allows the public origin when it matches the Next.js proxy host', () => {
   }), true);
 });
 
+test('allows browser-verified same-origin requests behind a host-rewriting proxy', () => {
+  assert.equal(isOriginAllowed({
+    origin: 'https://hkba.btcsam.com',
+    allowedOrigins: [],
+    host: '127.0.0.1:37900',
+    forwardedHost: '127.0.0.1:37900',
+    proxyHost: '127.0.0.1:3000',
+    fetchSite: 'same-origin',
+  }), true);
+});
+
 test('allows the public origin when it matches the direct host', () => {
   assert.equal(isOriginAllowed({
     origin: 'https://hkba.btcsam.com',
