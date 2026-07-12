@@ -1,8 +1,7 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const { DB_PATH } = require('./init');
+const { initDatabase, getDb, closeDatabase } = require('./init');
 
-const db = new Database(DB_PATH);
+initDatabase();
+const db = getDb();
 
 // ===== Banners =====
 const banners = [
@@ -219,5 +218,5 @@ for (const s of stats) {
 }
 console.log(`  ✅ ${stats.length} stats`);
 
-db.close();
+closeDatabase();
 console.log('🎉 Seed complete!');
