@@ -144,11 +144,11 @@ jobs:
           rm -rf .next
           npm run build
 
-          if pm2 describe hkba-web >/dev/null 2>&1; then
-            PORT="$FRONTEND_PORT" pm2 reload hkba-web --update-env
-          else
-            PORT="$FRONTEND_PORT" pm2 start npm --name hkba-web -- start
-          fi
+          pm2 delete hkba-web >/dev/null 2>&1 || true
+          PORT="$FRONTEND_PORT" pm2 start npm \
+            --name hkba-web \
+            --cwd "$DEPLOY_PATH/frontend" \
+            -- start
 
           if ! id www >/dev/null 2>&1; then
             printf 'Required Baota user "www" does not exist.\n' >&2
