@@ -23,7 +23,6 @@ jobs:
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
       BACKEND_PORT: ${{ secrets.BACKEND_PORT }}
       FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
-      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
       ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -51,7 +50,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=()
-          for name in SSH_HOST SSH_USER NEXT_PUBLIC_API_URL ALLOWED_ORIGINS JWT_SECRET; do
+          for name in SSH_HOST SSH_USER JWT_SECRET; do
             if [ -z "${!name:-}" ]; then
               missing+=("$name")
             fi
@@ -88,7 +87,6 @@ jobs:
             --exclude='.github/' \
             --exclude='frontend/node_modules/' \
             --exclude='frontend/.next/' \
-            --exclude='frontend/.env.local' \
             --exclude='backend/node_modules/' \
             --exclude='backend/.env' \
             --exclude='backend/db/*.db' \
@@ -105,7 +103,6 @@ jobs:
             "DEPLOY_PATH='$DEPLOY_PATH' \
              BACKEND_PORT='$BACKEND_PORT' \
              FRONTEND_PORT='$FRONTEND_PORT' \
-             NEXT_PUBLIC_API_URL='$NEXT_PUBLIC_API_URL' \
              ALLOWED_ORIGINS='$ALLOWED_ORIGINS' \
              JWT_SECRET='$JWT_SECRET' \
              SEED_ON_FIRST_DEPLOY='$SEED_ON_FIRST_DEPLOY' \
@@ -124,10 +121,6 @@ jobs:
           PORT=$BACKEND_PORT
           JWT_SECRET=$JWT_SECRET
           ALLOWED_ORIGINS=$ALLOWED_ORIGINS
-          EOF
-
-          cat > frontend/.env.local <<EOF
-          NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
           EOF
 
           cd "$DEPLOY_PATH/backend"

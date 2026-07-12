@@ -13,13 +13,9 @@ npm start
 
 `npm run dev` starts the local frontend on `http://localhost:3000` with Webpack. `npm run dev:turbo` is available for explicit Turbopack testing.
 
-## Environment
+## API Proxy
 
-Create `.env.local` from `.env.example`:
-
-```dotenv
-NEXT_PUBLIC_API_URL=http://localhost:37900
-```
+The browser uses relative `/api/*` and `/uploads/*` URLs. Next.js forwards both path families internally to Express on `http://127.0.0.1:37900`, so no frontend environment file is required.
 
 ## Main Routes
 
@@ -47,4 +43,4 @@ Admin:
 - `/admin/messages`
 - `/admin/settings`
 
-The admin CMS expects the Express backend to be running on `NEXT_PUBLIC_API_URL`.
+The admin CMS expects Express to be running locally on port `37900`; all browser traffic still stays on the Next.js origin.

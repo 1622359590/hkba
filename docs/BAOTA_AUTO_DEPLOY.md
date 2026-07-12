@@ -41,8 +41,6 @@ Add these required secrets:
 | `DEPLOY_HOST` | `1.2.3.4` | Server IP or host |
 | `DEPLOY_USER` | `root` | SSH user |
 | `DEPLOY_SSH_KEY` | private key text | Private key that can SSH into the server |
-| `NEXT_PUBLIC_API_URL` | `https://hkba.example.com` | Public frontend origin when using same-domain `/api` reverse proxy |
-| `ALLOWED_ORIGINS` | `https://hkba.example.com` | Backend CORS allowlist |
 | `JWT_SECRET` | long random string | Use at least 32 random characters |
 
 Optional secrets:
@@ -53,6 +51,7 @@ Optional secrets:
 | `DEPLOY_PATH` | `/www/wwwroot/hkba` | Server project path |
 | `BACKEND_PORT` | `37900` | Express API port |
 | `FRONTEND_PORT` | `3000` | Next.js port |
+| `ALLOWED_ORIGINS` | empty | Additional comma-separated backend CORS origins; same-domain proxy traffic is allowed automatically |
 | `SEED_ON_FIRST_DEPLOY` | `false` | Set `true` to run `backend/db/seed.js` when no server DB exists |
 
 ## SSH Key Setup
@@ -76,25 +75,9 @@ Put the private key content into GitHub secret `DEPLOY_SSH_KEY`.
 
 ## Baota Nginx Reverse Proxy
 
-Create a site in Baota for your domain, enable SSL, then add this reverse proxy config.
+Create a site in Baota for your domain, enable SSL, and keep only this reverse proxy config:
 
 ```nginx
-location /api/ {
-    proxy_pass http://127.0.0.1:37900/api/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-
-location /uploads/ {
-    proxy_pass http://127.0.0.1:37900/uploads/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-
 location / {
     proxy_pass http://127.0.0.1:3000;
     proxy_http_version 1.1;
@@ -106,6 +89,8 @@ location / {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 ```
+
+Delete or disable old Baota `/api/` and `/uploads/` reverse proxies. Next.js preserves those path prefixes and forwards them internally to Express on port `37900`.
 
 ## What The Workflow Preserves
 
@@ -126,10 +111,11 @@ chown -R www:www /www/wwwroot/hkba
 
 The rsync step also disables sender-side owner and group preservation, preventing GitHub Runner numeric IDs from being mapped to unrelated server accounts such as `postgres`.
 
-The workflow regenerates these env files from GitHub Secrets on every deploy:
+The workflow regenerates this backend environment file from GitHub Secrets on every deploy:
 
 - `backend/.env`
-- `frontend/.env.local`
+
+The frontend does not use `.env.local` in production. Legacy `NEXT_PUBLIC_API_URL` values may remain in an existing bundled Secret for compatibility, but they are ignored by the application.
 
 ## Manual Run
 

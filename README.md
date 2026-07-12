@@ -26,7 +26,6 @@ Install frontend dependencies:
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local
 ```
 
 ## Environment
@@ -37,12 +36,6 @@ Backend defaults:
 PORT=37900
 JWT_SECRET=replace-with-at-least-32-random-characters
 ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-```
-
-Frontend defaults:
-
-```dotenv
-NEXT_PUBLIC_API_URL=http://localhost:37900
 ```
 
 ## Development
@@ -64,6 +57,8 @@ npm run dev
 ```
 
 The frontend listens on `http://localhost:3000`.
+
+Browser API and uploaded-media requests use the same origin. Next.js forwards `/api/*` and `/uploads/*` internally to the backend on `127.0.0.1:37900`, so the frontend needs no environment file.
 
 `npm run dev` uses Next.js with Webpack for local development. On the current macOS/Node setup, Next.js 16's default Turbopack dev server can stall while compiling `/` and emit noisy `MallocStackLogging` messages. To test Turbopack explicitly, run:
 
@@ -167,9 +162,8 @@ For the current Phase 1 app:
 
 - Run the backend with PM2 or another process manager on port `37900`.
 - Run the frontend with `npm run build` and `npm start` on port `3000`.
-- Put Nginx in front of both services.
-- Set `NEXT_PUBLIC_API_URL` to the public API origin.
-- Set `ALLOWED_ORIGINS` on the backend to the public frontend origins.
+- Put Nginx in front of the frontend only; Next.js proxies API and upload traffic internally.
+- Keep port `37900` private. `ALLOWED_ORIGINS` remains available for additional explicit origins.
 - Keep uploads backed up if using local disk storage.
 
 GitHub Actions auto-deploy for a Baota server is documented in `docs/BAOTA_AUTO_DEPLOY.md`.
