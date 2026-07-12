@@ -19,21 +19,34 @@ jobs:
     env:
       SSH_HOST: ${{ secrets.DEPLOY_HOST }}
       SSH_USER: ${{ secrets.DEPLOY_USER }}
-      SSH_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
-      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/www/wwwroot/hkba' }}
-      BACKEND_PORT: ${{ secrets.BACKEND_PORT || '37900' }}
-      FRONTEND_PORT: ${{ secrets.FRONTEND_PORT || '3000' }}
+      SSH_PORT: ${{ secrets.DEPLOY_PORT }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      BACKEND_PORT: ${{ secrets.BACKEND_PORT }}
+      FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
       ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-      SEED_ON_FIRST_DEPLOY: ${{ secrets.SEED_ON_FIRST_DEPLOY || 'false' }}
+      SEED_ON_FIRST_DEPLOY: ${{ secrets.SEED_ON_FIRST_DEPLOY }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate required secrets
+      - name: Resolve deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle_file="$RUNNER_TEMP/hkba_deploy_bundle"
+          trap 'rm -f "$bundle_file"' EXIT
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$bundle_file"
+          bash .github/scripts/resolve-deploy-bundle.sh \
+            "$bundle_file" \
+            "$GITHUB_ENV" \
+            "$RUNNER_TEMP/hkba_deploy_key"
+
+      - name: Validate required deployment variables
         shell: bash
         run: |
           set -euo pipefail
@@ -43,11 +56,8 @@ jobs:
               missing+=("$name")
             fi
           done
-          if [ -z "${DEPLOY_SSH_KEY:-}" ]; then
-            missing+=("DEPLOY_SSH_KEY")
-          fi
           if [ "${#missing[@]}" -gt 0 ]; then
-            printf 'Missing required GitHub secrets: %s\n' "${missing[*]}"
+            printf 'Missing required deployment variables: %s\n' "${missing[*]}"
             exit 1
           fi
 
@@ -57,15 +67,16 @@ jobs:
           set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/hkba_deploy_key
-          chmod 600 ~/.ssh/hkba_deploy_key
+          test -s "$RUNNER_TEMP/hkba_deploy_key"
+          chmod 600 "$RUNNER_TEMP/hkba_deploy_key"
+          ssh-keygen -y -f "$RUNNER_TEMP/hkba_deploy_key" >/dev/null
           ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
       - name: Prepare server directory
         shell: bash
         run: |
           set -euo pipefail
-          ssh -i ~/.ssh/hkba_deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+          ssh -i "$RUNNER_TEMP/hkba_deploy_key" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "mkdir -p '$DEPLOY_PATH/backend/db' '$DEPLOY_PATH/backend/uploads'"
 
       - name: Sync project files
@@ -83,14 +94,14 @@ jobs:
             --exclude='backend/db/*.db' \
             --exclude='backend/db/*.db-*' \
             --exclude='backend/uploads/' \
-            -e "ssh -i ~/.ssh/hkba_deploy_key -p $SSH_PORT" \
+            -e "ssh -i $RUNNER_TEMP/hkba_deploy_key -p $SSH_PORT" \
             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
 
       - name: Install, build, and restart services
         shell: bash
         run: |
           set -euo pipefail
-          ssh -i ~/.ssh/hkba_deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+          ssh -i "$RUNNER_TEMP/hkba_deploy_key" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "DEPLOY_PATH='$DEPLOY_PATH' \
              BACKEND_PORT='$BACKEND_PORT' \
              FRONTEND_PORT='$FRONTEND_PORT' \

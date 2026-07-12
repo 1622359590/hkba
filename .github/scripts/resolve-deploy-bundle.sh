@@ -112,6 +112,7 @@ append_resolved SEED_ON_FIRST_DEPLOY "$bundle_SEED_ON_FIRST_DEPLOY" 'false'
 mkdir -p "$(dirname "$ssh_key_file")"
 rm -f "$ssh_key_file" "$key_candidate"
 awk '
+  { sub(/\r$/, "", $0) }
   /^-----BEGIN OPENSSH PRIVATE KEY-----$/ { capture = 1 }
   capture { print }
   /^-----END OPENSSH PRIVATE KEY-----$/ { exit }
