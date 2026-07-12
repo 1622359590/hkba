@@ -5,12 +5,14 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const { initDatabase, closeDatabase } = require('./db/init');
+const { isOriginAllowed } = require('./lib/corsPolicy');
 
 // 初始化数据库（单例）
 initDatabase();
 
 const app = express();
 const PORT = process.env.PORT || 37900;
+const HOST = process.env.HOST || '127.0.0.1';
 
 // 中间件
 // CORS 白名单：本地默认值，可通过 ALLOWED_ORIGINS 逗号分隔覆盖
@@ -26,14 +28,20 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || DEFAULT_ALLOWED_ORIGINS.
   .split(',')
   .map(origin => origin.trim())
   .filter(Boolean);
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-    cb(new Error(`CORS blocked: ${origin}`));
-  },
-  credentials: true,
-}));
+app.use((req, res, next) => {
+  cors({
+    origin: (origin, cb) => {
+      const allowed = isOriginAllowed({
+        origin,
+        allowedOrigins: ALLOWED_ORIGINS,
+        host: req.get('host'),
+        forwardedHost: req.get('x-forwarded-host'),
+      });
+      cb(allowed ? null : new Error('CORS blocked'), allowed);
+    },
+    credentials: true,
+  })(req, res, next);
+});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -68,8 +76,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: '伺服器錯誤' });
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 HKBA Backend running on port ${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🚀 HKBA Backend running at http://${HOST}:${PORT}`);
 });
 
 // 优雅退出
