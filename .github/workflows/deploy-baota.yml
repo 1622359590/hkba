@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      purge_proxy_cache:
+        description: Clear Baota Nginx reverse-proxy cache during this deployment
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: hkba-production-deploy
@@ -27,6 +33,7 @@ jobs:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       SEED_ON_FIRST_DEPLOY: ${{ secrets.SEED_ON_FIRST_DEPLOY }}
+      PURGE_PROXY_CACHE: ${{ inputs.purge_proxy_cache || 'false' }}
 
     steps:
       - name: Checkout repository
@@ -106,6 +113,7 @@ jobs:
              ALLOWED_ORIGINS='$ALLOWED_ORIGINS' \
              JWT_SECRET='$JWT_SECRET' \
              SEED_ON_FIRST_DEPLOY='$SEED_ON_FIRST_DEPLOY' \
+             PURGE_PROXY_CACHE='$PURGE_PROXY_CACHE' \
              bash -s" <<'REMOTE'
           set -euo pipefail
 
@@ -149,6 +157,14 @@ jobs:
             --name hkba-web \
             --cwd "$DEPLOY_PATH/frontend" \
             -- start
+
+          if [ "$PURGE_PROXY_CACHE" = "true" ]; then
+            proxy_cache_dir=/www/server/nginx/proxy_cache_dir
+            if [ -d "$proxy_cache_dir" ]; then
+              find "$proxy_cache_dir" -mindepth 1 -delete
+              printf 'Cleared Baota Nginx reverse-proxy cache.\n'
+            fi
+          fi
 
           if ! id www >/dev/null 2>&1; then
             printf 'Required Baota user "www" does not exist.\n' >&2
