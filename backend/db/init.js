@@ -2,6 +2,7 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { migrate } = require('./migrate');
+const { seedRbac } = require('../lib/rbac');
 
 // 数据库路径：默认 backend/db/hkba.db，可用 HKBA_DB_PATH 覆盖
 // （例如测试或盘点脚本指向临时库/快照）。
@@ -82,6 +83,9 @@ function initDatabase() {
     conn.prepare('INSERT INTO admins (username, password) VALUES (?, ?)').run('admin', hash);
     console.log('✅ Default admin created: admin / hkba2024');
   }
+
+  // 种子 RBAC：三个角色、权限点、角色映射；首个管理员自动挂 super_admin
+  seedRbac(conn);
 
   // 插入默认联系信息
   const contactDefaults = [
