@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState, ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { adminGet } from '@/lib/adminApi';
+import { adminGet, adminPost } from '@/lib/adminApi';
 
 const menu = [
   { href: '/admin', label: '儀表板', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -19,7 +19,7 @@ const menu = [
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
+  const [authed, setAuthed] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const activeItem = menu.find(item => pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href)));
 
@@ -29,16 +29,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       .catch(() => setUnreadMessages(0));
   }, []);
 
+  // Dual-mode session check: the server accepts the HttpOnly cookie first and
+  // the legacy Bearer token as fallback; a 401 triggers the login redirect
+  // inside adminApi (preserving the current URL as ?next=...).
   useEffect(() => {
-    const saved = localStorage.getItem('hkba_admin_token');
-    if (!saved && pathname !== '/admin/login') { router.push('/admin/login'); }
-    else {
-      setToken(saved);
-      if (saved) {
+    if (pathname === '/admin/login') return;
+    adminGet('/api/auth/verify')
+      .then(() => {
+        setAuthed(true);
         menu.forEach(item => router.prefetch(item.href));
         refreshUnreadMessages();
-      }
-    }
+      })
+      .catch(() => {});
   }, [pathname, refreshUnreadMessages, router]);
 
   useEffect(() => {
@@ -52,13 +54,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [refreshUnreadMessages]);
 
   useEffect(() => {
-    if (!token || pathname === '/admin/login') return;
+    if (!authed || pathname === '/admin/login') return;
     const interval = window.setInterval(refreshUnreadMessages, 60000);
     return () => window.clearInterval(interval);
-  }, [pathname, refreshUnreadMessages, token]);
+  }, [pathname, refreshUnreadMessages, authed]);
+
+  const logout = useCallback(async () => {
+    try { await adminPost('/api/auth/logout', {}); } catch { /* clear locally regardless */ }
+    localStorage.removeItem('hkba_admin_token');
+    router.push('/admin/login');
+  }, [router]);
 
   if (pathname === '/admin/login') return <>{children}</>;
-  if (!token) return <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#71717a', fontSize: 13 }}>載入中...</span></div>;
+  if (!authed) return <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#71717a', fontSize: 13 }}>載入中...</span></div>;
 
   return (
     <div className="admin-shell">
@@ -88,7 +96,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="admin-sidebar-footer">
-          <button type="button" onClick={() => { localStorage.removeItem('hkba_admin_token'); router.push('/admin/login'); }} className="admin-logout">
+          <button type="button" onClick={logout} className="admin-logout">
             <span className="admin-nav-icon">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.65} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             </span>
@@ -105,7 +113,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <Link href="/" target="_blank" className="btn-secondary" style={{ fontSize: 13, padding: '9px 14px' }}>查看前台 ↗</Link>
-            <button type="button" onClick={() => { localStorage.removeItem('hkba_admin_token'); router.push('/admin/login'); }} className="btn-secondary" style={{ fontSize: 13, padding: '9px 14px' }}>登出</button>
+            <button type="button" onClick={logout} className="btn-secondary" style={{ fontSize: 13, padding: '9px 14px' }}>登出</button>
           </div>
         </div>
         <div className="admin-content">

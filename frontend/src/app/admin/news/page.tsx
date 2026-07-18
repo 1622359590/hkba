@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { adminGet, adminPost, adminPut, adminDelete, adminRequestError, notifyAdminDataChanged } from '@/lib/adminApi';
+import { stashOnSessionExpired, takeFormState } from '@/lib/sessionGuard';
 import { FormField, Input, Textarea, BilingualField, ImageField, Toggle, Select, AdminCard } from '@/components/admin/FormControls';
 import { ActionButton } from '@/components/admin/ActionButton';
 import { ConfirmDialog, EmptyState, ErrorState, LoadingState, Toast } from '@/components/ui/Feedback';
@@ -25,6 +26,14 @@ export default function NewsAdmin() {
     try { setItems(await adminGet<NewsItem[]>('/api/news/admin/all')); } catch (requestError) { setError(adminRequestError(requestError)); } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
+
+  // 会话过期不丢未保存编辑：401 跳登录前把表单快照进 sessionStorage，
+  // 重登回到本页后恢复（spec 主设计 §12）。
+  useEffect(() => {
+    const stashed = takeFormState<{ form: typeof empty; editing: NewsItem | null; showForm: boolean }>('admin:news');
+    if (stashed?.showForm) { setForm(stashed.form); setEditing(stashed.editing); setShowForm(true); }
+  }, []);
+  useEffect(() => stashOnSessionExpired('admin:news', () => ({ form, editing, showForm })), [form, editing, showForm]);
 
   const handleSave = async () => {
     if (!form.title_zh.trim() && !form.title_en.trim()) { setToast({ tone: 'error', message: '請至少填寫一個新聞標題。' }); return; }
