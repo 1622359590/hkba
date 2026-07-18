@@ -29,6 +29,8 @@ const linkField = {
   },
 };
 
-const mediaRefField = (label, required = false) => ({ type: 'string', maxLength: 64, required, label });
+// Fields referencing a media_assets row are marked `media: true` so
+// lib/mediaReferences.js can extract them from block configs (D8).
+const mediaRefField = (label, required = false) => ({ type: 'string', maxLength: 64, required, label, media: true });
 
 module.exports = { newsQueryFields, specificYearRule, linkField, mediaRefField };
