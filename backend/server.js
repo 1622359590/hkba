@@ -67,6 +67,10 @@ app.use('/api/stats', require('./routes/stats'));
 app.use('/api/milestones', require('./routes/milestones'));
 app.use('/api/upload', require('./routes/upload'));
 
+// Phase 2 admin APIs (unified envelope, RBAC, audit)
+app.use('/api/admin/components', require('./routes/admin/components'));
+app.use('/api/admin/pages', require('./routes/admin/pages'));
+
 // 健康检查
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
