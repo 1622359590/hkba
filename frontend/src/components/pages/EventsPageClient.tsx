@@ -40,7 +40,29 @@ export default function EventsPage() {
               </div>
             </div>
           ))}
-          {events.length === 0 && <div style={{ textAlign: 'center', padding: '64px 0', color: '#52525b' }}>{t('暫無活動', 'No events')}</div>}
+          {events.length === 0 && (
+            <div className="hk-empty" style={{ maxWidth: 560, margin: '24px auto 0' }}>
+              <div className="hk-empty__glyph" aria-hidden>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+                  <path d="M8 3v4M16 3v4M3.5 10h17" />
+                </svg>
+              </div>
+              <div className="hk-empty__title">{t('暫無活動', 'No upcoming events')}</div>
+              <div className="hk-empty__desc">{t('新活動籌備中，歡迎先瀏覽協會新聞了解最新動態。', 'New events are being prepared — browse the association news in the meantime.')}</div>
+              <a
+                href="/news"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 18,
+                  padding: '9px 20px', fontSize: 13, fontWeight: 650, textDecoration: 'none',
+                  color: '#A5B4FC', border: '1px solid rgba(99,102,241,0.45)', borderRadius: 10,
+                  background: 'rgba(99,102,241,0.1)', transition: 'background 0.2s ease, border-color 0.2s ease',
+                }}
+              >
+                {t('瀏覽新聞動態', 'Browse news')} →
+              </a>
+            </div>
+          )}
         </div>
       </section>
     </>
