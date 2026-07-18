@@ -172,6 +172,17 @@ router.get('/news/item/:slug', (req, res) => {
   }
   const { item, blocks } = found;
   const parsed = blocks.map(blockJson);
+  // Header fallback: migrated items carry the cover on the item row while
+  // their news.header block may have an empty coverMediaId — serve the item
+  // cover through the header so the detail page renders its hero image.
+  if (item.cover_media_id) {
+    for (const block of parsed) {
+      if (block.component_type === 'news.header') {
+        if (!block.contentZh.coverMediaId) block.contentZh = { ...block.contentZh, coverMediaId: item.cover_media_id };
+        if (!block.contentEn.coverMediaId) block.contentEn = { ...block.contentEn, coverMediaId: item.cover_media_id };
+      }
+    }
+  }
   const media = mediaMapFor(conn, parsed, [item.cover_media_id]);
   res.ok({
     item: {

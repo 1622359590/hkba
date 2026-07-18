@@ -215,6 +215,8 @@ test('public news detail returns blocks with component_type and media map', asyn
   assert.equal(blocks[0].component_type, 'news.header');
   assert.ok(blocks[0].contentZh.title);
   assert.ok(media['media-cover']);
+  // Header fallback: the item cover fills an empty header coverMediaId.
+  assert.equal(blocks[0].contentZh.coverMediaId, 'media-cover');
 });
 
 test('unpublished news slug 404s; redirect aliases answer with a redirect payload', async () => {
