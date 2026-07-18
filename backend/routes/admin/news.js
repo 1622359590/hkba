@@ -20,6 +20,9 @@ const { applyNewsMutation, getDraftRevision, loadNewsBlocks } = require('../../l
 const { validateNewsBlocks } = require('../../lib/blockTree');
 const { isValidDisplayYear } = require('../../lib/newsYear');
 const { syncBlockReferences, clearBlockReferences } = require('../../lib/mediaReferences');
+const { checkNews } = require('../../lib/publishChecks');
+const { createPreviewToken } = require('../../lib/previewTokens');
+const { recordPublish, pruneNewsRevisions } = require('../../lib/publish');
 const registry = require('../../components/registry');
 const { applyDefaults } = require('../../components/validate');
 const { EFFECTIVE_YEAR_SQL } = require('../../lib/newsQuery');
@@ -28,6 +31,7 @@ router.use(requestContext);
 
 const read = [authMiddleware, requirePermission('content.read')];
 const write = [authMiddleware, requirePermission('content.write')];
+const publish = [authMiddleware, requirePermission('publish')];
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
@@ -560,6 +564,130 @@ router.post('/:id/restore', ...write, (req, res) => {
     objectId: news.id,
   }));
   res.ok({ news: newsJson(conn, getNews(conn, news.id)) });
+});
+
+// ---------- preview & publish lifecycle (spec: data-api §6, §9-§11) ----------
+
+// POST /api/admin/news/:id/preview — short-lived token bound to the draft
+router.post('/:id/preview', ...read, (req, res) => {
+  const conn = getDb();
+  const news = getNews(conn, req.params.id);
+  if (!news || news.status === 'trash') return res.fail('NOT_FOUND', '新聞不存在');
+  const draft = getDraftRevision(conn, news.id);
+  if (!draft) return res.fail('NOT_FOUND', '草稿不存在');
+  const { token, expiresAt } = createPreviewToken(conn, {
+    objectType: 'news',
+    objectId: news.id,
+    revision: draft.revision,
+    createdBy: req.admin.id,
+  });
+  res.ok({ token, url: `/api/preview/${token}`, revision: draft.revision, expiresAt }, 201);
+});
+
+// POST /api/admin/news/:id/publish — checks, then one transaction (§10)
+router.post('/:id/publish', ...publish, (req, res) => {
+  const conn = getDb();
+  const news = getNews(conn, req.params.id);
+  if (!news || news.status === 'trash') return res.fail('NOT_FOUND', '新聞不存在');
+  const draft = getDraftRevision(conn, news.id);
+  if (!draft) return res.fail('NOT_FOUND', '草稿不存在');
+
+  const { expectedRevision } = req.body || {};
+  if (!Number.isInteger(expectedRevision) || expectedRevision !== draft.revision) {
+    return res.fail('REVISION_CONFLICT', '新聞已被其他編輯更新', [
+      { field: 'expectedRevision', code: 'conflict', message: `當前修訂為 ${draft.revision}` },
+    ]);
+  }
+
+  const blocks = loadNewsBlocks(conn, news.id, draft.revision);
+  const problems = checkNews(conn, news, draft, blocks);
+  if (problems.length) {
+    return res.fail('PUBLISH_CHECK_FAILED', '發佈檢查未通過', problems, 422);
+  }
+
+  const nextRevision = draft.revision + 1;
+  conn.transaction(() => {
+    conn.prepare("UPDATE news_revisions SET status = 'superseded' WHERE news_id = ? AND status = 'published'").run(news.id);
+    conn
+      .prepare("UPDATE news_revisions SET status = 'published', published_by = ?, published_at = datetime('now') WHERE id = ?")
+      .run(req.admin.id, draft.id);
+    conn
+      .prepare(
+        `UPDATE news_items
+         SET status = 'published', published_revision = ?, published_at = datetime('now'),
+             current_draft_revision = ?, updated_at = datetime('now')
+         WHERE id = ?`
+      )
+      .run(draft.revision, nextRevision, news.id);
+    // The draft continues as a new revision copied from the published one.
+    conn
+      .prepare("INSERT INTO news_revisions (id, news_id, revision, status, snapshot, source_revision_id) VALUES (?, ?, ?, 'draft', ?, ?)")
+      .run(crypto.randomUUID(), news.id, nextRevision, draft.snapshot, draft.id);
+    const copied = blocks.map((block) => ({
+      id: crypto.randomUUID(),
+      block_type: block.block_type,
+      component_version: block.block_version,
+      sort_order: block.sort_order,
+      contentZh: JSON.parse(block.content_zh || '{}'),
+      contentEn: JSON.parse(block.content_en || '{}'),
+      settings: JSON.parse(block.settings || '{}'),
+      definition: registry.getDefinition(block.block_type),
+    }));
+    insertBlocks(conn, news.id, nextRevision, copied);
+    recordPublish(conn, {
+      objectType: 'news',
+      objectId: news.id,
+      versionId: draft.id,
+      revision: draft.revision,
+      action: 'publish',
+      actorId: req.admin.id,
+      checksReport: { problems: [] },
+    });
+    pruneNewsRevisions(conn, news.id);
+  })();
+
+  recordAudit(conn, auditEvent(req, {
+    actorId: req.admin.id,
+    actorName: req.admin.username,
+    action: 'news.publish',
+    objectType: 'news_item',
+    objectId: news.id,
+    detail: { revision: draft.revision, slug: news.slug },
+  }));
+  res.ok({ published: true, revision: draft.revision, draftRevision: nextRevision });
+});
+
+// POST /api/admin/news/:id/withdraw (spec §6)
+router.post('/:id/withdraw', ...publish, (req, res) => {
+  const conn = getDb();
+  const news = getNews(conn, req.params.id);
+  if (!news || news.status === 'trash') return res.fail('NOT_FOUND', '新聞不存在');
+  if (news.status !== 'published') return res.fail('NOT_FOUND', '新聞不在已發佈狀態');
+
+  const publishedRow = news.published_revision != null
+    ? conn.prepare('SELECT id FROM news_revisions WHERE news_id = ? AND revision = ?').get(news.id, news.published_revision)
+    : null;
+  conn.transaction(() => {
+    conn.prepare("UPDATE news_items SET status = 'withdrawn', updated_at = datetime('now') WHERE id = ?").run(news.id);
+    recordPublish(conn, {
+      objectType: 'news',
+      objectId: news.id,
+      versionId: publishedRow ? publishedRow.id : 'missing',
+      revision: news.published_revision || 1,
+      action: 'withdraw',
+      actorId: req.admin.id,
+    });
+  })();
+
+  recordAudit(conn, auditEvent(req, {
+    actorId: req.admin.id,
+    actorName: req.admin.username,
+    action: 'news.withdraw',
+    objectType: 'news_item',
+    objectId: news.id,
+    detail: { slug: news.slug, publishedRevision: news.published_revision },
+  }));
+  res.ok({ withdrawn: true, id: news.id });
 });
 
 // eslint-disable-next-line no-unused-vars

@@ -66,6 +66,7 @@ app.use('/api/media', require('./routes/media'));
 app.use('/api/stats', require('./routes/stats'));
 app.use('/api/milestones', require('./routes/milestones'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/preview', require('./routes/preview'));
 
 // Phase 2 admin APIs (unified envelope, RBAC, audit)
 app.use('/api/admin/components', require('./routes/admin/components'));

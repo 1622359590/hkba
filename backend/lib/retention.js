@@ -14,7 +14,12 @@ const DEFAULT_TRASH_DAYS = 30;
 
 function parseTime(value) {
   if (value == null) return null;
-  const time = Date.parse(String(value).replace(' ', 'T'));
+  // SQLite datetimes are stored as naive UTC; only strings carrying a time
+  // component without an explicit timezone get the 'Z' suffix. Date-only
+  // strings already parse as UTC, and ISO strings keep their own offset.
+  let text = String(value).trim().replace(' ', 'T');
+  if (text.length > 10 && !/([zZ]|[+-]\d{2}:?\d{2})$/.test(text)) text += 'Z';
+  const time = Date.parse(text);
   return Number.isNaN(time) ? null : time;
 }
 

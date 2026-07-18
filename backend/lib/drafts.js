@@ -36,23 +36,29 @@ function getOrCreateDraft(conn, node) {
 
   let revision = 1;
   let sourceVersionId = null;
+  let sourceSeo = '{}';
   if (node.published_version_id) {
     const published = conn
       .prepare('SELECT * FROM page_versions WHERE id = ?')
       .get(node.published_version_id);
     if (published) {
-      revision = published.revision;
       sourceVersionId = published.id;
+      sourceSeo = published.seo || '{}';
     }
   }
+  // The published row already occupies its revision number; the continuing
+  // draft always takes max(revision)+1 (UNIQUE(page_id, revision), §11
+  // "修訂號繼續遞增").
+  const maxRevision = conn.prepare('SELECT MAX(revision) AS m FROM page_versions WHERE page_id = ?').get(node.id).m || 0;
+  revision = maxRevision + 1;
 
   const id = crypto.randomUUID();
   conn
     .prepare(
-      `INSERT INTO page_versions (id, page_id, revision, status, source_version_id)
-       VALUES (?, ?, ?, 'draft', ?)`
+      `INSERT INTO page_versions (id, page_id, revision, status, source_version_id, seo)
+       VALUES (?, ?, ?, 'draft', ?, ?)`
     )
-    .run(id, node.id, revision, sourceVersionId);
+    .run(id, node.id, revision, sourceVersionId, sourceSeo);
 
   if (sourceVersionId) {
     const sourceBlocks = loadBlocks(conn, sourceVersionId);

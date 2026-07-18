@@ -18,7 +18,10 @@ function displayYearOf(news) {
   }
   const raw = news && news.published_at;
   if (!raw) return null;
-  const time = Date.parse(String(raw).replace(' ', 'T'));
+  // Naive SQLite datetimes are UTC; strings with explicit TZ parse as-is.
+  let text = String(raw).trim().replace(' ', 'T');
+  if (text.length > 10 && !/([zZ]|[+-]\d{2}:?\d{2})$/.test(text)) text += 'Z';
+  const time = Date.parse(text);
   if (Number.isNaN(time)) return null;
   return new Date(time).getUTCFullYear();
 }

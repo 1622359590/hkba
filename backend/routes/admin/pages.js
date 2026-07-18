@@ -20,16 +20,22 @@ const { applyDefaults } = require('../../components/validate');
 const {
   DraftConflict,
   loadBlocks,
+  getDraftVersion,
   getOrCreateDraft,
   applyDraftMutation,
 } = require('../../lib/drafts');
 const { recordAudit, auditEvent } = require('../../lib/audit');
 const { syncBlockReferences, clearBlockReferences } = require('../../lib/mediaReferences');
+const { checkPage } = require('../../lib/publishChecks');
+const { createPreviewToken } = require('../../lib/previewTokens');
+const { recordPublish, prunePageVersions } = require('../../lib/publish');
 
 router.use(requestContext);
 
 const read = [authMiddleware, requirePermission('content.read')];
 const write = [authMiddleware, requirePermission('content.write')];
+const publish = [authMiddleware, requirePermission('publish')];
+const rollback = [authMiddleware, requirePermission('rollback')];
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 const NAVIGATION_STATUSES = ['visible', 'hidden', 'external'];
@@ -797,6 +803,189 @@ router.post('/:id/draft/blocks/:blockId/duplicate', ...write, (req, res, next) =
     if (error.message === 'block_missing') return res.fail('NOT_FOUND', '組件不存在');
     handleDraftError(req, res, next, error);
   }
+});
+
+// ---------- preview & publish (spec: data-api §9-§11) ----------
+
+// POST /api/admin/pages/:id/preview — short-lived preview token for the draft
+router.post('/:id/preview', ...read, (req, res) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+  const draft = getDraftVersion(conn, node.id);
+  if (!draft) return res.fail('NOT_FOUND', '草稿不存在');
+  const { token, expiresAt } = createPreviewToken(conn, {
+    objectType: 'page',
+    objectId: node.id,
+    revision: draft.revision,
+    createdBy: req.admin.id,
+  });
+  res.ok({ token, url: `/api/preview/${token}`, revision: draft.revision, expiresAt }, 201);
+});
+
+// POST /api/admin/pages/:id/publish — checks then one transaction (§10)
+router.post('/:id/publish', ...publish, (req, res) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+  const draft = getDraftVersion(conn, node.id);
+  if (!draft) return res.fail('NOT_FOUND', '草稿不存在');
+
+  const { expectedRevision } = req.body || {};
+  if (!Number.isInteger(expectedRevision) || expectedRevision !== draft.revision) {
+    return res.fail('REVISION_CONFLICT', '頁面已被其他編輯更新', [
+      { field: 'expectedRevision', code: 'conflict', message: `當前修訂為 ${draft.revision}` },
+    ]);
+  }
+
+  const blocks = loadBlocks(conn, draft.id);
+  const problems = checkPage(conn, node, draft, blocks);
+  if (problems.length) {
+    return res.fail('PUBLISH_CHECK_FAILED', '發佈檢查未通過', problems, 422);
+  }
+
+  conn.transaction(() => {
+    conn.prepare("UPDATE page_versions SET status = 'superseded' WHERE page_id = ? AND status = 'published'").run(node.id);
+    conn
+      .prepare("UPDATE page_versions SET status = 'published', published_by = ?, published_at = datetime('now') WHERE id = ?")
+      .run(req.admin.id, draft.id);
+    conn
+      .prepare("UPDATE page_nodes SET published_version_id = ?, draft_version_id = NULL, updated_at = datetime('now') WHERE id = ?")
+      .run(draft.id, node.id);
+    recordPublish(conn, {
+      objectType: 'page',
+      objectId: node.id,
+      versionId: draft.id,
+      revision: draft.revision,
+      action: 'publish',
+      actorId: req.admin.id,
+      checksReport: { problems: [] },
+    });
+    prunePageVersions(conn, node.id);
+  })();
+  // §10 step 7: no query-cache layer exists yet; nothing to refresh. The
+  // post-commit hook lands with the frontend rendering milestone.
+
+  recordAudit(conn, auditEvent(req, {
+    actorId: req.admin.id,
+    actorName: req.admin.username,
+    action: 'page.publish',
+    objectType: 'page_node',
+    objectId: node.id,
+    detail: { versionId: draft.id, revision: draft.revision, path: node.path },
+  }));
+  res.ok({ published: true, versionId: draft.id, revision: draft.revision });
+});
+
+// POST /api/admin/pages/:id/withdraw — take the page offline (record kept)
+router.post('/:id/withdraw', ...publish, (req, res) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+  if (!node.published_version_id) return res.fail('NOT_FOUND', '頁面沒有已發佈版本');
+
+  const version = conn.prepare('SELECT * FROM page_versions WHERE id = ?').get(node.published_version_id);
+  if (!version) return res.fail('NOT_FOUND', '已發佈版本記錄不存在');
+  conn.transaction(() => {
+    conn.prepare('UPDATE page_nodes SET published_version_id = NULL, updated_at = datetime(\'now\') WHERE id = ?').run(node.id);
+    recordPublish(conn, {
+      objectType: 'page',
+      objectId: node.id,
+      versionId: node.published_version_id,
+      revision: version.revision,
+      action: 'withdraw',
+      actorId: req.admin.id,
+    });
+  })();
+
+  recordAudit(conn, auditEvent(req, {
+    actorId: req.admin.id,
+    actorName: req.admin.username,
+    action: 'page.withdraw',
+    objectType: 'page_node',
+    objectId: node.id,
+    detail: { versionId: node.published_version_id },
+  }));
+  res.ok({ withdrawn: true, id: node.id });
+});
+
+// POST /api/admin/pages/:id/rollback — new draft from a historical version (§11)
+router.post('/:id/rollback', ...rollback, (req, res) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+
+  const { revision } = req.body || {};
+  if (!Number.isInteger(revision)) {
+    return res.fail('VALIDATION_FAILED', '缺少要回退的修訂號', [{ field: 'revision', code: 'required', message: '必填整數' }]);
+  }
+  const target = conn
+    .prepare("SELECT * FROM page_versions WHERE page_id = ? AND revision = ? AND status IN ('published', 'superseded')")
+    .get(node.id, revision);
+  if (!target) return res.fail('NOT_FOUND', `修訂 ${revision} 不存在或不是已發佈版本`);
+
+  const result = conn.transaction(() => {
+    const maxRevision = conn.prepare('SELECT MAX(revision) AS m FROM page_versions WHERE page_id = ?').get(node.id).m || 0;
+    const nextRevision = maxRevision + 1;
+    let draft = getDraftVersion(conn, node.id);
+    const sourceBlocks = loadBlocks(conn, target.id);
+
+    if (draft) {
+      const oldBlocks = loadBlocks(conn, draft.id);
+      for (const block of oldBlocks) clearBlockReferences(conn, block.id, 'page_block');
+      conn.prepare('DELETE FROM page_blocks WHERE page_version_id = ?').run(draft.id);
+      conn
+        .prepare("UPDATE page_versions SET revision = ?, source_version_id = ?, seo = ? WHERE id = ?")
+        .run(nextRevision, target.id, target.seo, draft.id);
+    } else {
+      const draftId = crypto.randomUUID();
+      conn
+        .prepare("INSERT INTO page_versions (id, page_id, revision, status, source_version_id, seo) VALUES (?, ?, ?, 'draft', ?, ?)")
+        .run(draftId, node.id, nextRevision, target.id, target.seo);
+      draft = conn.prepare('SELECT * FROM page_versions WHERE id = ?').get(draftId);
+    }
+
+    const insert = conn.prepare(
+      `INSERT INTO page_blocks (id, page_version_id, component_type, component_version, sort_order, parent_block_id, is_visible, anchor_id, content_zh, content_en, settings)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+    const idMap = new Map(sourceBlocks.map((block) => [block.id, crypto.randomUUID()]));
+    for (const block of sourceBlocks) {
+      const newId = idMap.get(block.id);
+      insert.run(newId, draft.id, block.component_type, block.component_version, block.sort_order,
+        block.parent_block_id ? idMap.get(block.parent_block_id) : null, block.is_visible, block.anchor_id,
+        block.content_zh, block.content_en, block.settings);
+      syncBlockReferences(conn, {
+        blockId: newId,
+        definition: registry.getDefinition(block.component_type),
+        config: {
+          contentZh: JSON.parse(block.content_zh || '{}'),
+          contentEn: JSON.parse(block.content_en || '{}'),
+          settings: JSON.parse(block.settings || '{}'),
+        },
+      });
+    }
+    conn.prepare('UPDATE page_nodes SET draft_version_id = ?, updated_at = datetime(\'now\') WHERE id = ?').run(draft.id, node.id);
+    recordPublish(conn, {
+      objectType: 'page',
+      objectId: node.id,
+      versionId: target.id,
+      revision: target.revision,
+      action: 'rollback',
+      actorId: req.admin.id,
+    });
+    return { version: draft, rolledBackFrom: revision };
+  })();
+
+  recordAudit(conn, auditEvent(req, {
+    actorId: req.admin.id,
+    actorName: req.admin.username,
+    action: 'page.rollback',
+    objectType: 'page_node',
+    objectId: node.id,
+    detail: { rolledBackFrom: revision, newDraftRevision: result.version.revision },
+  }));
+  res.ok({ draft: result.version, rolledBackFrom: result.rolledBackFrom });
 });
 
 // Unified error shape for unexpected failures on these routes.
