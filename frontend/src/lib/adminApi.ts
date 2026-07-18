@@ -33,8 +33,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     if (!res.ok) {
       let message = `Error: ${res.status}`;
       try {
-        const body = await res.json() as { error?: string };
-        if (body.error) message = body.error;
+        // Legacy routes: { error: string }; unified envelope (M3+):
+        // { error: { code, message, fields } }. Handle both.
+        const body = await res.json() as { error?: string | { code?: string; message?: string } };
+        if (typeof body.error === 'string') message = body.error;
+        else if (body.error && typeof body.error === 'object' && body.error.message) message = body.error.message;
       } catch {
         // Keep the status message when the server response is not JSON.
       }
@@ -60,7 +63,23 @@ export function notifyAdminDataChanged(event: string): void {
 export async function adminGet<T>(path: string): Promise<T> { return request<T>(path); }
 export async function adminPost<T>(path: string, body: unknown): Promise<T> { return request<T>(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
 export async function adminPut<T>(path: string, body: unknown): Promise<T> { return request<T>(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+export async function adminPatch<T>(path: string, body: unknown): Promise<T> { return request<T>(path, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
 export async function adminDelete<T>(path: string): Promise<T> { return request<T>(path, { method: 'DELETE' }); }
+
+// Unified-envelope APIs (M3+) wrap payloads in { success, data, meta }.
+type Envelope<T> = { success: true; data: T };
+export async function adminGetData<T>(path: string): Promise<T> {
+  return (await adminGet<Envelope<T>>(path)).data;
+}
+export async function adminPostData<T>(path: string, body: unknown): Promise<T> {
+  return (await adminPost<Envelope<T>>(path, body)).data;
+}
+export async function adminPatchData<T>(path: string, body: unknown): Promise<T> {
+  return (await adminPatch<Envelope<T>>(path, body)).data;
+}
+export async function adminDeleteData<T>(path: string): Promise<T> {
+  return (await adminDelete<Envelope<T>>(path)).data;
+}
 
 export async function adminUpload(file: File, dir: string = 'general'): Promise<{ url: string }> {
   const headers: Record<string, string> = { ...CSRF_HEADERS };
