@@ -68,10 +68,14 @@ test('creates every M1 table and index on a fresh database', (t) => {
     assert.ok(objectExists(conn, 'index', index), `missing index: ${index}`);
   }
   const recorded = conn.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get().count;
-  assert.equal(recorded, 9);
+  assert.equal(recorded, 10);
   // 008 adds user_agent to audit_events.
   const auditColumns = conn.prepare('PRAGMA table_info(audit_events)').all().map((col) => col.name);
   assert.ok(auditColumns.includes('user_agent'));
+  // 010 generalizes mutation_log to any draft owner.
+  const mutationColumns = conn.prepare('PRAGMA table_info(mutation_log)').all().map((col) => col.name);
+  assert.ok(mutationColumns.includes('owner_id'));
+  assert.ok(!mutationColumns.includes('page_id'));
 });
 
 test('page_nodes enforces per-parent slug uniqueness and site-wide path uniqueness', (t) => {

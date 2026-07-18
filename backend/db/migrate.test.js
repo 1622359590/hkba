@@ -17,6 +17,7 @@ const ALL_MIGRATIONS = [
   '007_rbac_audit_ops.sql',
   '008_audit_events_user_agent.sql',
   '009_mutation_log.sql',
+  '010_mutation_owner.sql',
 ];
 
 const BASELINE_TABLES = [

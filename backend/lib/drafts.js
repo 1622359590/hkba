@@ -90,12 +90,12 @@ function findMutation(conn, mutationId) {
     .get(mutationId);
 }
 
-function recordMutation(conn, { mutationId, pageId, revision, response }) {
+function recordMutation(conn, { mutationId, ownerId, revision, response }) {
   conn
     .prepare(
-      'INSERT INTO mutation_log (id, mutation_id, page_id, revision, response) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO mutation_log (id, mutation_id, owner_id, revision, response) VALUES (?, ?, ?, ?, ?)'
     )
-    .run(crypto.randomUUID(), mutationId, pageId, revision, JSON.stringify(response));
+    .run(crypto.randomUUID(), mutationId, ownerId, revision, JSON.stringify(response));
 }
 
 // Executes fn inside the draft-mutation protocol:
@@ -128,7 +128,7 @@ function applyDraftMutation(conn, node, { expectedRevision, mutationId }, fn) {
       .run(nextRevision, draft.id);
     const response = { ...payload, revision: nextRevision };
     if (mutationId) {
-      recordMutation(conn, { mutationId, pageId: node.id, revision: nextRevision, response });
+      recordMutation(conn, { mutationId, ownerId: node.id, revision: nextRevision, response });
     }
     return response;
   });
