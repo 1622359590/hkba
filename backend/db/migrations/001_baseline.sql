@@ -1,5 +1,10 @@
--- HKBA Club Database Schema
--- 支持繁中 + 英文多语言
+-- 001_baseline.sql
+-- HKBA Phase 2 baseline migration.
+--
+-- Absorbs the pre-migration schema formerly loaded from backend/db/schema.sql.
+-- Every statement uses IF NOT EXISTS so the baseline is idempotent.
+-- On legacy databases that predate schema_migrations, the migrator records
+-- this migration as applied WITHOUT executing it (see backend/db/migrate.js).
 
 -- 管理员
 CREATE TABLE IF NOT EXISTS admins (

@@ -1,16 +1,19 @@
 const Database = require('better-sqlite3');
-const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const { migrate } = require('./migrate');
 
-const DB_PATH = path.join(__dirname, 'hkba.db');
-const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
+// 数据库路径：默认 backend/db/hkba.db，可用 HKBA_DB_PATH 覆盖
+// （例如测试或盘点脚本指向临时库/快照）。
+function resolveDbPath() {
+  return process.env.HKBA_DB_PATH || path.join(__dirname, 'hkba.db');
+}
 
 let db = null; // 单例
 
 function getDb() {
   if (!db) {
-    db = new Database(DB_PATH);
+    db = new Database(resolveDbPath());
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
   }
@@ -57,9 +60,15 @@ function normalizeLegacyPartnerNames(conn) {
 function initDatabase() {
   const conn = getDb();
 
-  // 执行建表 SQL
-  const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
-  conn.exec(schema);
+  // 按序应用版本化迁移（新库从头执行 001_baseline.sql；
+  // 老库检测基线已存在时仅记录为已应用，不重跑）。
+  const migrationResult = migrate(conn);
+  if (migrationResult.baselined) {
+    console.log(`ℹ️ Legacy database detected; baseline recorded as applied: ${migrationResult.baselined}`);
+  }
+  if (migrationResult.applied.length > 0) {
+    console.log(`✅ Migrations applied: ${migrationResult.applied.join(', ')}`);
+  }
 
   removeExactDuplicates(conn, 'stats', ['label_zh', 'label_en', 'value', 'icon', 'sort_order', 'is_active']);
   removeExactDuplicates(conn, 'milestones', ['year', 'title_zh', 'title_en', 'description_zh', 'description_en', 'sort_order', 'is_active']);
@@ -149,7 +158,7 @@ function initDatabase() {
     }
   }
 
-  console.log('✅ Database initialized at', DB_PATH);
+  console.log('✅ Database initialized at', resolveDbPath());
 }
 
 function closeDatabase() {
@@ -159,4 +168,5 @@ function closeDatabase() {
   }
 }
 
-module.exports = { initDatabase, getDb, closeDatabase, DB_PATH };
+module.exports = { initDatabase, getDb, closeDatabase, resolveDbPath };
+Object.defineProperty(module.exports, 'DB_PATH', { get: resolveDbPath });
