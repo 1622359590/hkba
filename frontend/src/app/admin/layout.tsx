@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [router]);
 
   if (pathname === '/admin/login') return <>{children}</>;
-  if (!authed) return <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#71717a', fontSize: 13 }}>載入中...</span></div>;
+  if (!authed) return <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: 'var(--text-3)', fontSize: 13 }}>載入中...</span></div>;
 
   return (
     <div className="admin-shell">
@@ -75,8 +75,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
             <div className="admin-brand__mark">H</div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>HKBA CMS</div>
-              <div style={{ fontSize: 11, color: '#818cf8', marginTop: 3, fontWeight: 650 }}>Content Ops</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-1)', lineHeight: 1.15 }}>HKBA CMS</div>
+              <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 3, fontWeight: 650 }}>Content Ops</div>
             </div>
           </Link>
         </div>
@@ -108,8 +108,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <main className="admin-main">
         <div className="admin-topbar">
           <div>
-            <div style={{ color: '#818cf8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>HKBA Admin</div>
-            <h1 style={{ color: '#fff', fontSize: 22, fontWeight: 750, lineHeight: 1.2 }}>{activeItem?.label || '管理後台'}</h1>
+            <div style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>HKBA Admin</div>
+            <h1 style={{ color: 'var(--text-1)', fontSize: 22, fontWeight: 750, lineHeight: 1.2 }}>{activeItem?.label || '管理後台'}</h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <Link href="/" target="_blank" className="btn-secondary" style={{ fontSize: 13, padding: '9px 14px' }}>查看前台 ↗</Link>
