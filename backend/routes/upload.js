@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { authMiddleware } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/requirePermission');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -40,7 +41,7 @@ const upload = multer({
   }
 });
 
-router.post('/', authMiddleware, upload.single('file'), (req, res) => {
+router.post('/', authMiddleware, requirePermission('content.write'), upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: '未選擇檔案' });
   const sub = getSafeSubdir(req.query.dir);
   const url = `/uploads/${sub}/${req.file.filename}`;
@@ -48,7 +49,7 @@ router.post('/', authMiddleware, upload.single('file'), (req, res) => {
 });
 
 // 多文件上传
-router.post('/multiple', authMiddleware, upload.array('files', 10), (req, res) => {
+router.post('/multiple', authMiddleware, requirePermission('content.write'), upload.array('files', 10), (req, res) => {
   if (!req.files?.length) return res.status(400).json({ error: '未選擇檔案' });
   const sub = getSafeSubdir(req.query.dir);
   const results = req.files.map(f => ({
