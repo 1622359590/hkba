@@ -15,6 +15,7 @@ const { loadNewsBlocks } = require('../lib/newsDrafts');
 function blockJson(block) {
   return {
     ...block,
+    component_type: block.component_type || block.block_type,
     contentZh: JSON.parse(block.content_zh || '{}'),
     contentEn: JSON.parse(block.content_en || '{}'),
     settings: JSON.parse(block.settings || '{}'),
