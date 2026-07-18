@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "HKBA — Hong Kong Blockchain Association",
   description: "Hong Kong Blockchain Association — Dedicated to promoting blockchain technology in Hong Kong.",
 };

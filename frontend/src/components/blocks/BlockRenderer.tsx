@@ -23,6 +23,19 @@ export type RenderBlock = {
 
 export type MediaMap = Record<string, { url: string; altZh?: string; altEn?: string }>;
 
+// Card data for news display components in the public context (M8). The
+// caller resolves language; the renderer only truncates to the configured
+// limit. When no news prop is provided (studio canvas), query components
+// keep rendering their configuration placeholder cards.
+export type NewsCardData = {
+  slug: string;
+  title: string;
+  summary: string;
+  year: number | null;
+  publishedAt?: string | null;
+  coverUrl?: string | null;
+};
+
 type Lang = 'zh' | 'en';
 
 function text(block: RenderBlock, lang: Lang, field: string, fallback = ''): string {
@@ -92,7 +105,45 @@ function PlaceholderCard({ title, lines }: { title: string; lines: string[] }) {
   );
 }
 
-function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: ReactNode): ReactNode {
+function NewsCards({ type, settings, news, lang }: { type: string; settings: Record<string, unknown>; news: NewsCardData[]; lang: Lang }) {
+  const limit = Number(settings.limit ?? settings.count ?? 6) || 6;
+  const items = news.slice(0, type === 'news.featured' ? Math.min(3, limit) : limit);
+  if (!items.length) {
+    return <div className="hk-block__placeholder-line">{lang === 'en' ? 'No published news yet.' : '暫無已發佈新聞。'}</div>;
+  }
+  const featured = type === 'news.featured';
+  return (
+    <div
+      className="hk-news-cards"
+      style={type === 'news.list' ? { display: 'grid', gap: 14 } : { display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${featured ? 260 : 220}px, 1fr))`, gap: 18 }}
+    >
+      {items.map((item) => (
+        <a
+          key={item.slug}
+          href={`/news/${item.slug}`}
+          className="hk-news-card"
+          style={{ display: 'block', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden', textDecoration: 'none', background: 'var(--surface-1)' }}
+        >
+          {item.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.coverUrl} alt={item.title} style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', display: 'block' }} />
+          ) : null}
+          <span style={{ display: 'block', padding: '14px 16px' }}>
+            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-3)', marginBottom: 6 }}>
+              {[item.year, item.publishedAt ? String(item.publishedAt).slice(0, 10) : ''].filter(Boolean).join(' · ')}
+            </span>
+            <span style={{ display: 'block', fontSize: 14.5, fontWeight: 700, color: 'var(--text-1)', lineHeight: 1.45 }}>{item.title}</span>
+            {type !== 'news.list' && item.summary ? (
+              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-2)', marginTop: 6, lineHeight: 1.6 }}>{item.summary}</span>
+            ) : null}
+          </span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: ReactNode, news?: NewsCardData[]): ReactNode {
   const t = block.component_type;
   const settings = block.settings as Record<string, unknown>;
 
@@ -112,8 +163,19 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
     );
   }
 
-  // ---- news display (query placeholders until public endpoints mount) ----
+  // ---- news display ----
   if (t.startsWith('news.') && t !== 'news.header') {
+    // Public context: real published cards when the caller supplies data.
+    if (news && (t === 'news.grid' || t === 'news.list' || t === 'news.featured')) {
+      return (
+        <BlockShell block={block}>
+          {text(block, lang, 'title') ? (
+            <h2 style={{ fontSize: 22, fontWeight: 750, color: 'var(--text-1)', marginBottom: 14 }}>{text(block, lang, 'title')}</h2>
+          ) : null}
+          <NewsCards type={t} settings={settings} news={news} lang={lang} />
+        </BlockShell>
+      );
+    }
     const names: Record<string, string> = {
       'news.grid': '新聞卡片',
       'news.list': '新聞列表',
@@ -309,12 +371,14 @@ export default function BlockRenderer({
   media = {},
   onSelect,
   selectedId,
+  news,
 }: {
   blocks: RenderBlock[];
   lang?: Lang;
   media?: MediaMap;
   onSelect?: (id: string) => void;
   selectedId?: string | null;
+  news?: NewsCardData[];
 }) {
   const visible = blocks.filter((block) => block.is_visible !== 0 && block.is_visible !== false);
   const childrenOf = new Map<string | null, RenderBlock[]>();
@@ -329,7 +393,7 @@ export default function BlockRenderer({
 
   const renderTree = (parentId: string | null): ReactNode =>
     (childrenOf.get(parentId) || []).map((block) => {
-      const rendered = renderBlock(block, lang, media, renderTree(block.id));
+      const rendered = renderBlock(block, lang, media, renderTree(block.id), news);
       if (!onSelect) return <div key={block.id}>{rendered}</div>;
       return (
         <div
