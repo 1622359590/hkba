@@ -7,6 +7,16 @@ const Database = require('better-sqlite3');
 
 const { migrate } = require('./migrate');
 
+const ALL_MIGRATIONS = [
+  '001_baseline.sql',
+  '002_legacy_id_map.sql',
+  '003_page_nodes.sql',
+  '004_page_versions_blocks.sql',
+  '005_media_assets_references.sql',
+  '006_news_builder.sql',
+  '007_rbac_audit_ops.sql',
+];
+
 const BASELINE_TABLES = [
   'admins',
   'translations',
@@ -50,15 +60,14 @@ test('applies the real baseline from scratch on a fresh database', (t) => {
 
   const result = migrate(conn);
 
-  assert.deepEqual(result.applied, ['001_baseline.sql']);
+  assert.deepEqual(result.applied, ALL_MIGRATIONS);
   assert.equal(result.baselined, null);
   for (const table of BASELINE_TABLES) {
     assert.ok(tableExists(conn, table), `missing baseline table: ${table}`);
   }
-  const recorded = conn.prepare('SELECT name, applied_at FROM schema_migrations').all();
-  assert.equal(recorded.length, 1);
-  assert.equal(recorded[0].name, '001_baseline.sql');
-  assert.ok(!Number.isNaN(Date.parse(recorded[0].applied_at)), 'applied_at must be a timestamp');
+  const recorded = conn.prepare('SELECT name, applied_at FROM schema_migrations ORDER BY name').all();
+  assert.deepEqual(recorded.map((row) => row.name), ALL_MIGRATIONS);
+  assert.ok(recorded.every((row) => !Number.isNaN(Date.parse(row.applied_at))), 'applied_at must be a timestamp');
 });
 
 test('records the baseline as applied without executing it on a legacy database', (t) => {
@@ -79,9 +88,10 @@ test('records the baseline as applied without executing it on a legacy database'
   const result = migrate(conn);
 
   assert.equal(result.baselined, '001_baseline.sql');
-  assert.deepEqual(result.applied, []);
-  const recorded = conn.prepare('SELECT name FROM schema_migrations').all();
-  assert.deepEqual(recorded.map((row) => row.name), ['001_baseline.sql']);
+  // The baseline is only recorded; every later migration still executes.
+  assert.deepEqual(result.applied, ALL_MIGRATIONS.slice(1));
+  const recorded = conn.prepare('SELECT name FROM schema_migrations ORDER BY name').all();
+  assert.deepEqual(recorded.map((row) => row.name), ALL_MIGRATIONS);
 
   // The baseline file must NOT have been executed: on this legacy fixture the
   // other baseline tables do not exist and would have been created otherwise.
@@ -100,11 +110,11 @@ test('is idempotent when migrate runs repeatedly', (t) => {
   const first = migrate(conn);
   const second = migrate(conn);
 
-  assert.deepEqual(first.applied, ['001_baseline.sql']);
+  assert.deepEqual(first.applied, ALL_MIGRATIONS);
   assert.deepEqual(second.applied, []);
   assert.equal(second.baselined, null);
-  assert.deepEqual(second.alreadyApplied, ['001_baseline.sql']);
-  assert.equal(conn.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get().count, 1);
+  assert.deepEqual(second.alreadyApplied, ALL_MIGRATIONS);
+  assert.equal(conn.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get().count, ALL_MIGRATIONS.length);
 });
 
 test('applies migrations after the baseline on a legacy database', (t) => {
