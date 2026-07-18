@@ -24,6 +24,7 @@ const {
   applyDraftMutation,
 } = require('../../lib/drafts');
 const { recordAudit, auditEvent } = require('../../lib/audit');
+const { syncBlockReferences, clearBlockReferences } = require('../../lib/mediaReferences');
 
 router.use(requestContext);
 
@@ -390,6 +391,15 @@ router.post('/:id/duplicate', ...write, (req, res) => {
           insert.run(idMap.get(block.id), draftId, block.component_type, block.component_version, block.sort_order,
             block.parent_block_id ? idMap.get(block.parent_block_id) : null, block.is_visible, block.anchor_id,
             block.content_zh, block.content_en, block.settings);
+          syncBlockReferences(conn, {
+            blockId: idMap.get(block.id),
+            definition: registry.getDefinition(block.component_type),
+            config: {
+              contentZh: JSON.parse(block.content_zh || '{}'),
+              contentEn: JSON.parse(block.content_en || '{}'),
+              settings: JSON.parse(block.settings || '{}'),
+            },
+          });
         }
         conn.prepare('UPDATE page_nodes SET draft_version_id = ? WHERE id = ?').run(draftId, id);
       }
@@ -595,6 +605,7 @@ router.post('/:id/draft/blocks', ...write, (req, res, next) => {
           JSON.stringify(candidate.contentEn),
           JSON.stringify(candidate.settings)
         );
+      syncBlockReferences(conn, { blockId: id, definition, config: candidate });
       return { block: blockJson(conn.prepare('SELECT * FROM page_blocks WHERE id = ?').get(id)) };
     });
     res.ok(result, 201);
@@ -651,6 +662,11 @@ router.patch('/:id/draft/blocks/:blockId', ...write, (req, res, next) => {
           patch.sortOrder ?? current.sort_order,
           current.id
         );
+      syncBlockReferences(conn, {
+        blockId: current.id,
+        definition: registry.getDefinition(current.component_type),
+        config: merged,
+      });
       return { block: blockJson(conn.prepare('SELECT * FROM page_blocks WHERE id = ?').get(current.id)) };
     });
     res.ok(result);
@@ -685,6 +701,7 @@ router.delete('/:id/draft/blocks/:blockId', ...write, (req, res, next) => {
         throw error;
       }
       conn.prepare('DELETE FROM page_blocks WHERE id = ?').run(current.id);
+      clearBlockReferences(conn, current.id);
       return { deleted: true, blockId: current.id };
     });
     res.ok(result);
@@ -764,6 +781,15 @@ router.post('/:id/draft/blocks/:blockId/duplicate', ...write, (req, res, next) =
           source.content_en,
           source.settings
         );
+      syncBlockReferences(conn, {
+        blockId: id,
+        definition: registry.getDefinition(source.component_type),
+        config: {
+          contentZh: JSON.parse(source.content_zh || '{}'),
+          contentEn: JSON.parse(source.content_en || '{}'),
+          settings: JSON.parse(source.settings || '{}'),
+        },
+      });
       return { block: blockJson(conn.prepare('SELECT * FROM page_blocks WHERE id = ?').get(id)) };
     });
     res.ok(result, 201);
