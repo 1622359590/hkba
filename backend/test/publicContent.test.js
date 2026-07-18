@@ -242,3 +242,33 @@ test('sitemap-data lists published pages and news only', async () => {
   assert.ok(!res.body.data.pages.some((entry) => entry.path === '/m8-draft-only'));
   assert.ok(res.body.data.news.some((entry) => entry.slug === 'm8-news-slug'));
 });
+
+test('association endpoint serves structured partners, people, milestones and contact', async () => {
+  // Seed one of each (init defaults already insert milestones/contact rows).
+  db.prepare("INSERT INTO partners (name, logo_url, website_url, group_name, sort_order, is_active) VALUES ('Assoc Partner', '/uploads/p.png', 'https://example.com', 'default', 99, 1)").run();
+  db.prepare("INSERT INTO partners (name, logo_url, group_name, sort_order, is_active) VALUES ('Inactive Partner', '/uploads/x.png', 'default', 100, 0)").run();
+  db.prepare("INSERT INTO team_members (name_zh, name_en, title_zh, avatar_url, group_name, sort_order, is_active) VALUES ('測試人', 'Test Person', '會長', '/uploads/a.png', 'chairman', 99, 1)").run();
+
+  const res = await publicGet('/association');
+  assert.equal(res.status, 200);
+  const { partners, people, milestones, contact, resources } = res.body.data;
+
+  const partner = partners.find((entry) => entry.name === 'Assoc Partner');
+  assert.ok(partner);
+  assert.equal(partner.logoUrl, '/uploads/p.png');
+  assert.equal(partner.websiteUrl, 'https://example.com');
+  assert.equal(partner.group, 'default');
+  assert.ok(!partners.some((entry) => entry.name === 'Inactive Partner'), 'inactive rows filtered');
+
+  const person = people.find((entry) => entry.nameEn === 'Test Person');
+  assert.ok(person);
+  assert.equal(person.nameZh, '測試人');
+  assert.equal(person.titleZh, '會長');
+  assert.equal(person.avatarUrl, '/uploads/a.png');
+  assert.equal(person.group, 'chairman');
+
+  assert.ok(milestones.length >= 1);
+  assert.ok(milestones.every((entry) => entry.year && entry.titleZh !== undefined));
+  assert.equal(contact.email, 'info@hkba.club');
+  assert.ok(Array.isArray(resources));
+});

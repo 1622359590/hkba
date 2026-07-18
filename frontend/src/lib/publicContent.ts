@@ -89,3 +89,34 @@ export async function fetchPublicNewsItem(slug: string): Promise<PublicNewsItemR
   if (data.redirect) return { kind: 'redirect', to: data.redirect };
   return { kind: 'detail', detail: data };
 }
+
+// ---- association data (structured tables; association.* block renderers) ----
+
+export type PublicPartner = { id: number; name: string; logoUrl: string; websiteUrl: string; group: string };
+export type PublicPerson = {
+  id: number;
+  nameZh: string;
+  nameEn: string;
+  titleZh: string;
+  titleEn: string;
+  bioZh: string;
+  bioEn: string;
+  avatarUrl: string;
+  group: string;
+  facebook: string;
+  twitter: string;
+  linkedin: string;
+  instagram: string;
+};
+export type PublicMilestone = { id: number; year: string; titleZh: string; titleEn: string; descriptionZh: string; descriptionEn: string };
+export type PublicAssociation = {
+  partners: PublicPartner[];
+  people: PublicPerson[];
+  milestones: PublicMilestone[];
+  contact: Record<string, string>;
+  resources: unknown[];
+};
+
+export function fetchPublicAssociation(): Promise<PublicAssociation | null> {
+  return get<PublicAssociation>('/api/public/association');
+}

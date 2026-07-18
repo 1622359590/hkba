@@ -11,8 +11,8 @@
 // flash; the swap happens only when blocks arrive.
 
 import { ReactNode, useEffect, useState } from 'react';
-import BlockRenderer, { NewsCardData } from '@/components/blocks/BlockRenderer';
-import { fetchPublicNews, fetchPublicPage, PublicPage, PublicNewsListItem } from '@/lib/publicContent';
+import BlockRenderer, { AssocData, NewsCardData } from '@/components/blocks/BlockRenderer';
+import { fetchPublicAssociation, fetchPublicNews, fetchPublicPage, PublicPage, PublicNewsListItem } from '@/lib/publicContent';
 import { useLang } from '@/lib/useLang';
 
 function toCard(item: PublicNewsListItem, lang: 'zh' | 'en'): NewsCardData {
@@ -30,14 +30,17 @@ export default function PublicPageSwitch({ path, children }: { path: string; chi
   const { lang } = useLang();
   const [page, setPage] = useState<PublicPage | null>(null);
   const [news, setNews] = useState<NewsCardData[]>([]);
+  const [assoc, setAssoc] = useState<AssocData | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
     fetchPublicPage(path).then(async (data) => {
       if (cancelled || !data) return;
       setPage(data);
-      const list = await fetchPublicNews({ pageSize: 12 });
-      if (!cancelled && list) setNews(list.items.map((item) => toCard(item, lang)));
+      const [list, association] = await Promise.all([fetchPublicNews({ pageSize: 12 }), fetchPublicAssociation()]);
+      if (cancelled) return;
+      if (list) setNews(list.items.map((item) => toCard(item, lang)));
+      if (association) setAssoc(association);
     });
     return () => {
       cancelled = true;
@@ -48,7 +51,7 @@ export default function PublicPageSwitch({ path, children }: { path: string; chi
 
   return (
     <div className="public-blocks" style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px 96px' }}>
-      <BlockRenderer blocks={page.blocks} lang={lang} media={page.media} news={news} />
+      <BlockRenderer blocks={page.blocks} lang={lang} media={page.media} news={news} assoc={assoc} />
     </div>
   );
 }

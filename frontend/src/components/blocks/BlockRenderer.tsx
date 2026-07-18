@@ -7,7 +7,7 @@
 // News-display components render their query configuration as data cards
 // until the public query endpoints mount with the frontend-switch milestone.
 
-import { CSSProperties, ReactNode } from 'react';
+import { CSSProperties, ReactNode, useState } from 'react';
 
 export type RenderBlock = {
   id: string;
@@ -34,6 +34,35 @@ export type NewsCardData = {
   year: number | null;
   publishedAt?: string | null;
   coverUrl?: string | null;
+};
+
+// Structured association data for association.* components (visual-strike
+// task). Served by GET /api/public/association straight from the structured
+// tables; when absent (studio canvas) the components keep their
+// configuration placeholder cards.
+export type AssocPartner = { id: number; name: string; logoUrl: string; websiteUrl: string; group: string };
+export type AssocPerson = {
+  id: number;
+  nameZh: string;
+  nameEn: string;
+  titleZh: string;
+  titleEn: string;
+  bioZh: string;
+  bioEn: string;
+  avatarUrl: string;
+  group: string;
+  facebook: string;
+  twitter: string;
+  linkedin: string;
+  instagram: string;
+};
+export type AssocMilestone = { id: number; year: string; titleZh: string; titleEn: string; descriptionZh: string; descriptionEn: string };
+export type AssocData = {
+  partners: AssocPartner[];
+  people: AssocPerson[];
+  milestones: AssocMilestone[];
+  contact: Record<string, string>;
+  resources: unknown[];
 };
 
 type Lang = 'zh' | 'en';
@@ -105,8 +134,7 @@ function PlaceholderCard({ title, lines }: { title: string; lines: string[] }) {
   );
 }
 
-function NewsCards({ type, settings, news, lang }: { type: string; settings: Record<string, unknown>; news: NewsCardData[]; lang: Lang }) {
-  const limit = Number(settings.limit ?? settings.count ?? 6) || 6;
+function NewsCards({ type, settings, news, lang }: { type: string; settings: Record<string, unknown>; news: NewsCardData[]; lang: Lang }) {  const limit = Number(settings.limit ?? settings.count ?? 6) || 6;
   const items = news.slice(0, type === 'news.featured' ? Math.min(3, limit) : limit);
   if (!items.length) {
     return <div className="hk-block__placeholder-line">{lang === 'en' ? 'No published news yet.' : '暫無已發佈新聞。'}</div>;
@@ -143,7 +171,294 @@ function NewsCards({ type, settings, news, lang }: { type: string; settings: Rec
   );
 }
 
-function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: ReactNode, news?: NewsCardData[]): ReactNode {
+// ---- association data components (public context) ----
+
+const GROUP_LABELS: Record<string, { zh: string; en: string }> = {
+  honorary_chairman: { zh: '榮譽主席', en: 'Honorary Chairman' },
+  chairman: { zh: '會長', en: 'Chairman' },
+  president: { zh: '主席', en: 'President' },
+  vice_chairman: { zh: '副會長', en: 'Vice Chairman' },
+  advisor: { zh: '顧問', en: 'Advisor' },
+  member: { zh: '成員', en: 'Member' },
+};
+
+function groupLabel(group: string, lang: Lang): string {
+  const entry = GROUP_LABELS[group];
+  if (entry) return lang === 'en' ? entry.en : entry.zh;
+  return group || (lang === 'en' ? 'Member' : '成員');
+}
+
+function personName(person: AssocPerson, lang: Lang): string {
+  return (lang === 'en' ? person.nameEn || person.nameZh : person.nameZh || person.nameEn) || '';
+}
+
+function personTitle(person: AssocPerson, lang: Lang): string {
+  return (lang === 'en' ? person.titleEn || person.titleZh : person.titleZh || person.titleEn) || '';
+}
+
+function personBio(person: AssocPerson, lang: Lang): string {
+  return (lang === 'en' ? person.bioEn || person.bioZh : person.bioZh || person.bioEn) || '';
+}
+
+function AssocHead({ block, lang }: { block: RenderBlock; lang: Lang }) {
+  const title = text(block, lang, 'title');
+  const description = text(block, lang, 'description');
+  if (!title && !description) return null;
+  return (
+    <div className="hk-assoc__head">
+      {title ? <h2 className="hk-assoc__head-title">{title}</h2> : null}
+      {description ? <p className="hk-assoc__head-desc">{description}</p> : null}
+    </div>
+  );
+}
+
+// Logo on a bright tile (DESIGN.md: partner logos stay in color on brighter
+// tiles). Falls back to the partner initial when the image fails.
+function LogoTile({ src, name }: { src: string; name: string }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="hk-partner__tile">
+      {!failed && src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} />
+      ) : (
+        <span className="hk-partner__initial">{(name || '?').slice(0, 1).toUpperCase()}</span>
+      )}
+    </div>
+  );
+}
+
+function PersonAvatar({ src, name, large }: { src: string; name: string; large?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const className = `hk-person__avatar${large ? ' hk-person__avatar--large' : ''}`;
+  if (failed || !src) {
+    return (
+      <div className={`${className} hk-person__avatar-fallback`} aria-hidden>
+        {(name || '?').slice(0, 1)}
+      </div>
+    );
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={className} src={src} alt={name} loading="lazy" onError={() => setFailed(true)} />;
+}
+
+const SOCIAL_ICONS: Record<string, { label: string; path: string }> = {
+  facebook: { label: 'Facebook', path: 'M13.5 21v-7h2.4l.4-3h-2.8V9.1c0-.9.3-1.5 1.6-1.5H16V4.9c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4V11H7.5v3h2.3v7h3.7Z' },
+  twitter: { label: 'X', path: 'M4 4.5 10.9 13 4.2 20h2.3l5.4-5.7 4 5.7H20l-7.2-9.2 6.4-6.3h-2.3l-5.1 5.2-3.7-5.2H4Z' },
+  linkedin: { label: 'LinkedIn', path: 'M6.9 8.6H4V20h2.9V8.6ZM5.4 4a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4ZM10 20v-6.2c0-1.6.8-2.6 2.2-2.6 1.3 0 1.9.9 1.9 2.6V20h2.9v-6.7c0-3-1.6-4.4-3.8-4.4-1.5 0-2.5.8-3.2 1.8V8.6H10Z' },
+  instagram: { label: 'Instagram', path: 'M12 7.2A4.8 4.8 0 1 0 12 16.8 4.8 4.8 0 0 0 12 7.2Zm0 7.9a3.1 3.1 0 1 1 0-6.2 3.1 3.1 0 0 1 0 6.2ZM17.4 4H6.6A2.6 2.6 0 0 0 4 6.6v10.8A2.6 2.6 0 0 0 6.6 20h10.8a2.6 2.6 0 0 0 2.6-2.6V6.6A2.6 2.6 0 0 0 17.4 4Zm1 13.4a1 1 0 0 1-1 1H6.6a1 1 0 0 1-1-1V6.6a1 1 0 0 1 1-1h10.8a1 1 0 0 1 1 1v10.8ZM16.9 6.2a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z' },
+  youtube: { label: 'YouTube', path: 'M20.6 8.2a2.5 2.5 0 0 0-1.8-1.8C17.2 6 12 6 12 6s-5.2 0-6.8.4A2.5 2.5 0 0 0 3.4 8.2 26 26 0 0 0 3 12a26 26 0 0 0 .4 3.8 2.5 2.5 0 0 0 1.8 1.8c1.6.4 6.8.4 6.8.4s5.2 0 6.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 21 12a26 26 0 0 0-.4-3.8ZM10 15V9l5.2 3L10 15Z' },
+};
+
+function SocialLink({ kind, url }: { kind: string; url: string }) {
+  const icon = SOCIAL_ICONS[kind];
+  if (!icon || !url) return null;
+  return (
+    <a className="hk-social" href={url} target="_blank" rel="noreferrer" aria-label={icon.label} title={icon.label}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d={icon.path} />
+      </svg>
+    </a>
+  );
+}
+
+function AssocPartners({ block, lang, settings, assoc }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData }) {
+  const group = String(settings.group || '').trim();
+  const variant = String(settings.variant || 'logo-wall');
+  const items = assoc.partners.filter((partner) => !group || partner.group === group);
+  if (!items.length) return <AssocEmpty lang={lang} kind="partners" />;
+  const list = (
+    <>
+      {items.map((partner) => {
+        const card = (
+          <>
+            <LogoTile src={partner.logoUrl} name={partner.name} />
+            <span className="hk-partner__name">{partner.name}</span>
+            {variant === 'cards' && partner.websiteUrl ? (
+              <span className="hk-partner__site">{partner.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+            ) : null}
+          </>
+        );
+        return partner.websiteUrl ? (
+          <a key={partner.id} className="hk-partner" href={partner.websiteUrl} target="_blank" rel="noreferrer">
+            {card}
+          </a>
+        ) : (
+          <div key={partner.id} className="hk-partner">
+            {card}
+          </div>
+        );
+      })}
+    </>
+  );
+  return (
+    <>
+      <AssocHead block={block} lang={lang} />
+      {variant === 'carousel' ? (
+        <div className="hk-partner-carousel">{list}</div>
+      ) : (
+        <div className={`hk-partner-grid${variant === 'cards' ? ' hk-partner-grid--cards' : ''}`}>{list}</div>
+      )}
+    </>
+  );
+}
+
+function AssocTimeline({ block, lang, settings, assoc }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData }) {
+  const items = [...assoc.milestones];
+  if (String(settings.order) === 'desc') items.reverse();
+  if (!items.length) return <AssocEmpty lang={lang} kind="timeline" />;
+  return (
+    <>
+      <AssocHead block={block} lang={lang} />
+      <div className="hk-timeline">
+        {items.map((milestone) => (
+          <div key={milestone.id} className="hk-timeline__item">
+            <div className="hk-timeline__year">{milestone.year}</div>
+            <div className="hk-timeline__title">{(lang === 'en' ? milestone.titleEn || milestone.titleZh : milestone.titleZh || milestone.titleEn) || ''}</div>
+            {(lang === 'en' ? milestone.descriptionEn || milestone.descriptionZh : milestone.descriptionZh || milestone.descriptionEn) ? (
+              <div className="hk-timeline__desc">{lang === 'en' ? milestone.descriptionEn || milestone.descriptionZh : milestone.descriptionZh || milestone.descriptionEn}</div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function AssocPeople({ block, lang, settings, assoc, board }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData; board: boolean }) {
+  const roles = Array.isArray(settings.roles) ? (settings.roles as unknown[]).map(String).filter(Boolean) : [];
+  const items = board && roles.length ? assoc.people.filter((person) => roles.includes(person.group)) : assoc.people;
+  if (!items.length) return <AssocEmpty lang={lang} kind="people" />;
+  const showBio = board && settings.showBio !== false;
+  const showSocial = board && settings.showSocial !== false;
+  return (
+    <>
+      <AssocHead block={block} lang={lang} />
+      <div className={`hk-people-grid${board ? ' hk-people-grid--board' : ''}`}>
+        {items.map((person) => {
+          const name = personName(person, lang);
+          return (
+            <div key={person.id} className={`hk-person${board ? '' : ' hk-person--compact'}`}>
+              {board ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 2 }}>
+                    <PersonAvatar src={person.avatarUrl} name={name} large />
+                    <div>
+                      <span className="hk-person__badge">{groupLabel(person.group, lang)}</span>
+                      <div className="hk-person__name" style={{ marginTop: 6 }}>{name}</div>
+                    </div>
+                  </div>
+                  <div className="hk-person__title" style={{ marginTop: 8 }}>{personTitle(person, lang)}</div>
+                  {showBio && personBio(person, lang) ? <div className="hk-person__bio">{personBio(person, lang)}</div> : null}
+                  {showSocial ? (
+                    <div className="hk-person__socials">
+                      <SocialLink kind="facebook" url={person.facebook} />
+                      <SocialLink kind="twitter" url={person.twitter} />
+                      <SocialLink kind="linkedin" url={person.linkedin} />
+                      <SocialLink kind="instagram" url={person.instagram} />
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <PersonAvatar src={person.avatarUrl} name={name} />
+                  <div>
+                    <div className="hk-person__name">{name}</div>
+                    <div className="hk-person__title">{personTitle(person, lang)}</div>
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+function AssocContact({ block, lang, settings, assoc }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData }) {
+  const contact = assoc.contact || {};
+  const address = (lang === 'en' ? contact.address_en || contact.address_zh : contact.address_zh || contact.address_en) || '';
+  const showMap = settings.showMap !== false && !!address;
+  const showSocial = settings.showSocial !== false;
+  const showHours = settings.showHours === true && !!(contact.hours_zh || contact.hours_en);
+  const hasAny = contact.phone || contact.email || address || showSocial;
+  if (!hasAny) return <AssocEmpty lang={lang} kind="contact" />;
+  return (
+    <>
+      <AssocHead block={block} lang={lang} />
+      <div className="hk-contact">
+        {contact.phone ? (
+          <div>
+            <div className="hk-contact__label">{lang === 'en' ? 'Phone' : '電話'}</div>
+            <div className="hk-contact__value"><a href={`tel:${String(contact.phone).replace(/\s+/g, '')}`}>{contact.phone}</a></div>
+          </div>
+        ) : null}
+        {contact.email ? (
+          <div>
+            <div className="hk-contact__label">{lang === 'en' ? 'Email' : '電郵'}</div>
+            <div className="hk-contact__value"><a href={`mailto:${contact.email}`}>{contact.email}</a></div>
+          </div>
+        ) : null}
+        {address ? (
+          <div>
+            <div className="hk-contact__label">{lang === 'en' ? 'Address' : '地址'}</div>
+            <div className="hk-contact__value">
+              {showMap ? (
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer">
+                  {address}
+                </a>
+              ) : (
+                address
+              )}
+            </div>
+          </div>
+        ) : null}
+        {showHours ? (
+          <div>
+            <div className="hk-contact__label">{lang === 'en' ? 'Hours' : '辦公時間'}</div>
+            <div className="hk-contact__value">{lang === 'en' ? contact.hours_en || contact.hours_zh : contact.hours_zh || contact.hours_en}</div>
+          </div>
+        ) : null}
+        {showSocial && (contact.facebook || contact.twitter || contact.linkedin || contact.instagram || contact.youtube) ? (
+          <div>
+            <div className="hk-contact__label">{lang === 'en' ? 'Follow' : '關注我們'}</div>
+            <div className="hk-contact__socials">
+              <SocialLink kind="facebook" url={contact.facebook} />
+              <SocialLink kind="twitter" url={contact.twitter} />
+              <SocialLink kind="linkedin" url={contact.linkedin} />
+              <SocialLink kind="instagram" url={contact.instagram} />
+              <SocialLink kind="youtube" url={contact.youtube} />
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+function AssocEmpty({ lang, kind }: { lang: Lang; kind: 'partners' | 'timeline' | 'people' | 'contact' | 'resources' }) {
+  const labels = {
+    partners: { zh: '暫無合作夥伴資料', en: 'No partners yet' },
+    timeline: { zh: '暫無里程碑資料', en: 'No milestones yet' },
+    people: { zh: '暫無成員資料', en: 'No members yet' },
+    contact: { zh: '暫無聯繫資料', en: 'No contact details yet' },
+    resources: { zh: '暫無資源下載', en: 'No resources yet' },
+  }[kind];
+  return (
+    <div className="hk-empty">
+      <div className="hk-empty__glyph" aria-hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+          <path d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14" />
+        </svg>
+      </div>
+      <div className="hk-empty__title">{lang === 'en' ? labels.en : labels.zh}</div>
+      <div className="hk-empty__desc">{lang === 'en' ? 'Content is being prepared.' : '內容整理中，敬請期待。'}</div>
+    </div>
+  );
+}
+
+function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: ReactNode, news?: NewsCardData[], assoc?: AssocData): ReactNode {
   const t = block.component_type;
   const settings = block.settings as Record<string, unknown>;
 
@@ -345,15 +660,42 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
       );
 
     // ---- association components ----
-    case 'association.related-pages':
-    case 'association.members':
     case 'association.partners':
-    case 'association.events':
     case 'association.timeline':
+    case 'association.members':
+    case 'association.board':
     case 'association.contact':
+    case 'association.resources': {
+      // Studio canvas (no assoc data): keep the configuration placeholder.
+      if (!assoc) {
+        return (
+          <BlockShell block={block}>
+            <PlaceholderCard title={`協會數據組件 ${t}`} lines={['前台發佈後以結構化數據渲染']} />
+          </BlockShell>
+        );
+      }
       return (
         <BlockShell block={block}>
-          <PlaceholderCard title={`協會數據組件 ${t}`} lines={['前台切換里程碑接入真實數據']} />
+          {t === 'association.partners' ? <AssocPartners block={block} lang={lang} settings={settings} assoc={assoc} /> : null}
+          {t === 'association.timeline' ? <AssocTimeline block={block} lang={lang} settings={settings} assoc={assoc} /> : null}
+          {t === 'association.members' ? <AssocPeople block={block} lang={lang} settings={settings} assoc={assoc} board={false} /> : null}
+          {t === 'association.board' ? <AssocPeople block={block} lang={lang} settings={settings} assoc={assoc} board /> : null}
+          {t === 'association.contact' ? <AssocContact block={block} lang={lang} settings={settings} assoc={assoc} /> : null}
+          {t === 'association.resources' ? (
+            <>
+              <AssocHead block={block} lang={lang} />
+              <AssocEmpty lang={lang} kind="resources" />
+            </>
+          ) : null}
+        </BlockShell>
+      );
+    }
+    case 'association.related-pages':
+    case 'association.events':
+      // Not part of the current registry; keep a quiet placeholder.
+      return (
+        <BlockShell block={block}>
+          <PlaceholderCard title={`協會數據組件 ${t}`} lines={['渲染器待補充']} />
         </BlockShell>
       );
     default:
@@ -372,6 +714,7 @@ export default function BlockRenderer({
   onSelect,
   selectedId,
   news,
+  assoc,
 }: {
   blocks: RenderBlock[];
   lang?: Lang;
@@ -379,6 +722,7 @@ export default function BlockRenderer({
   onSelect?: (id: string) => void;
   selectedId?: string | null;
   news?: NewsCardData[];
+  assoc?: AssocData;
 }) {
   const visible = blocks.filter((block) => block.is_visible !== 0 && block.is_visible !== false);
   const childrenOf = new Map<string | null, RenderBlock[]>();
@@ -393,7 +737,7 @@ export default function BlockRenderer({
 
   const renderTree = (parentId: string | null): ReactNode =>
     (childrenOf.get(parentId) || []).map((block) => {
-      const rendered = renderBlock(block, lang, media, renderTree(block.id), news);
+      const rendered = renderBlock(block, lang, media, renderTree(block.id), news, assoc);
       if (!onSelect) return <div key={block.id}>{rendered}</div>;
       return (
         <div

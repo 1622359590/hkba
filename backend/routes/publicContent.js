@@ -218,4 +218,44 @@ router.get('/sitemap-data', (req, res) => {
   res.ok({ pages, news });
 });
 
+// ---------- association data (structured legacy tables; visual-strike task) ----------
+//
+// One read-only payload feeding every association.* block renderer. The data
+// stays in the structured tables (partners / team_members / milestones /
+// contact_info); resolvers never copy it into page content. Image URLs are
+// whatever the source rows point at — after import-external-media runs they
+// are local /uploads/ paths.
+router.get('/association', (req, res) => {
+  const conn = getDb();
+  const partners = conn
+    .prepare(
+      `SELECT id, name, logo_url AS logoUrl, website_url AS websiteUrl, group_name AS "group"
+       FROM partners WHERE is_active = 1 ORDER BY sort_order, id`
+    )
+    .all();
+  const people = conn
+    .prepare(
+      `SELECT id, name_zh AS nameZh, name_en AS nameEn, title_zh AS titleZh, title_en AS titleEn,
+              bio_zh AS bioZh, bio_en AS bioEn, avatar_url AS avatarUrl, group_name AS "group",
+              social_facebook AS facebook, social_twitter AS twitter,
+              social_linkedin AS linkedin, social_instagram AS instagram
+       FROM team_members WHERE is_active = 1 ORDER BY sort_order, id`
+    )
+    .all();
+  const milestones = conn
+    .prepare(
+      `SELECT id, year, title_zh AS titleZh, title_en AS titleEn,
+              description_zh AS descriptionZh, description_en AS descriptionEn
+       FROM milestones WHERE is_active = 1 ORDER BY sort_order, id`
+    )
+    .all();
+  const contact = {};
+  for (const row of conn.prepare('SELECT key, value FROM contact_info').all()) {
+    contact[row.key] = row.value;
+  }
+  // No structured resources table exists yet; the renderer shows a designed
+  // empty state for association.resources.
+  res.ok({ partners, people, milestones, contact, resources: [] });
+});
+
 module.exports = router;
