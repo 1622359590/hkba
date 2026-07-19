@@ -66,6 +66,17 @@ app.use('/api/media', require('./routes/media'));
 app.use('/api/stats', require('./routes/stats'));
 app.use('/api/milestones', require('./routes/milestones'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/preview', require('./routes/preview'));
+app.use('/api/public', require('./routes/publicContent'));
+
+// Phase 2 admin APIs (unified envelope, RBAC, audit)
+app.use('/api/admin/components', require('./routes/admin/components'));
+app.use('/api/admin/pages', require('./routes/admin/pages'));
+app.use('/api/admin/media', require('./routes/admin/media'));
+app.use('/api/admin/news', require('./routes/admin/news'));
+const newsTaxonomy = require('./routes/admin/newsTaxonomy');
+app.use('/api/admin/news-categories', newsTaxonomy.categories);
+app.use('/api/admin/news-tags', newsTaxonomy.tags);
 
 // 健康检查
 app.get('/api/health', (req, res) => {
