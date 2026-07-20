@@ -42,7 +42,6 @@ Add these required secrets:
 | `DEPLOY_USER` | `root` | SSH user |
 | `DEPLOY_SSH_KEY` | private key text | Private key that can SSH into the server |
 | `JWT_SECRET` | long random string | Use at least 32 random characters |
-| `ADMIN_INITIAL_PASSWORD` | long random string | Initial `admin` password; use at least 12 characters and do not include a newline or single quote |
 | `ALLOWED_ORIGINS` | `https://hkba.example.com` | Comma-separated HTTPS origins allowed to call the API |
 
 Optional secrets:
@@ -53,6 +52,7 @@ Optional secrets:
 | `DEPLOY_PATH` | `/www/wwwroot/hkba` | Server project path |
 | `BACKEND_PORT` | `37900` | Express API port |
 | `FRONTEND_PORT` | `3000` | Next.js port |
+| `ADMIN_INITIAL_PASSWORD` | empty for existing databases | Required for the first deployment of an empty database; use at least 12 characters and do not include a newline or single quote |
 | `SEED_ON_FIRST_DEPLOY` | `false` | Set `true` to load initial content when all core content tables are empty; existing CMS content is preserved |
 
 The project also supports the existing bundled `DEPLOY_SSH_KEY` secret. The bundle may contain the environment lines followed by the OpenSSH private key, including:
@@ -69,6 +69,7 @@ ADMIN_INITIAL_PASSWORD=at-least-12-random-characters
 ```
 
 Individual repository secrets take precedence over values in this bundle.
+An existing production database that already contains the `admin` account can deploy without `ADMIN_INITIAL_PASSWORD`. A new empty database refuses to initialize in production until the value is provided.
 
 ## SSH Key Setup
 

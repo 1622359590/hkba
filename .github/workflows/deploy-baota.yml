@@ -58,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=()
-          for name in SSH_HOST SSH_USER DEPLOY_PATH BACKEND_PORT FRONTEND_PORT ALLOWED_ORIGINS JWT_SECRET ADMIN_INITIAL_PASSWORD; do
+          for name in SSH_HOST SSH_USER DEPLOY_PATH BACKEND_PORT FRONTEND_PORT ALLOWED_ORIGINS JWT_SECRET; do
             if [ -z "${!name:-}" ]; then
               missing+=("$name")
             fi
@@ -86,7 +86,7 @@ jobs:
               exit 1
             fi
           done
-          if [ "${#ADMIN_INITIAL_PASSWORD}" -lt 12 ]; then
+          if [ -n "$ADMIN_INITIAL_PASSWORD" ] && [ "${#ADMIN_INITIAL_PASSWORD}" -lt 12 ]; then
             printf 'ADMIN_INITIAL_PASSWORD must contain at least 12 characters.\n' >&2
             exit 1
           fi
@@ -155,7 +155,9 @@ jobs:
             printf 'PORT=%s\n' "$BACKEND_PORT"
             printf 'NODE_ENV=production\n'
             printf "JWT_SECRET='%s'\n" "$JWT_SECRET"
-            printf "ADMIN_INITIAL_PASSWORD='%s'\n" "$ADMIN_INITIAL_PASSWORD"
+            if [ -n "$ADMIN_INITIAL_PASSWORD" ]; then
+              printf "ADMIN_INITIAL_PASSWORD='%s'\n" "$ADMIN_INITIAL_PASSWORD"
+            fi
             printf "ALLOWED_ORIGINS='%s'\n" "$ALLOWED_ORIGINS"
           } > "$env_file"
           scp -q -i "$RUNNER_TEMP/hkba_deploy_key" -P "$SSH_PORT" \

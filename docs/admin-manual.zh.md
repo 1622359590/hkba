@@ -7,7 +7,7 @@
 ## 1. 登入與角色
 
 - 後台入口：`/admin/login`。
-- 首次部署會建立 `admin` 帳號，密碼必須由 GitHub Secret `ADMIN_INITIAL_PASSWORD` 提供（至少 12 個字元）。正式環境未配置安全密碼時，服務會拒絕初始化；`hkba2024` 僅保留為本地開發回退值。
+- 首次部署空資料庫時會建立 `admin` 帳號，密碼必須由 GitHub Secret `ADMIN_INITIAL_PASSWORD` 提供（至少 12 個字元）。已有 `admin` 帳號的生產資料庫可不配置此 Secret；正式環境的新資料庫未配置安全密碼時會拒絕初始化，`hkba2024` 僅保留為本地開發回退值。
 - 會話以 `hkba_admin` HttpOnly Cookie 維持；登出調用 `POST /api/auth/logout`。
 
 系統內建三種角色（寫入 `roles` / `user_roles` 表，idempotent 種子）：
