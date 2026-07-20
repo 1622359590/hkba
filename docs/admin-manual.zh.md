@@ -7,7 +7,7 @@
 ## 1. 登入與角色
 
 - 後台入口：`/admin/login`。
-- 首次部署的預設帳號為 `admin / hkba2024`（由資料庫初始化自動建立），**上線前必須登入後立即修改密碼**（登入後調用 `POST /api/auth/change-password`，或在資料庫中重置）。
+- 首次部署會建立 `admin` 帳號，密碼必須由 GitHub Secret `ADMIN_INITIAL_PASSWORD` 提供（至少 12 個字元）。正式環境未配置安全密碼時，服務會拒絕初始化；`hkba2024` 僅保留為本地開發回退值。
 - 會話以 `hkba_admin` HttpOnly Cookie 維持；登出調用 `POST /api/auth/logout`。
 
 系統內建三種角色（寫入 `roles` / `user_roles` 表，idempotent 種子）：
@@ -67,7 +67,7 @@
 
 ## 9. 備份與定時任務
 
-`backend/scripts/backup-db.js` 會把資料庫複製到 `backend/db/backups/hkba.<時間戳>.bak`，並清理超過保留天數（預設 30 天）的舊備份。
+`backend/scripts/backup-db.js` 使用 SQLite 在線備份 API，把一致性快照寫入 `backend/db/backups/hkba.<時間戳>.bak`，可包含尚在 WAL 中的已提交資料，並清理超過保留天數（預設 30 天）的舊備份。GitHub Actions 每次部署會在重啟 API 前自動執行一次；資料庫尚未建立的首次部署會跳過。
 
 建議 crontab（每日 03:17，避開整點）：
 
@@ -77,7 +77,9 @@
 
 - 自訂：`--db <路徑>`、`--dir <備份目錄>`、`--keep-days <天數>`。
 - 內容遷移（`backend/scripts/migrate-content.js`）在寫入前也會自動做一次檔案備份（可用 `--no-backup` 跳過）。
-- 注意：檔案複製適合低峰/停機窗口；若上線後需在流量中熱備份，改用 `sqlite3 <db> ".backup '<目標>'"`。
+- `backend/scripts/migrate-content.js` 仍保留同步檔案備份供離線遷移使用；在線服務與定時任務應直接運行上述 CLI，避免手工複製主 `.db` 文件而漏掉 WAL 資料。
+
+資料庫回退：先 `pm2 stop hkba-api`，保留當前失敗資料庫副本，再把選定 `.bak` 複製為 `backend/db/hkba.db`，執行 `chown www:www`，重啟 API 並訪問 `http://127.0.0.1:37900/api/health` 確認 `status=ok`，最後重啟前端並 `pm2 save`。
 
 ## 10. 常見錯誤與恢復
 

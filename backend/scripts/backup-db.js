@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Database backup (M9; acceptance spec §12).
 //
-// Copies the SQLite database file into backend/db/backups/ with an
+// Uses SQLite's online backup API to write backend/db/backups/ with an
 // ISO-timestamped name and prunes backups older than --keep-days
 // (default 30). Intended to be wired into crontab, e.g.:
 //

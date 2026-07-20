@@ -8,7 +8,7 @@ The workflow is stored at:
 .github/workflows/deploy-baota.yml
 ```
 
-It syncs code to the server, keeps production data safe, installs dependencies, builds the Next.js frontend, reloads PM2 processes, and normalizes the deployed project to Baota's `www:www` ownership.
+It validates deployment configuration, syncs code, creates an online-safe SQLite backup, installs dependencies, builds the Next.js frontend, reloads PM2 processes, verifies the frontend and API, and normalizes the deployed project to Baota's `www:www` ownership.
 
 ## Server Requirements
 
@@ -42,6 +42,8 @@ Add these required secrets:
 | `DEPLOY_USER` | `root` | SSH user |
 | `DEPLOY_SSH_KEY` | private key text | Private key that can SSH into the server |
 | `JWT_SECRET` | long random string | Use at least 32 random characters |
+| `ADMIN_INITIAL_PASSWORD` | long random string | Initial `admin` password; use at least 12 characters and do not include a newline or single quote |
+| `ALLOWED_ORIGINS` | `https://hkba.example.com` | Comma-separated HTTPS origins allowed to call the API |
 
 Optional secrets:
 
@@ -51,8 +53,22 @@ Optional secrets:
 | `DEPLOY_PATH` | `/www/wwwroot/hkba` | Server project path |
 | `BACKEND_PORT` | `37900` | Express API port |
 | `FRONTEND_PORT` | `3000` | Next.js port |
-| `ALLOWED_ORIGINS` | empty | Additional comma-separated backend CORS origins; same-domain proxy traffic is allowed automatically |
 | `SEED_ON_FIRST_DEPLOY` | `false` | Set `true` to load initial content when all core content tables are empty; existing CMS content is preserved |
+
+The project also supports the existing bundled `DEPLOY_SSH_KEY` secret. The bundle may contain the environment lines followed by the OpenSSH private key, including:
+
+```text
+DEPLOY_USER=root
+DEPLOY_PATH=/www/wwwroot/hkba
+ALLOWED_ORIGINS=https://hkba.example.com
+JWT_SECRET=at-least-32-random-characters
+ADMIN_INITIAL_PASSWORD=at-least-12-random-characters
+-----BEGIN OPENSSH PRIVATE KEY-----
+...
+-----END OPENSSH PRIVATE KEY-----
+```
+
+Individual repository secrets take precedence over values in this bundle.
 
 ## SSH Key Setup
 
@@ -99,6 +115,7 @@ These server-side data paths are preserved during every deploy:
 - `backend/db/*.db`
 - `backend/db/*.db-wal`
 - `backend/db/*.db-shm`
+- `backend/db/backups/`
 - `backend/uploads/`
 
 That means production database records and uploaded files are not replaced by GitHub deploys.
@@ -111,7 +128,7 @@ chown -R www:www /www/wwwroot/hkba
 
 The rsync step also disables sender-side owner and group preservation, preventing GitHub Runner numeric IDs from being mapped to unrelated server accounts such as `postgres`.
 
-The workflow regenerates this backend environment file from GitHub Secrets on every deploy:
+The workflow uploads this backend environment file from GitHub Secrets on every deploy without putting secret values in the SSH command line:
 
 - `backend/.env`
 
@@ -126,3 +143,37 @@ GitHub -> Actions -> Deploy to Baota Server -> Run workflow
 ```
 
 Future pushes to `main` will deploy automatically.
+
+## Deployment Checks And Backups
+
+Before restarting the API, the workflow runs SQLite's online backup API and writes a consistent snapshot to:
+
+```text
+backend/db/backups/hkba.<timestamp>.bak
+```
+
+After PM2 starts `hkba-api` and `hkba-web`, `scripts/deploy-smoke.js` verifies:
+
+- the frontend homepage on the loopback frontend port;
+- `/api/health` directly on the backend port;
+- `/api/health` through the Next.js proxy.
+
+PM2 state is saved only after these checks pass. A failed backup, build, process start, or health check marks the GitHub Actions run as failed.
+
+## Database Rollback
+
+Use rollback only after identifying the failed deployment and selecting the correct backup:
+
+```bash
+cd /www/wwwroot/hkba
+pm2 stop hkba-api
+cp backend/db/hkba.db backend/db/hkba.failed.$(date +%Y%m%d%H%M%S).db
+cp backend/db/backups/hkba.<timestamp>.bak backend/db/hkba.db
+chown www:www backend/db/hkba.db
+pm2 restart hkba-api --update-env
+curl --fail http://127.0.0.1:37900/api/health
+pm2 restart hkba-web
+pm2 save
+```
+
+Do not delete the failed database until its contents have been inspected or exported.
