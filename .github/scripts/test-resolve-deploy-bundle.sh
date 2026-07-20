@@ -34,6 +34,7 @@ DEPLOY_USER=root
 NEXT_PUBLIC_API_URL=https://api.example.test?token=a=b
 ALLOWED_ORIGINS=https://www.example.test
 JWT_SECRET=test-jwt-value
+ADMIN_INITIAL_PASSWORD=bundled-password-123
 EPLOY_USER=ignored-user
 UNSUPPORTED=ignored-value
 EOF
@@ -52,6 +53,7 @@ assert_line 'FRONTEND_PORT=3000' "$github_env"
 assert_line 'NEXT_PUBLIC_API_URL=https://api.example.test?token=a=b' "$github_env"
 assert_line 'ALLOWED_ORIGINS=https://www.example.test' "$github_env"
 assert_line 'JWT_SECRET=test-jwt-value' "$github_env"
+assert_line 'ADMIN_INITIAL_PASSWORD=bundled-password-123' "$github_env"
 assert_line 'SEED_ON_FIRST_DEPLOY=false' "$github_env"
 assert_no_key 'EPLOY_USER' "$github_env"
 assert_no_key 'UNSUPPORTED' "$github_env"
@@ -71,8 +73,10 @@ prefixed_key="$tmp_dir/prefixed-key"
   tail -n +2 "$private_key"
 } > "$prefixed_bundle"
 : > "$prefixed_env"
-bash "$resolver" "$prefixed_bundle" "$prefixed_env" "$prefixed_key"
+ADMIN_INITIAL_PASSWORD=separate-password-456 \
+  bash "$resolver" "$prefixed_bundle" "$prefixed_env" "$prefixed_key"
 assert_line 'SSH_USER=root' "$prefixed_env"
+assert_line 'ADMIN_INITIAL_PASSWORD=separate-password-456' "$prefixed_env"
 ssh-keygen -y -f "$prefixed_key" >/dev/null
 
 missing_bundle="$tmp_dir/missing-key-bundle"

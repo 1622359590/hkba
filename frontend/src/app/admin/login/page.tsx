@@ -1,9 +1,13 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function AdminLogin() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Only internal admin paths are accepted to avoid open redirects.
+  const rawNext = searchParams.get('next') || '';
+  const next = rawNext.startsWith('/admin') && !rawNext.startsWith('/admin/login') ? rawNext : '/admin';
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,11 +16,17 @@ export default function AdminLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-requested-with': 'XMLHttpRequest' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password }),
+      });
       const data = await res.json();
       if (!res.ok) { setError(data.error || '登入失敗'); return; }
-      localStorage.setItem('hkba_admin_token', data.token);
-      router.push('/admin');
+      // Transition fallback (D3): keep the Bearer token until the UI cutover completes.
+      if (data.token) localStorage.setItem('hkba_admin_token', data.token);
+      router.push(next);
     } catch { setError('網絡錯誤'); } finally { setLoading(false); }
   };
 
@@ -44,5 +54,13 @@ export default function AdminLogin() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function AdminLogin() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

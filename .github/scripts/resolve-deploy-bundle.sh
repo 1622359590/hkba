@@ -38,6 +38,7 @@ bundle_FRONTEND_PORT=''
 bundle_NEXT_PUBLIC_API_URL=''
 bundle_ALLOWED_ORIGINS=''
 bundle_JWT_SECRET=''
+bundle_ADMIN_INITIAL_PASSWORD=''
 bundle_SEED_ON_FIRST_DEPLOY=''
 
 mask_value() {
@@ -93,6 +94,7 @@ while IFS= read -r line; do
     NEXT_PUBLIC_API_URL) bundle_NEXT_PUBLIC_API_URL=$value ;;
     ALLOWED_ORIGINS) bundle_ALLOWED_ORIGINS=$value ;;
     JWT_SECRET) bundle_JWT_SECRET=$value ;;
+    ADMIN_INITIAL_PASSWORD) bundle_ADMIN_INITIAL_PASSWORD=$value ;;
     SEED_ON_FIRST_DEPLOY) bundle_SEED_ON_FIRST_DEPLOY=$value ;;
     *) continue ;;
   esac
@@ -128,6 +130,7 @@ append_resolved FRONTEND_PORT "$bundle_FRONTEND_PORT" '3000'
 append_resolved NEXT_PUBLIC_API_URL "$bundle_NEXT_PUBLIC_API_URL" ''
 append_resolved ALLOWED_ORIGINS "$bundle_ALLOWED_ORIGINS" ''
 append_resolved JWT_SECRET "$bundle_JWT_SECRET" ''
+append_resolved ADMIN_INITIAL_PASSWORD "$bundle_ADMIN_INITIAL_PASSWORD" ''
 append_resolved SEED_ON_FIRST_DEPLOY "$bundle_SEED_ON_FIRST_DEPLOY" 'false'
 
 mkdir -p "$(dirname "$ssh_key_file")"

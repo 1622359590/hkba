@@ -7,8 +7,10 @@ backend_dir=$(cd "$db_dir/.." && pwd)
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT
 
-mkdir -p "$tmp_dir/db"
-cp "$db_dir/init.js" "$db_dir/schema.sql" "$db_dir/seed.js" "$db_dir/seed-if-empty.js" "$tmp_dir/db/"
+mkdir -p "$tmp_dir/db" "$tmp_dir/lib"
+cp "$db_dir/init.js" "$db_dir/migrate.js" "$db_dir/seed.js" "$db_dir/seed-if-empty.js" "$tmp_dir/db/"
+cp -R "$db_dir/migrations" "$tmp_dir/db/migrations"
+cp "$backend_dir/lib/rbac.js" "$tmp_dir/lib/"
 
 NODE_PATH="$backend_dir/node_modules" node "$tmp_dir/db/seed-if-empty.js" >/dev/null
 NODE_PATH="$backend_dir/node_modules" node "$tmp_dir/db/seed-if-empty.js" >/dev/null

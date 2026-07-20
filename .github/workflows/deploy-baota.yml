@@ -31,6 +31,7 @@ jobs:
       FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
       ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      ADMIN_INITIAL_PASSWORD: ${{ secrets.ADMIN_INITIAL_PASSWORD }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       SEED_ON_FIRST_DEPLOY: ${{ secrets.SEED_ON_FIRST_DEPLOY }}
       PURGE_PROXY_CACHE: ${{ inputs.purge_proxy_cache || 'false' }}
@@ -57,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=()
-          for name in SSH_HOST SSH_USER JWT_SECRET; do
+          for name in SSH_HOST SSH_USER DEPLOY_PATH BACKEND_PORT FRONTEND_PORT ALLOWED_ORIGINS JWT_SECRET ADMIN_INITIAL_PASSWORD; do
             if [ -z "${!name:-}" ]; then
               missing+=("$name")
             fi
@@ -66,6 +67,47 @@ jobs:
             printf 'Missing required deployment variables: %s\n' "${missing[*]}"
             exit 1
           fi
+          if [[ ! "$SSH_USER" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]]; then
+            printf 'DEPLOY_USER contains unsupported characters.\n' >&2
+            exit 1
+          fi
+          if [[ ! "$SSH_HOST" =~ ^[A-Za-z0-9._:-]+$ ]]; then
+            printf 'DEPLOY_HOST contains unsupported characters.\n' >&2
+            exit 1
+          fi
+          if [[ ! "$DEPLOY_PATH" =~ ^/[A-Za-z0-9._/-]+$ ]]; then
+            printf 'DEPLOY_PATH must be an absolute path without whitespace.\n' >&2
+            exit 1
+          fi
+          for name in SSH_PORT BACKEND_PORT FRONTEND_PORT; do
+            value=${!name}
+            if [[ ! "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 1 ] || [ "$value" -gt 65535 ]; then
+              printf '%s must be a port between 1 and 65535.\n' "$name" >&2
+              exit 1
+            fi
+          done
+          if [ "${#ADMIN_INITIAL_PASSWORD}" -lt 12 ]; then
+            printf 'ADMIN_INITIAL_PASSWORD must contain at least 12 characters.\n' >&2
+            exit 1
+          fi
+          if [ "${#JWT_SECRET}" -lt 32 ]; then
+            printf 'JWT_SECRET must contain at least 32 characters.\n' >&2
+            exit 1
+          fi
+          for name in SEED_ON_FIRST_DEPLOY PURGE_PROXY_CACHE; do
+            value=${!name}
+            if [ "$value" != "true" ] && [ "$value" != "false" ]; then
+              printf '%s must be true or false.\n' "$name" >&2
+              exit 1
+            fi
+          done
+          for name in JWT_SECRET ADMIN_INITIAL_PASSWORD ALLOWED_ORIGINS; do
+            value=${!name}
+            if [[ "$value" == *$'\n'* ]] || [[ "$value" == *"'"* ]]; then
+              printf '%s cannot contain a newline or single quote.\n' "$name" >&2
+              exit 1
+            fi
+          done
 
       - name: Configure SSH
         shell: bash
@@ -83,7 +125,7 @@ jobs:
         run: |
           set -euo pipefail
           ssh -i "$RUNNER_TEMP/hkba_deploy_key" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
-            "mkdir -p '$DEPLOY_PATH/backend/db' '$DEPLOY_PATH/backend/uploads'"
+            "mkdir -p '$DEPLOY_PATH/backend/db/backups' '$DEPLOY_PATH/backend/uploads'"
 
       - name: Sync project files
         shell: bash
@@ -98,9 +140,28 @@ jobs:
             --exclude='backend/.env' \
             --exclude='backend/db/*.db' \
             --exclude='backend/db/*.db-*' \
+            --exclude='backend/db/backups/' \
             --exclude='backend/uploads/' \
             -e "ssh -i $RUNNER_TEMP/hkba_deploy_key -p $SSH_PORT" \
             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+
+      - name: Upload production backend environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          env_file="$RUNNER_TEMP/hkba_backend_env"
+          umask 077
+          {
+            printf 'PORT=%s\n' "$BACKEND_PORT"
+            printf 'NODE_ENV=production\n'
+            printf "JWT_SECRET='%s'\n" "$JWT_SECRET"
+            printf "ADMIN_INITIAL_PASSWORD='%s'\n" "$ADMIN_INITIAL_PASSWORD"
+            printf "ALLOWED_ORIGINS='%s'\n" "$ALLOWED_ORIGINS"
+          } > "$env_file"
+          scp -q -i "$RUNNER_TEMP/hkba_deploy_key" -P "$SSH_PORT" \
+            "$env_file" "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/backend/.env.next"
+          ssh -i "$RUNNER_TEMP/hkba_deploy_key" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "chmod 600 '$DEPLOY_PATH/backend/.env.next' && mv '$DEPLOY_PATH/backend/.env.next' '$DEPLOY_PATH/backend/.env'"
 
       - name: Install, build, and restart services
         shell: bash
@@ -110,21 +171,13 @@ jobs:
             "DEPLOY_PATH='$DEPLOY_PATH' \
              BACKEND_PORT='$BACKEND_PORT' \
              FRONTEND_PORT='$FRONTEND_PORT' \
-             ALLOWED_ORIGINS='$ALLOWED_ORIGINS' \
-             JWT_SECRET='$JWT_SECRET' \
              SEED_ON_FIRST_DEPLOY='$SEED_ON_FIRST_DEPLOY' \
              PURGE_PROXY_CACHE='$PURGE_PROXY_CACHE' \
              bash -s" <<'REMOTE'
           set -euo pipefail
 
           cd "$DEPLOY_PATH"
-          mkdir -p backend/db backend/uploads
-
-          cat > backend/.env <<EOF
-          PORT=$BACKEND_PORT
-          JWT_SECRET=$JWT_SECRET
-          ALLOWED_ORIGINS=$ALLOWED_ORIGINS
-          EOF
+          mkdir -p backend/db/backups backend/uploads
 
           cd "$DEPLOY_PATH/backend"
           if [ -f package-lock.json ]; then
@@ -133,8 +186,14 @@ jobs:
             npm install --omit=dev
           fi
 
+          if [ -f db/hkba.db ]; then
+            node scripts/backup-db.js
+          else
+            printf 'No existing database found; pre-deploy backup skipped.\n'
+          fi
+
           if [ "$SEED_ON_FIRST_DEPLOY" = "true" ]; then
-            node db/seed-if-empty.js
+            DOTENV_CONFIG_PATH=.env node -r dotenv/config db/seed-if-empty.js
           fi
 
           if pm2 describe hkba-api >/dev/null 2>&1; then
@@ -172,6 +231,11 @@ jobs:
           fi
           chown -R www:www "$DEPLOY_PATH"
 
-          pm2 save
           pm2 status
+          node "$DEPLOY_PATH/scripts/deploy-smoke.js" \
+            --frontend-url "http://127.0.0.1:$FRONTEND_PORT" \
+            --backend-url "http://127.0.0.1:$BACKEND_PORT" \
+            --attempts 10 \
+            --delay-ms 2000
+          pm2 save
           REMOTE

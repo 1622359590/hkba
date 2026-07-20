@@ -4,6 +4,7 @@ import { useLang } from '@/lib/useLang';
 import { apiGet, imgUrl, isPlaceholderPartnerName, type Banner, type Announcement, type Partner, type TeamMember, type NewsItem, type StatItem, type Milestone } from '@/lib/api';
 import Link from 'next/link';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
+import PublicPageSwitch from '@/components/PublicPageSwitch';
 
 /* ═══ Shared Styles ═══ */
 const container: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
@@ -77,7 +78,8 @@ export default function Home() {
   const displayStats = stats.length ? stats : fallbackStats;
 
   return (
-    <>
+    <PublicPageSwitch path="/">
+      <>
       {/* ═══ HERO ═══ */}
       <section style={{ minHeight: '85vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.1) 0%, transparent 60%)' }} />
@@ -323,5 +325,6 @@ export default function Home() {
         </div>
       </section>
     </>
+    </PublicPageSwitch>
   );
 }

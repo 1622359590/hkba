@@ -42,3 +42,6 @@ backend/uploads/
 
 # Temporary files
 *.tmp
+
+# Local database artifacts (runtime data, backups and media uploads)
+backend/db/backups/
