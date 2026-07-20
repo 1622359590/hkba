@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const Database = require('better-sqlite3');
 
 function defaultDbPath() {
   return process.env.HKBA_DB_PATH || path.join(__dirname, '..', 'db', 'hkba.db');
@@ -25,38 +26,69 @@ function defaultBackupsDir() {
 
 const BACKUP_RE = /^hkba\.(.+)\.bak$/;
 
-function runBackup({ dbPath = defaultDbPath(), backupsDir = defaultBackupsDir(), keepDays = 30, now = new Date() } = {}) {
+function prepareBackup({ dbPath, backupsDir, now }) {
   if (!fs.existsSync(dbPath)) {
     throw new Error(`database file not found: ${dbPath}`);
   }
   fs.mkdirSync(backupsDir, { recursive: true });
 
-  // SQLite files are copy-safe here because the backup runs while the app is
-  // quiet (cron) or the operator has stopped the server; the migration CLI
-  // uses the same approach. A live-traffic deployment should prefer
-  // `sqlite3 <db> ".backup ..."` — noted in the admin manual.
   const stamp = now.toISOString().replace(/[:.]/g, '-');
-  const target = path.join(backupsDir, `hkba.${stamp}.bak`);
-  fs.copyFileSync(dbPath, target);
-  const sizeBytes = fs.statSync(target).size;
+  return path.join(backupsDir, `hkba.${stamp}.bak`);
+}
 
+function pruneBackups({ backupsDir, keepDays, now, currentBackup }) {
   const cutoff = now.getTime() - keepDays * 24 * 60 * 60 * 1000;
   const pruned = [];
   for (const entry of fs.readdirSync(backupsDir)) {
     const match = BACKUP_RE.exec(entry);
     if (!match) continue;
     const full = path.join(backupsDir, entry);
+    if (full === currentBackup) continue;
     const stat = fs.statSync(full);
     if (stat.mtimeMs < cutoff) {
       fs.rmSync(full);
       pruned.push(entry);
     }
   }
-
-  return { backup: target, sizeBytes, pruned, keepDays };
+  return pruned;
 }
 
-function main() {
+function backupResult({ target, backupsDir, keepDays, now }) {
+  return {
+    backup: target,
+    sizeBytes: fs.statSync(target).size,
+    pruned: pruneBackups({ backupsDir, keepDays, now, currentBackup: target }),
+    keepDays,
+  };
+}
+
+function runBackup({ dbPath = defaultDbPath(), backupsDir = defaultBackupsDir(), keepDays = 30, now = new Date() } = {}) {
+  const target = prepareBackup({ dbPath, backupsDir, now });
+
+  // SQLite files are copy-safe here because the backup runs while the app is
+  // stopped. Migration helpers retain this synchronous path, while deployment
+  // and cron use runOnlineBackup so committed WAL data is included.
+  fs.copyFileSync(dbPath, target);
+  return backupResult({ target, backupsDir, keepDays, now });
+}
+
+async function runOnlineBackup({ dbPath = defaultDbPath(), backupsDir = defaultBackupsDir(), keepDays = 30, now = new Date() } = {}) {
+  const target = prepareBackup({ dbPath, backupsDir, now });
+  const source = new Database(dbPath, { readonly: true, fileMustExist: true });
+  try {
+    await source.backup(target);
+    return backupResult({ target, backupsDir, keepDays, now });
+  } catch (error) {
+    if (fs.existsSync(target)) {
+      fs.rmSync(target);
+    }
+    throw error;
+  } finally {
+    source.close();
+  }
+}
+
+async function main() {
   const args = process.argv.slice(2);
   const flagValue = (name) => {
     const index = args.indexOf(name);
@@ -70,7 +102,7 @@ function main() {
     process.exit(1);
   }
   try {
-    const result = runBackup({ dbPath, backupsDir, keepDays });
+    const result = await runOnlineBackup({ dbPath, backupsDir, keepDays });
     console.log(`✅ backup written: ${result.backup} (${result.sizeBytes} bytes)`);
     if (result.pruned.length) {
       console.log(`🧹 pruned ${result.pruned.length} backup(s) older than ${keepDays} days:`);
@@ -86,4 +118,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { runBackup };
+module.exports = { runBackup, runOnlineBackup };
