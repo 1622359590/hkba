@@ -12,6 +12,15 @@ function resolveDbPath() {
 
 let db = null; // 单例
 
+function resolveInitialAdminPassword() {
+  const configured = process.env.ADMIN_INITIAL_PASSWORD || '';
+  if (configured.length >= 12) return configured;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_INITIAL_PASSWORD must contain at least 12 characters in production');
+  }
+  return 'hkba2024';
+}
+
 function getDb() {
   if (!db) {
     db = new Database(resolveDbPath());
@@ -79,9 +88,9 @@ function initDatabase() {
   // 插入默认管理员
   const adminExists = conn.prepare('SELECT id FROM admins WHERE username = ?').get('admin');
   if (!adminExists) {
-    const hash = bcrypt.hashSync('hkba2024', 10);
+    const hash = bcrypt.hashSync(resolveInitialAdminPassword(), 10);
     conn.prepare('INSERT INTO admins (username, password) VALUES (?, ?)').run('admin', hash);
-    console.log('✅ Default admin created: admin / hkba2024');
+    console.log('✅ Default admin created: admin');
   }
 
   // 种子 RBAC：三个角色、权限点、角色映射；首个管理员自动挂 super_admin
@@ -172,5 +181,5 @@ function closeDatabase() {
   }
 }
 
-module.exports = { initDatabase, getDb, closeDatabase, resolveDbPath };
+module.exports = { initDatabase, getDb, closeDatabase, resolveDbPath, resolveInitialAdminPassword };
 Object.defineProperty(module.exports, 'DB_PATH', { get: resolveDbPath });
