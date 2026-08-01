@@ -1,0 +1,132 @@
+@property --hero-scan-y {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 4%;
+}
+
+:global(.hero) .wordmark {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 16px;
+  overflow: visible;
+  background: none;
+  font-size: clamp(4rem, 9vw, 7.5rem);
+  font-weight: 700;
+  letter-spacing: -0.065em;
+  line-height: 0.82;
+  -webkit-text-fill-color: initial;
+  text-shadow: none;
+}
+
+.motion {
+  --hero-scan-y: 4%;
+  position: relative;
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: hidden;
+  animation: wordmarkScan var(--hero-scan-duration) linear infinite;
+}
+
+.base,
+.light,
+.texture {
+  display: block;
+}
+
+.base {
+  position: relative;
+  z-index: 1;
+  color: rgba(11, 37, 69, 0.96);
+  -webkit-text-fill-color: currentColor;
+  -webkit-text-stroke: 2px #bfeaff;
+  text-shadow: 0 0 20px rgba(14, 165, 233, 0.22);
+}
+
+.light,
+.texture {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  pointer-events: none;
+}
+
+.light {
+  z-index: 2;
+  background: linear-gradient(
+    180deg,
+    rgba(42, 130, 190, 0.1) 0%,
+    rgba(42, 130, 190, 0.1) calc(var(--hero-scan-y) - 13%),
+    #147eb9 calc(var(--hero-scan-y) - 8%),
+    #53d7f4 calc(var(--hero-scan-y) - 3%),
+    #e8fcff var(--hero-scan-y),
+    #4fd3f1 calc(var(--hero-scan-y) + 4%),
+    #126ca3 calc(var(--hero-scan-y) + 9%),
+    rgba(42, 130, 190, 0.08) calc(var(--hero-scan-y) + 14%),
+    rgba(42, 130, 190, 0.08) 100%
+  );
+  filter: drop-shadow(0 0 7px rgba(56, 189, 248, 0.5));
+}
+
+.texture {
+  z-index: 3;
+  opacity: 0.62;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2px, rgba(219, 249, 255, 0.5) 2px 3px, transparent 3px 6px),
+    linear-gradient(
+      180deg,
+      transparent calc(var(--hero-scan-y) - 9%),
+      #d7f9ff calc(var(--hero-scan-y) - 2%),
+      #35c8ed calc(var(--hero-scan-y) + 7%),
+      transparent calc(var(--hero-scan-y) + 11%)
+    );
+  background-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent calc(var(--hero-scan-y) - 10%),
+    #000 calc(var(--hero-scan-y) - 6%),
+    #000 calc(var(--hero-scan-y) + 9%),
+    transparent calc(var(--hero-scan-y) + 13%)
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent calc(var(--hero-scan-y) - 10%),
+    #000 calc(var(--hero-scan-y) - 6%),
+    #000 calc(var(--hero-scan-y) + 9%),
+    transparent calc(var(--hero-scan-y) + 13%)
+  );
+}
+
+.beam {
+  position: absolute;
+  z-index: 4;
+  top: var(--hero-scan-y);
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(224, 251, 255, 0.9) 15%, #38bdf8 78%, transparent);
+  box-shadow: 0 0 6px #38bdf8, 0 0 14px rgba(56, 189, 248, 0.6);
+  pointer-events: none;
+}
+
+@keyframes wordmarkScan {
+  from { --hero-scan-y: 4%; }
+  to { --hero-scan-y: 96%; }
+}
+
+@media (max-width: 600px) {
+  :global(.hero) .wordmark {
+    font-size: clamp(3.4rem, 19vw, 5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion {
+    --hero-scan-y: 52%;
+    animation: none;
+  }
+}
