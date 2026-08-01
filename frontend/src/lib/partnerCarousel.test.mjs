@@ -4,12 +4,28 @@ import * as partnerCarousel from './partnerCarousel.mjs';
 import {
   partnerCarouselDelta,
   partnerCarouselPixelsPerSecond,
+  observePartnerCarouselPageVisibility,
   partnerShowsDetails,
   resolvePartnerCarouselOptions,
   shouldPartnerCarouselAnimate,
   shouldPartnerCarouselPauseForFocus,
   wrapPartnerCarouselScroll,
 } from './partnerCarousel.mjs';
+
+test('partner carousel keeps playing while the page is visible even if the window loses focus', () => {
+  const documentTarget = new EventTarget();
+  documentTarget.visibilityState = 'visible';
+  const states = [];
+
+  const stopObserving = observePartnerCarouselPageVisibility(documentTarget, (visible) => states.push(visible));
+  documentTarget.dispatchEvent(new Event('blur'));
+  assert.deepEqual(states, [true]);
+  documentTarget.visibilityState = 'hidden';
+  documentTarget.dispatchEvent(new Event('visibilitychange'));
+  stopObserving();
+
+  assert.deepEqual(states, [true, false]);
+});
 
 test('partner details are visible only in the explicit cards variant', () => {
   assert.equal(partnerShowsDetails('cards'), true);

@@ -25,6 +25,13 @@ export function partnerCarouselPixelsPerSecond(speed) {
   return SPEEDS[speed] || SPEEDS.slow;
 }
 
+export function observePartnerCarouselPageVisibility(documentTarget, onChange) {
+  const update = () => onChange(documentTarget.visibilityState !== 'hidden');
+  update();
+  documentTarget.addEventListener('visibilitychange', update);
+  return () => documentTarget.removeEventListener('visibilitychange', update);
+}
+
 export function shouldPartnerCarouselAnimate(state) {
   return Boolean(
     state.autoPlay

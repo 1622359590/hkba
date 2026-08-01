@@ -12,6 +12,7 @@ import {
 } from 'react';
 import {
   nextPartnerCarouselFocusState,
+  observePartnerCarouselPageVisibility,
   partnerCarouselDelta,
   partnerCarouselIsOverflowing,
   partnerCarouselPixelsPerSecond,
@@ -106,18 +107,7 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
   }, []);
 
   useEffect(() => {
-    const updateVisibility = () => setPageVisible(document.visibilityState !== 'hidden');
-    const markVisible = () => setPageVisible(document.visibilityState !== 'hidden');
-    const markHidden = () => setPageVisible(false);
-    updateVisibility();
-    document.addEventListener('visibilitychange', updateVisibility);
-    window.addEventListener('focus', markVisible);
-    window.addEventListener('blur', markHidden);
-    return () => {
-      document.removeEventListener('visibilitychange', updateVisibility);
-      window.removeEventListener('focus', markVisible);
-      window.removeEventListener('blur', markHidden);
-    };
+    return observePartnerCarouselPageVisibility(document, setPageVisible);
   }, []);
 
   useLayoutEffect(() => {
