@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as partnerCarousel from './partnerCarousel.mjs';
 import {
+  advancePartnerCarouselPosition,
   partnerCarouselDelta,
   partnerCarouselPixelsPerSecond,
   observePartnerCarouselPageVisibility,
@@ -11,6 +12,21 @@ import {
   shouldPartnerCarouselPauseForFocus,
   wrapPartnerCarouselScroll,
 } from './partnerCarousel.mjs';
+
+test('partner carousel preserves subpixel movement on high-refresh displays', () => {
+  let position = 0;
+  for (let frame = 0; frame < 144; frame += 1) {
+    position = advancePartnerCarouselPosition({
+      position,
+      elapsedMs: 1000 / 144,
+      pixelsPerSecond: 28,
+      direction: 'left',
+      cycleWidth: 1000,
+    });
+  }
+
+  assert.ok(Math.abs(position - 28) < 0.000001);
+});
 
 test('partner carousel keeps playing while the page is visible even if the window loses focus', () => {
   const documentTarget = new EventTarget();

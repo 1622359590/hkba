@@ -70,6 +70,14 @@ export function partnerCarouselDelta({ elapsedMs, pixelsPerSecond, direction }) 
   return direction === 'right' ? -distance : distance;
 }
 
+export function advancePartnerCarouselPosition({ position, elapsedMs, pixelsPerSecond, direction, cycleWidth }) {
+  return wrapPartnerCarouselScroll({
+    scrollLeft: position + partnerCarouselDelta({ elapsedMs, pixelsPerSecond, direction }),
+    cycleWidth,
+    direction,
+  });
+}
+
 export function wrapPartnerCarouselScroll({ scrollLeft, cycleWidth, direction }) {
   if (!(cycleWidth > 0)) return scrollLeft;
   if (direction === 'right' && scrollLeft <= 0) return scrollLeft + cycleWidth;

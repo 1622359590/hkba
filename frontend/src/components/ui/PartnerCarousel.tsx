@@ -11,14 +11,13 @@ import {
   useState,
 } from 'react';
 import {
+  advancePartnerCarouselPosition,
   nextPartnerCarouselFocusState,
   observePartnerCarouselPageVisibility,
-  partnerCarouselDelta,
   partnerCarouselIsOverflowing,
   partnerCarouselPixelsPerSecond,
   resolvePartnerCarouselOptions,
   shouldPartnerCarouselAnimate,
-  wrapPartnerCarouselScroll,
 } from '@/lib/partnerCarousel.mjs';
 
 export type PartnerCarouselItem = { id: string | number };
@@ -54,6 +53,7 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
   const firstSetRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
+  const scrollPositionRef = useRef(0);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const draggedRef = useRef(false);
@@ -122,7 +122,10 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
         viewportWidth: viewport.clientWidth,
       });
       setOverflowing(nextOverflowing);
-      if (!nextOverflowing) viewport.scrollLeft = 0;
+      if (!nextOverflowing) {
+        scrollPositionRef.current = 0;
+        viewport.scrollLeft = 0;
+      }
     };
     measure();
 
@@ -141,7 +144,8 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
     }
     const initializationKey = `${options.direction}:${items.map((item) => item.id).join(',')}`;
     if (initializedDirectionRef.current === initializationKey) return;
-    viewport.scrollLeft = options.direction === 'right' ? firstSet.scrollWidth : 0;
+    scrollPositionRef.current = options.direction === 'right' ? firstSet.scrollWidth : 0;
+    viewport.scrollLeft = scrollPositionRef.current;
     initializedDirectionRef.current = initializationKey;
   }, [items, options.direction, overflowing]);
 
@@ -165,6 +169,8 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
       return;
     }
 
+    scrollPositionRef.current = viewportRef.current?.scrollLeft ?? scrollPositionRef.current;
+
     const tick = (timestamp: number) => {
       const viewport = viewportRef.current;
       const firstSet = firstSetRef.current;
@@ -172,16 +178,15 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
 
       const previous = lastTimestampRef.current ?? timestamp;
       lastTimestampRef.current = timestamp;
-      const next = viewport.scrollLeft + partnerCarouselDelta({
+      const next = advancePartnerCarouselPosition({
+        position: scrollPositionRef.current,
         elapsedMs: timestamp - previous,
         pixelsPerSecond: partnerCarouselPixelsPerSecond(options.speed),
         direction: options.direction,
-      });
-      viewport.scrollLeft = wrapPartnerCarouselScroll({
-        scrollLeft: next,
         cycleWidth: firstSet.scrollWidth,
-        direction: options.direction,
       });
+      scrollPositionRef.current = next;
+      viewport.scrollLeft = next;
       animationFrameRef.current = requestAnimationFrame(tick);
     };
 
