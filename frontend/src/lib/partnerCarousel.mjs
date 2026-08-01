@@ -31,6 +31,7 @@ export function shouldPartnerCarouselAnimate(state) {
     && state.overflowing
     && !state.reducedMotion
     && state.pageVisible
+    && state.carouselVisible
     && !state.hovered
     && !state.focused
     && !state.dragging
@@ -40,6 +41,21 @@ export function shouldPartnerCarouselAnimate(state) {
 
 export function shouldPartnerCarouselPauseForFocus({ focusVisible, pointerActive }) {
   return Boolean(focusVisible && !pointerActive);
+}
+
+export function nextPartnerCarouselFocusState(currentFocused, event) {
+  if (event.type === 'pointer-down' || event.type === 'focus-out') return false;
+  if (event.type === 'focus-in') {
+    return shouldPartnerCarouselPauseForFocus({
+      focusVisible: event.focusVisible,
+      pointerActive: event.pointerActive,
+    });
+  }
+  return currentFocused;
+}
+
+export function partnerCarouselIsOverflowing({ itemCount, contentWidth, viewportWidth }) {
+  return itemCount > 1 && contentWidth > viewportWidth + 1;
 }
 
 export function partnerCarouselDelta({ elapsedMs, pixelsPerSecond, direction }) {

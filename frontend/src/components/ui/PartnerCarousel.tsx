@@ -11,11 +11,12 @@ import {
   useState,
 } from 'react';
 import {
+  nextPartnerCarouselFocusState,
   partnerCarouselDelta,
+  partnerCarouselIsOverflowing,
   partnerCarouselPixelsPerSecond,
   resolvePartnerCarouselOptions,
   shouldPartnerCarouselAnimate,
-  shouldPartnerCarouselPauseForFocus,
   wrapPartnerCarouselScroll,
 } from '@/lib/partnerCarousel.mjs';
 
@@ -65,6 +66,7 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
   const [manuallyPaused, setManuallyPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
+  const [carouselVisible, setCarouselVisible] = useState(true);
 
   const options = resolvePartnerCarouselOptions({ autoPlay, speed, direction, pauseOnHover });
 
@@ -82,6 +84,17 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
       if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
       if (clearDraggedTimerRef.current) clearTimeout(clearDraggedTimerRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setCarouselVisible(entry.isIntersecting);
+    });
+    observer.observe(viewport);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -113,7 +126,11 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
     if (!viewport || !firstSet) return;
 
     const measure = () => {
-      const nextOverflowing = firstSet.scrollWidth > viewport.clientWidth + 1;
+      const nextOverflowing = partnerCarouselIsOverflowing({
+        itemCount: items.length,
+        contentWidth: firstSet.scrollWidth,
+        viewportWidth: viewport.clientWidth,
+      });
       setOverflowing(nextOverflowing);
       if (!nextOverflowing) viewport.scrollLeft = 0;
     };
@@ -144,6 +161,7 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
       overflowing,
       reducedMotion,
       pageVisible,
+      carouselVisible,
       hovered: options.pauseOnHover && hovered,
       focused,
       dragging,
@@ -183,13 +201,14 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
       animationFrameRef.current = null;
       lastTimestampRef.current = null;
     };
-  }, [dragging, focused, hovered, manuallyPaused, options.autoPlay, options.direction, options.pauseOnHover, options.speed, overflowing, pageVisible, reducedMotion]);
+  }, [carouselVisible, dragging, focused, hovered, manuallyPaused, options.autoPlay, options.direction, options.pauseOnHover, options.speed, overflowing, pageVisible, reducedMotion]);
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     const viewport = viewportRef.current;
     if (!viewport) return;
     if (clearDraggedTimerRef.current) clearTimeout(clearDraggedTimerRef.current);
+    setFocused((current) => nextPartnerCarouselFocusState(current, { type: 'pointer-down' }));
     dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startScrollLeft: viewport.scrollLeft };
     draggedRef.current = false;
     setDragging(true);
@@ -245,13 +264,16 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
         onMouseLeave={() => setHovered(false)}
         onFocusCapture={(event) => {
           const target = event.target as HTMLElement;
-          setFocused(shouldPartnerCarouselPauseForFocus({
+          setFocused((current) => nextPartnerCarouselFocusState(current, {
+            type: 'focus-in',
             focusVisible: target.matches(':focus-visible'),
             pointerActive: dragRef.current !== null,
           }));
         }}
         onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setFocused((current) => nextPartnerCarouselFocusState(current, { type: 'focus-out' }));
+          }
         }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

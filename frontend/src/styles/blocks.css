@@ -504,6 +504,34 @@
   border-color: rgba(34, 211, 238, 0.62);
   box-shadow: 0 12px 30px rgba(1, 10, 28, 0.34), 0 0 22px rgba(37, 99, 235, 0.12);
 }
+
+/* The partner marquee is one shared strip, so these final rules must win over
+   the shared public card language above. */
+:is(.public-main, .hk-canvas) .hk-partner-carousel .hk-partner {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+:is(.public-main, .hk-canvas) .hk-partner-carousel .hk-partner:hover {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+:is(.public-main, .hk-canvas) .hk-partner-carousel .hk-partner::before {
+  content: none;
+  display: none;
+  background: none;
+  box-shadow: none;
+}
+.hk-partner-carousel .partner-carousel__viewport:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 2px var(--cyan);
+}
 .hk-news-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

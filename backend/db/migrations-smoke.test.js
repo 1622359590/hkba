@@ -68,7 +68,7 @@ test('creates every M1 table and index on a fresh database', (t) => {
     assert.ok(objectExists(conn, 'index', index), `missing index: ${index}`);
   }
   const recorded = conn.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get().count;
-  assert.equal(recorded, 10);
+  assert.equal(recorded, 12);
   // 008 adds user_agent to audit_events.
   const auditColumns = conn.prepare('PRAGMA table_info(audit_events)').all().map((col) => col.name);
   assert.ok(auditColumns.includes('user_agent'));
@@ -76,6 +76,58 @@ test('creates every M1 table and index on a fresh database', (t) => {
   const mutationColumns = conn.prepare('PRAGMA table_info(mutation_log)').all().map((col) => col.name);
   assert.ok(mutationColumns.includes('owner_id'));
   assert.ok(!mutationColumns.includes('page_id'));
+});
+
+test('partner carousel migration updates only About-page partner blocks and preserves playback choices', (t) => {
+  const conn = makeTempDb(t);
+  conn.prepare("INSERT INTO page_nodes (id, node_type, slug, path) VALUES ('about-page', 'page', 'about', '/about')").run();
+  conn.prepare("INSERT INTO page_nodes (id, node_type, slug, path) VALUES ('home-page', 'page', 'home', '/')").run();
+  conn.prepare("INSERT INTO page_versions (id, page_id, revision) VALUES ('about-version', 'about-page', 1)").run();
+  conn.prepare("INSERT INTO page_versions (id, page_id, revision) VALUES ('home-version', 'home-page', 1)").run();
+  conn.prepare("INSERT INTO page_blocks (id, page_version_id, component_type, sort_order, settings) VALUES ('about-partners', 'about-version', 'association.partners', 1, ?)")
+    .run(JSON.stringify({ variant: 'logo-wall', autoPlay: false, speed: 'fast', direction: 'right', pauseOnHover: false }));
+  conn.prepare("INSERT INTO page_blocks (id, page_version_id, component_type, sort_order, settings) VALUES ('home-partners', 'home-version', 'association.partners', 1, ?)")
+    .run(JSON.stringify({ variant: 'logo-wall' }));
+
+  const migration = fs.readFileSync(path.join(__dirname, 'migrations/011_about_partner_carousel.sql'), 'utf8');
+  conn.exec(migration);
+
+  assert.deepEqual(JSON.parse(conn.prepare("SELECT settings FROM page_blocks WHERE id = 'about-partners'").get().settings), {
+    variant: 'carousel',
+    autoPlay: false,
+    speed: 'fast',
+    direction: 'right',
+    pauseOnHover: false,
+  });
+  assert.deepEqual(JSON.parse(conn.prepare("SELECT settings FROM page_blocks WHERE id = 'home-partners'").get().settings), {
+    variant: 'logo-wall',
+  });
+});
+
+test('home partner carousel migration updates only Home-page partner blocks and preserves playback choices', (t) => {
+  const conn = makeTempDb(t);
+  conn.prepare("INSERT INTO page_nodes (id, node_type, slug, path) VALUES ('home-page', 'page', 'home', '/')").run();
+  conn.prepare("INSERT INTO page_nodes (id, node_type, slug, path) VALUES ('members-page', 'page', 'members', '/members')").run();
+  conn.prepare("INSERT INTO page_versions (id, page_id, revision) VALUES ('home-version', 'home-page', 1)").run();
+  conn.prepare("INSERT INTO page_versions (id, page_id, revision) VALUES ('members-version', 'members-page', 1)").run();
+  conn.prepare("INSERT INTO page_blocks (id, page_version_id, component_type, sort_order, settings) VALUES ('home-partners', 'home-version', 'association.partners', 1, ?)")
+    .run(JSON.stringify({ variant: 'logo-wall', autoPlay: false, speed: 'normal', direction: 'right', pauseOnHover: false }));
+  conn.prepare("INSERT INTO page_blocks (id, page_version_id, component_type, sort_order, settings) VALUES ('members-partners', 'members-version', 'association.partners', 1, ?)")
+    .run(JSON.stringify({ variant: 'logo-wall' }));
+
+  const migration = fs.readFileSync(path.join(__dirname, 'migrations/012_home_partner_carousel.sql'), 'utf8');
+  conn.exec(migration);
+
+  assert.deepEqual(JSON.parse(conn.prepare("SELECT settings FROM page_blocks WHERE id = 'home-partners'").get().settings), {
+    variant: 'carousel',
+    autoPlay: false,
+    speed: 'normal',
+    direction: 'right',
+    pauseOnHover: false,
+  });
+  assert.deepEqual(JSON.parse(conn.prepare("SELECT settings FROM page_blocks WHERE id = 'members-partners'").get().settings), {
+    variant: 'logo-wall',
+  });
 });
 
 test('page_nodes enforces per-parent slug uniqueness and site-wide path uniqueness', (t) => {

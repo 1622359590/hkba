@@ -5,6 +5,7 @@ import { apiGet, imgUrl, isPlaceholderPartnerName, type PageContent, type Milest
 import Link from 'next/link';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
 import PublicPageSwitch from '@/components/PublicPageSwitch';
+import PartnerCarousel from '@/components/ui/PartnerCarousel';
 
 const c: React.CSSProperties = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
 const sec: React.CSSProperties = { padding: '96px 0' };
@@ -112,23 +113,35 @@ export default function AboutPage() {
           <div style={c}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}><div className="section-label">{t('合作夥伴', 'Partners')}</div><h2 className="section-title">{t('攜手共建生態', 'Building Together')}</h2></div>
             <div style={{ maxWidth: 980, margin: '0 auto' }}>
-              <div className="member-logo-grid">
-                {partners.map(p => {
-                  const partnerName = isPlaceholderPartnerName(p.name) ? t('合作夥伴', 'Partner Organization') : p.name;
-                  const card = (
-                    <div className="member-logo-card">
-                      <div className="member-logo-card__surface">
-                        <img src={imgUrl(p.logo_url)} alt={partnerName} />
-                      </div>
+              <PartnerCarousel
+                items={partners}
+                ariaLabel={t('合作夥伴', 'Partners')}
+                autoPlay
+                speed="slow"
+                direction="left"
+                pauseOnHover
+                className="hk-partner-carousel about-partner-carousel"
+                renderItem={(partner, duplicate) => {
+                  const partnerName = isPlaceholderPartnerName(partner.name) ? t('合作夥伴', 'Partner Organization') : partner.name;
+                  const logo = (
+                    <div className="hk-partner__tile">
+                      <img src={imgUrl(partner.logo_url)} alt={duplicate ? '' : partnerName} />
                     </div>
                   );
-                  return p.website_url ? (
-                    <a key={p.id} href={p.website_url} target="_blank" rel="noopener noreferrer" className="member-logo-link" aria-label={`${p.name} website`}>{card}</a>
-                  ) : (
-                    <div key={p.id}>{card}</div>
-                  );
-                })}
-              </div>
+                  return partner.website_url ? (
+                    <a
+                      href={partner.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hk-partner"
+                      aria-label={duplicate ? undefined : `${partnerName} website`}
+                      tabIndex={duplicate ? -1 : undefined}
+                    >
+                      {logo}
+                    </a>
+                  ) : <div className="hk-partner">{logo}</div>;
+                }}
+              />
             </div>
           </div>
         </section>

@@ -18,6 +18,8 @@ const ALL_MIGRATIONS = [
   '008_audit_events_user_agent.sql',
   '009_mutation_log.sql',
   '010_mutation_owner.sql',
+  '011_about_partner_carousel.sql',
+  '012_home_partner_carousel.sql',
 ];
 
 const BASELINE_TABLES = [

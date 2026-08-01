@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as partnerCarousel from './partnerCarousel.mjs';
 import {
   partnerCarouselDelta,
   partnerCarouselPixelsPerSecond,
@@ -54,18 +55,48 @@ test('partner carousel animates only when playback is safe', () => {
     overflowing: true,
     reducedMotion: false,
     pageVisible: true,
+    carouselVisible: true,
     hovered: false,
     focused: false,
     dragging: false,
     manuallyPaused: false,
   };
   assert.equal(shouldPartnerCarouselAnimate(ready), true);
-  for (const blockedBy of ['autoPlay', 'overflowing', 'pageVisible']) {
+  for (const blockedBy of ['autoPlay', 'overflowing', 'pageVisible', 'carouselVisible']) {
     assert.equal(shouldPartnerCarouselAnimate({ ...ready, [blockedBy]: false }), false);
   }
   for (const blockedBy of ['reducedMotion', 'hovered', 'focused', 'dragging', 'manuallyPaused']) {
     assert.equal(shouldPartnerCarouselAnimate({ ...ready, [blockedBy]: true }), false);
   }
+});
+
+test('keyboard focus followed by pointer drag resumes after the manual delay', () => {
+  assert.equal(typeof partnerCarousel.nextPartnerCarouselFocusState, 'function');
+  const ready = {
+    autoPlay: true,
+    overflowing: true,
+    reducedMotion: false,
+    pageVisible: true,
+    carouselVisible: true,
+    hovered: false,
+    dragging: false,
+  };
+
+  let focused = partnerCarousel.nextPartnerCarouselFocusState(false, { type: 'focus-in', focusVisible: true });
+  assert.equal(focused, true);
+  assert.equal(shouldPartnerCarouselAnimate({ ...ready, focused, manuallyPaused: false }), false);
+
+  focused = partnerCarousel.nextPartnerCarouselFocusState(focused, { type: 'pointer-down' });
+  assert.equal(focused, false);
+  assert.equal(shouldPartnerCarouselAnimate({ ...ready, focused, manuallyPaused: true }), false);
+  assert.equal(shouldPartnerCarouselAnimate({ ...ready, focused, manuallyPaused: false }), true);
+});
+
+test('a single partner never overflows even when its content is wider than the viewport', () => {
+  assert.equal(typeof partnerCarousel.partnerCarouselIsOverflowing, 'function');
+  assert.equal(partnerCarousel.partnerCarouselIsOverflowing({ itemCount: 1, contentWidth: 420, viewportWidth: 180 }), false);
+  assert.equal(partnerCarousel.partnerCarouselIsOverflowing({ itemCount: 2, contentWidth: 420, viewportWidth: 180 }), true);
+  assert.equal(partnerCarousel.partnerCarouselIsOverflowing({ itemCount: 2, contentWidth: 180, viewportWidth: 180 }), false);
 });
 
 test('pointer focus does not keep autoplay paused after dragging', () => {
