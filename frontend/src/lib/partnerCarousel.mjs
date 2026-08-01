@@ -38,6 +38,10 @@ export function shouldPartnerCarouselAnimate(state) {
   );
 }
 
+export function shouldPartnerCarouselPauseForFocus({ focusVisible, pointerActive }) {
+  return Boolean(focusVisible && !pointerActive);
+}
+
 export function partnerCarouselDelta({ elapsedMs, pixelsPerSecond, direction }) {
   const distance = pixelsPerSecond * Math.min(Math.max(elapsedMs, 0), 64) / 1000;
   return direction === 'right' ? -distance : distance;

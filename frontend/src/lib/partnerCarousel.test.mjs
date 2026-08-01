@@ -6,6 +6,7 @@ import {
   partnerShowsDetails,
   resolvePartnerCarouselOptions,
   shouldPartnerCarouselAnimate,
+  shouldPartnerCarouselPauseForFocus,
   wrapPartnerCarouselScroll,
 } from './partnerCarousel.mjs';
 
@@ -65,6 +66,12 @@ test('partner carousel animates only when playback is safe', () => {
   for (const blockedBy of ['reducedMotion', 'hovered', 'focused', 'dragging', 'manuallyPaused']) {
     assert.equal(shouldPartnerCarouselAnimate({ ...ready, [blockedBy]: true }), false);
   }
+});
+
+test('pointer focus does not keep autoplay paused after dragging', () => {
+  assert.equal(shouldPartnerCarouselPauseForFocus({ focusVisible: true, pointerActive: false }), true);
+  assert.equal(shouldPartnerCarouselPauseForFocus({ focusVisible: true, pointerActive: true }), false);
+  assert.equal(shouldPartnerCarouselPauseForFocus({ focusVisible: false, pointerActive: false }), false);
 });
 
 test('partner carousel delta follows direction and caps long frames', () => {

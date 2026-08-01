@@ -15,6 +15,7 @@ import {
   partnerCarouselPixelsPerSecond,
   resolvePartnerCarouselOptions,
   shouldPartnerCarouselAnimate,
+  shouldPartnerCarouselPauseForFocus,
   wrapPartnerCarouselScroll,
 } from '@/lib/partnerCarousel.mjs';
 
@@ -242,7 +243,13 @@ export default function PartnerCarousel<T extends PartnerCarouselItem>({
         tabIndex={overflowing ? 0 : undefined}
         onMouseEnter={() => options.pauseOnHover && setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        onFocusCapture={() => setFocused(true)}
+        onFocusCapture={(event) => {
+          const target = event.target as HTMLElement;
+          setFocused(shouldPartnerCarouselPauseForFocus({
+            focusVisible: target.matches(':focus-visible'),
+            pointerActive: dragRef.current !== null,
+          }));
+        }}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
         }}
