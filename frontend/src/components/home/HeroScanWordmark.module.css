@@ -60,16 +60,16 @@
   background: linear-gradient(
     180deg,
     rgba(42, 130, 190, 0.1) 0%,
-    rgba(42, 130, 190, 0.1) calc(var(--hero-scan-y) - 13%),
-    #147eb9 calc(var(--hero-scan-y) - 8%),
-    #53d7f4 calc(var(--hero-scan-y) - 3%),
+    rgba(42, 130, 190, 0.1) calc(var(--hero-scan-y) - var(--hero-scan-band-edge)),
+    #147eb9 calc(var(--hero-scan-y) - var(--hero-scan-band-edge)),
+    #53d7f4 calc(var(--hero-scan-y) - var(--hero-scan-core)),
     #e8fcff var(--hero-scan-y),
-    #4fd3f1 calc(var(--hero-scan-y) + 4%),
-    #126ca3 calc(var(--hero-scan-y) + 9%),
-    rgba(42, 130, 190, 0.08) calc(var(--hero-scan-y) + 14%),
+    #4fd3f1 calc(var(--hero-scan-y) + var(--hero-scan-core)),
+    #126ca3 calc(var(--hero-scan-y) + var(--hero-scan-band-edge)),
+    rgba(42, 130, 190, 0.08) calc(var(--hero-scan-y) + var(--hero-scan-band-edge)),
     rgba(42, 130, 190, 0.08) 100%
   );
-  filter: drop-shadow(0 0 7px rgba(56, 189, 248, 0.5));
+  filter: drop-shadow(0 0 var(--hero-scan-glow) rgba(56, 189, 248, 0.44));
 }
 
 .texture {
@@ -79,25 +79,25 @@
     repeating-linear-gradient(180deg, transparent 0 2px, rgba(219, 249, 255, 0.5) 2px 3px, transparent 3px 6px),
     linear-gradient(
       180deg,
-      transparent calc(var(--hero-scan-y) - 9%),
-      #d7f9ff calc(var(--hero-scan-y) - 2%),
-      #35c8ed calc(var(--hero-scan-y) + 7%),
-      transparent calc(var(--hero-scan-y) + 11%)
+      transparent calc(var(--hero-scan-y) - var(--hero-scan-band-edge)),
+      #d7f9ff calc(var(--hero-scan-y) - var(--hero-scan-core)),
+      #35c8ed calc(var(--hero-scan-y) + var(--hero-scan-core)),
+      transparent calc(var(--hero-scan-y) + var(--hero-scan-band-edge))
     );
   background-blend-mode: screen;
   -webkit-mask-image: linear-gradient(
     180deg,
-    transparent calc(var(--hero-scan-y) - 10%),
-    #000 calc(var(--hero-scan-y) - 6%),
-    #000 calc(var(--hero-scan-y) + 9%),
-    transparent calc(var(--hero-scan-y) + 13%)
+    transparent calc(var(--hero-scan-y) - var(--hero-scan-band-edge)),
+    #000 calc(var(--hero-scan-y) - var(--hero-scan-core)),
+    #000 calc(var(--hero-scan-y) + var(--hero-scan-core)),
+    transparent calc(var(--hero-scan-y) + var(--hero-scan-band-edge))
   );
   mask-image: linear-gradient(
     180deg,
-    transparent calc(var(--hero-scan-y) - 10%),
-    #000 calc(var(--hero-scan-y) - 6%),
-    #000 calc(var(--hero-scan-y) + 9%),
-    transparent calc(var(--hero-scan-y) + 13%)
+    transparent calc(var(--hero-scan-y) - var(--hero-scan-band-edge)),
+    #000 calc(var(--hero-scan-y) - var(--hero-scan-core)),
+    #000 calc(var(--hero-scan-y) + var(--hero-scan-core)),
+    transparent calc(var(--hero-scan-y) + var(--hero-scan-band-edge))
   );
 }
 
@@ -107,9 +107,11 @@
   top: var(--hero-scan-y);
   left: 0;
   right: 0;
-  height: 1px;
+  height: var(--hero-scan-beam-size);
   background: linear-gradient(90deg, transparent, rgba(224, 251, 255, 0.9) 15%, #38bdf8 78%, transparent);
-  box-shadow: 0 0 6px #38bdf8, 0 0 14px rgba(56, 189, 248, 0.6);
+  box-shadow:
+    0 0 var(--hero-scan-glow) #38bdf8,
+    0 0 calc(var(--hero-scan-glow) + 4px) rgba(56, 189, 248, 0.52);
   pointer-events: none;
 }
 

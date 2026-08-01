@@ -4,7 +4,7 @@
 
 **Goal:** Refine the homepage HKBA wordmark so its moving scan reads as a precise 1px line with a narrow internal highlight instead of a thick light column.
 
-**Architecture:** Keep the existing `HeroScanWordmark` markup, shared `--hero-scan-y` timeline, 3.4 second cycle, and reduced-motion behavior. Change only the CSS Module gradient stops, texture mask, and glow radius, with a source-level regression test that locks the approved narrow-band contract.
+**Architecture:** Keep the existing `HeroScanWordmark` markup, shared `--hero-scan-y` timeline, 3.4 second cycle, and reduced-motion behavior. Expose the approved scan metrics through the existing presentation model, pass them into CSS custom properties, and use those properties to narrow the gradient stops, texture mask, and glow radius.
 
 **Tech Stack:** Next.js 16, React, CSS Modules, Node.js built-in test runner
 
@@ -22,26 +22,25 @@
 
 **Files:**
 - Modify: `frontend/src/lib/heroWordmark.test.mjs`
+- Modify: `frontend/src/lib/heroWordmark.mjs`
+- Modify: `frontend/src/components/home/HeroScanWordmark.tsx`
 - Modify: `frontend/src/components/home/HeroScanWordmark.module.css`
 
 **Interfaces:**
 - Consumes: the existing `--hero-scan-y` custom property and `HeroScanWordmark` layer classes.
-- Produces: the same visual component contract with narrower `.light`, `.texture`, and `.beam` rendering.
+- Produces: `heroWordmarkPresentation()` metrics for `bandEdgePct`, `corePct`, `beamPx`, and `glowPx`, consumed as CSS custom properties by the existing component.
 
-- [ ] **Step 1: Write the failing CSS contract test**
+- [ ] **Step 1: Write the failing presentation contract test**
 
-Extend `frontend/src/lib/heroWordmark.test.mjs` to read `HeroScanWordmark.module.css` and assert that it contains the approved narrow stops and reduced glow:
+Extend `frontend/src/lib/heroWordmark.test.mjs` to assert the approved scan metrics returned by the real presentation model:
 
 ```js
-const css = readFileSync(
-  new URL('../components/home/HeroScanWordmark.module.css', import.meta.url),
-  'utf8',
-);
-
-assert.match(css, /calc\(var\(--hero-scan-y\) - 4%\)/);
-assert.match(css, /calc\(var\(--hero-scan-y\) \+ 4%\)/);
-assert.match(css, /height:\s*1px/);
-assert.match(css, /0 0 3px #38bdf8/);
+assert.deepEqual(presentation.scan, {
+  bandEdgePct: 4,
+  corePct: 1.5,
+  beamPx: 1,
+  glowPx: 3,
+});
 ```
 
 - [ ] **Step 2: Run the focused test and verify it fails**
@@ -53,11 +52,11 @@ cd frontend
 node --test src/lib/heroWordmark.test.mjs
 ```
 
-Expected: FAIL because the current highlight uses wider `-13%` through `+14%` stops and a `6px` beam glow.
+Expected: FAIL because the current presentation model does not expose the approved narrow scan metrics.
 
 - [ ] **Step 3: Implement the narrow scan treatment**
 
-In `HeroScanWordmark.module.css`:
+Add the literal scan metrics to `heroWordmarkPresentation()`, pass them from `HeroScanWordmark.tsx` as CSS custom properties, then update `HeroScanWordmark.module.css`:
 
 - confine the visible `.light` transition to `--hero-scan-y - 4%` through `--hero-scan-y + 4%`;
 - keep the white/cyan core within roughly `-1%` through `+2%`;
@@ -83,6 +82,6 @@ At desktop width, sample the wordmark during motion and confirm the beam remains
 - [ ] **Step 6: Commit**
 
 ```bash
-git add frontend/src/lib/heroWordmark.test.mjs frontend/src/components/home/HeroScanWordmark.module.css
+git add frontend/src/lib/heroWordmark.test.mjs frontend/src/lib/heroWordmark.mjs frontend/src/components/home/HeroScanWordmark.tsx frontend/src/components/home/HeroScanWordmark.module.css
 git commit -m "fix: refine HKBA scan line"
 ```

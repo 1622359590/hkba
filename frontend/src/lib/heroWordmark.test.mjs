@@ -13,3 +13,14 @@ test('hero wordmark exposes one accessible label and hides decorative scan layer
   ]);
   assert.equal(presentation.layers.filter((layer) => !layer.ariaHidden).length, 1);
 });
+
+test('hero wordmark keeps the scan beam and internal highlight narrow', () => {
+  const presentation = heroWordmarkPresentation('HKBA');
+
+  assert.deepEqual(presentation.scan, {
+    bandEdgePct: 4,
+    corePct: 1.5,
+    beamPx: 1,
+    glowPx: 3,
+  });
+});

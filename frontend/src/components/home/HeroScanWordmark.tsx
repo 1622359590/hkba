@@ -18,7 +18,13 @@ type HeroScanWordmarkProps = { text?: string };
 
 export default function HeroScanWordmark({ text = 'HKBA' }: HeroScanWordmarkProps) {
   const presentation = heroWordmarkPresentation(text);
-  const style = { '--hero-scan-duration': `${presentation.cycleMs}ms` } as CSSProperties;
+  const style = {
+    '--hero-scan-duration': `${presentation.cycleMs}ms`,
+    '--hero-scan-band-edge': `${presentation.scan.bandEdgePct}%`,
+    '--hero-scan-core': `${presentation.scan.corePct}%`,
+    '--hero-scan-beam-size': `${presentation.scan.beamPx}px`,
+    '--hero-scan-glow': `${presentation.scan.glowPx}px`,
+  } as CSSProperties;
 
   return (
     <h1 className={`hero-title hero-wordmark ${styles.wordmark} ${oxanium.className}`}>
