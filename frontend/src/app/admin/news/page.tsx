@@ -300,7 +300,7 @@ export default function NewsCenterPage() {
     if (!editingId || editingId === 'new') return;
     try {
       const response = await adminPostData<{ token: string }>(`/api/admin/news/${editingId}/preview`, {});
-      window.open(`/admin/preview/${response.token}`, '_blank', 'noopener');
+      window.open(`/preview/${response.token}`, '_blank', 'noopener');
     } catch (error) {
       setBanner(adminRequestError(error));
     }

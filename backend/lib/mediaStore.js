@@ -70,7 +70,7 @@ function uploadsRoot() {
 
 // Validates and persists an upload buffer. Returns everything the route needs
 // to insert the media_assets row. Throws MediaRejected on validation failure.
-function storeUpload({ buffer, originalFilename = '' }) {
+function prepareUpload({ buffer, originalFilename = '', storagePrefix = 'media' }) {
   if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
     throw new MediaRejected([{ field: 'file', code: 'required', message: '未選擇檔案' }]);
   }
@@ -95,10 +95,8 @@ function storeUpload({ buffer, originalFilename = '' }) {
   const dimensions = spec.image && kind !== 'svg' ? imageSize(content) : null;
 
   const id = crypto.randomUUID();
-  const storageKey = `media/${id}${spec.ext}`;
-  const absolute = path.join(uploadsRoot(), storageKey);
-  fs.mkdirSync(path.dirname(absolute), { recursive: true });
-  fs.writeFileSync(absolute, content);
+  const prefix = String(storagePrefix || 'media').replace(/^\/+|\/+$/g, '');
+  const storageKey = `${prefix}/${id}${spec.ext}`;
 
   return {
     id,
@@ -109,7 +107,20 @@ function storeUpload({ buffer, originalFilename = '' }) {
     width: dimensions ? dimensions.width : null,
     height: dimensions ? dimensions.height : null,
     checksum: crypto.createHash('sha256').update(content).digest('hex'),
+    content,
   };
+}
+
+function persistLocalUpload(prepared) {
+  const absolute = path.join(uploadsRoot(), prepared.storageKey);
+  fs.mkdirSync(path.dirname(absolute), { recursive: true });
+  fs.writeFileSync(absolute, prepared.content);
+  const { content, ...stored } = prepared;
+  return stored;
+}
+
+function storeUpload(input) {
+  return persistLocalUpload(prepareUpload(input));
 }
 
 // Best-effort file removal; missing files are not an error (the row delete is
@@ -124,6 +135,8 @@ function removeStored(storageKey) {
 
 module.exports = {
   MediaRejected,
+  prepareUpload,
+  persistLocalUpload,
   storeUpload,
   removeStored,
   sanitizeSvg,

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HKBA 配色方案对比</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #111; color: #fff; padding: 40px 20px; }
+    h1 { text-align: center; font-size: 28px; margin-bottom: 40px; color: #888; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; max-width: 1400px; margin: 0 auto; }
+
+    .card { border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+    .card-header { padding: 20px 24px; font-size: 18px; font-weight: 700; }
+
+    .preview { padding: 32px 24px; min-height: 420px; display: flex; flex-direction: column; }
+    .preview-overline { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+    .preview-title { font-size: 32px; font-weight: 900; line-height: 1.1; margin-bottom: 12px; }
+    .preview-subtitle { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 28px; opacity: 0.7; }
+    .preview-btns { display: flex; gap: 12px; margin-bottom: 36px; }
+    .preview-btn-primary { padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; }
+    .preview-btn-secondary { padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid rgba(255,255,255,0.2); background: transparent; cursor: pointer; }
+    .preview-stats { display: flex; gap: 28px; margin-top: auto; }
+    .preview-stat-num { font-size: 28px; font-weight: 800; }
+    .preview-stat-label { font-size: 12px; opacity: 0.5; margin-top: 4px; }
+    .preview-divider { width: 1px; height: 40px; align-self: center; opacity: 0.2; }
+
+    .color-bar { display: flex; padding: 12px 24px; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .color-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); }
+    .color-label { font-size: 10px; opacity: 0.5; margin-top: 4px; text-align: center; }
+    .color-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+    /* === 方案 A: 深蓝科技 === */
+    .scheme-a .card-header { background: #0A0E1A; color: #3B82F6; }
+    .scheme-a .preview { background: #0A0E1A; }
+    .scheme-a .preview-title { color: #F1F5F9; }
+    .scheme-a .preview-btn-primary { background: #3B82F6; color: #fff; }
+    .scheme-a .preview-btn-secondary { color: #93C5FD; border-color: rgba(59,130,246,0.3); }
+    .scheme-a .preview-stat-num { color: #3B82F6; }
+    .scheme-a .preview-divider { background: rgba(59,130,246,0.3); }
+
+    /* === 方案 B: 紫色赛博 === */
+    .scheme-b .card-header { background: #13101F; color: #8B5CF6; }
+    .scheme-b .preview { background: #0D0B1A; }
+    .scheme-b .preview-title { color: #F0EDF6; }
+    .scheme-b .preview-btn-primary { background: #8B5CF6; color: #fff; }
+    .scheme-b .preview-btn-secondary { color: #C4B5FD; border-color: rgba(139,92,246,0.3); }
+    .scheme-b .preview-stat-num { color: #8B5CF6; }
+    .scheme-b .preview-divider { background: rgba(139,92,246,0.3); }
+
+    /* === 方案 C: 铂金银白 === */
+    .scheme-c .card-header { background: #E2E8F0; color: #1E293B; }
+    .scheme-c .preview { background: #FAFBFC; }
+    .scheme-c .preview-title { color: #0F172A; }
+    .scheme-c .preview-subtitle { color: #64748B; }
+    .scheme-c .preview-btn-primary { background: #1E293B; color: #fff; }
+    .scheme-c .preview-btn-secondary { color: #475569; border-color: #CBD5E1; }
+    .scheme-c .preview-stat-num { color: #1E293B; }
+    .scheme-c .preview-stat-label { color: #94A3B8; }
+    .scheme-c .preview-divider { background: #CBD5E1; }
+    .scheme-c .color-bar { border-color: #E2E8F0; }
+    .scheme-c .color-dot { border-color: #CBD5E1; }
+
+    /* === 方案 D: 翡翠绿 === */
+    .scheme-d .card-header { background: #0B2318; color: #10B981; }
+    .scheme-d .preview { background: #061A14; }
+    .scheme-d .preview-title { color: #ECFDF5; }
+    .scheme-d .preview-btn-primary { background: #10B981; color: #061A14; }
+    .scheme-d .preview-btn-secondary { color: #6EE7B7; border-color: rgba(16,185,129,0.3); }
+    .scheme-d .preview-stat-num { color: #10B981; }
+    .scheme-d .preview-divider { background: rgba(16,185,129,0.3); }
+
+    /* === 方案 E: 暗夜蓝靛 === */
+    .scheme-e .card-header { background: #111B2E; color: #6366F1; }
+    .scheme-e .preview { background: #0B1120; }
+    .scheme-e .preview-title { color: #E2E8F0; }
+    .scheme-e .preview-btn-primary { background: #6366F1; color: #fff; }
+    .scheme-e .preview-btn-secondary { color: #A5B4FC; border-color: rgba(99,102,241,0.3); }
+    .scheme-e .preview-stat-num { color: #6366F1; }
+    .scheme-e .preview-divider { background: rgba(99,102,241,0.3); }
+  </style>
+</head>
+<body>
+
+<h1>🎨 HKBA 配色方案对比</h1>
+
+<div class="grid">
+
+  <!-- 方案 A -->
+  <div class="card scheme-a">
+    <div class="card-header">方案 A — 深蓝科技</div>
+    <div class="preview">
+      <div class="preview-overline" style="color:#60A5FA">OUR MISSION</div>
+      <div class="preview-title">推动香港成为<br>区块链创新枢纽</div>
+      <div class="preview-subtitle">HONG KONG BLOCKCHAIN ASSOCIATION</div>
+      <div class="preview-btns">
+        <button class="preview-btn-primary">关于我们</button>
+        <button class="preview-btn-secondary">加入我们</button>
+      </div>
+      <div class="preview-stats">
+        <div><div class="preview-stat-num">200+</div><div class="preview-stat-label">会员单位</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">50+</div><div class="preview-stat-label">行业活动</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">5+</div><div class="preview-stat-label">深耕年数</div></div>
+      </div>
+    </div>
+    <div class="color-bar">
+      <div class="color-item"><div class="color-dot" style="background:#0A0E1A"></div><div class="color-label">背景</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#111827"></div><div class="color-label">表面</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#3B82F6"></div><div class="color-label">强调</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#06B6D4"></div><div class="color-label">辅助</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#F1F5F9"></div><div class="color-label">文字</div></div>
+    </div>
+  </div>
+
+  <!-- 方案 B -->
+  <div class="card scheme-b">
+    <div class="card-header">方案 B — 紫色赛博</div>
+    <div class="preview">
+      <div class="preview-overline" style="color:#A78BFA">OUR MISSION</div>
+      <div class="preview-title">推动香港成为<br>区块链创新枢纽</div>
+      <div class="preview-subtitle">HONG KONG BLOCKCHAIN ASSOCIATION</div>
+      <div class="preview-btns">
+        <button class="preview-btn-primary">关于我们</button>
+        <button class="preview-btn-secondary">加入我们</button>
+      </div>
+      <div class="preview-stats">
+        <div><div class="preview-stat-num">200+</div><div class="preview-stat-label">会员单位</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">50+</div><div class="preview-stat-label">行业活动</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">5+</div><div class="preview-stat-label">深耕年数</div></div>
+      </div>
+    </div>
+    <div class="color-bar">
+      <div class="color-item"><div class="color-dot" style="background:#0D0B1A"></div><div class="color-label">背景</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#13101F"></div><div class="color-label">表面</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#8B5CF6"></div><div class="color-label">强调</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#06D6A0"></div><div class="color-label">辅助</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#F0EDF6"></div><div class="color-label">文字</div></div>
+    </div>
+  </div>
+
+  <!-- 方案 C -->
+  <div class="card scheme-c">
+    <div class="card-header">方案 C — 铂金银白</div>
+    <div class="preview">
+      <div class="preview-overline" style="color:#475569">OUR MISSION</div>
+      <div class="preview-title">推动香港成为<br>区块链创新枢纽</div>
+      <div class="preview-subtitle">HONG KONG BLOCKCHAIN ASSOCIATION</div>
+      <div class="preview-btns">
+        <button class="preview-btn-primary">关于我们</button>
+        <button class="preview-btn-secondary">加入我们</button>
+      </div>
+      <div class="preview-stats">
+        <div><div class="preview-stat-num">200+</div><div class="preview-stat-label">会员单位</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">50+</div><div class="preview-stat-label">行业活动</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">5+</div><div class="preview-stat-label">深耕年数</div></div>
+      </div>
+    </div>
+    <div class="color-bar">
+      <div class="color-item"><div class="color-dot" style="background:#FAFBFC"></div><div class="color-label">背景</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#FFFFFF"></div><div class="color-label">表面</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#1E293B"></div><div class="color-label">强调</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#64748B"></div><div class="color-label">辅助</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#0F172A"></div><div class="color-label">文字</div></div>
+    </div>
+  </div>
+
+  <!-- 方案 D -->
+  <div class="card scheme-d">
+    <div class="card-header">方案 D — 翡翠绿</div>
+    <div class="preview">
+      <div class="preview-overline" style="color:#34D399">OUR MISSION</div>
+      <div class="preview-title">推动香港成为<br>区块链创新枢纽</div>
+      <div class="preview-subtitle">HONG KONG BLOCKCHAIN ASSOCIATION</div>
+      <div class="preview-btns">
+        <button class="preview-btn-primary">关于我们</button>
+        <button class="preview-btn-secondary">加入我们</button>
+      </div>
+      <div class="preview-stats">
+        <div><div class="preview-stat-num">200+</div><div class="preview-stat-label">会员单位</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">50+</div><div class="preview-stat-label">行业活动</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">5+</div><div class="preview-stat-label">深耕年数</div></div>
+      </div>
+    </div>
+    <div class="color-bar">
+      <div class="color-item"><div class="color-dot" style="background:#061A14"></div><div class="color-label">背景</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#0B2318"></div><div class="color-label">表面</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#10B981"></div><div class="color-label">强调</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#34D399"></div><div class="color-label">辅助</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#ECFDF5"></div><div class="color-label">文字</div></div>
+    </div>
+  </div>
+
+  <!-- 方案 E -->
+  <div class="card scheme-e">
+    <div class="card-header">方案 E — 暗夜蓝靛</div>
+    <div class="preview">
+      <div class="preview-overline" style="color:#818CF8">OUR MISSION</div>
+      <div class="preview-title">推动香港成为<br>区块链创新枢纽</div>
+      <div class="preview-subtitle">HONG KONG BLOCKCHAIN ASSOCIATION</div>
+      <div class="preview-btns">
+        <button class="preview-btn-primary">关于我们</button>
+        <button class="preview-btn-secondary">加入我们</button>
+      </div>
+      <div class="preview-stats">
+        <div><div class="preview-stat-num">200+</div><div class="preview-stat-label">会员单位</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">50+</div><div class="preview-stat-label">行业活动</div></div>
+        <div class="preview-divider"></div>
+        <div><div class="preview-stat-num">5+</div><div class="preview-stat-label">深耕年数</div></div>
+      </div>
+    </div>
+    <div class="color-bar">
+      <div class="color-item"><div class="color-dot" style="background:#0B1120"></div><div class="color-label">背景</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#111B2E"></div><div class="color-label">表面</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#6366F1"></div><div class="color-label">强调</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#22D3EE"></div><div class="color-label">辅助</div></div>
+      <div class="color-item"><div class="color-dot" style="background:#E2E8F0"></div><div class="color-label">文字</div></div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

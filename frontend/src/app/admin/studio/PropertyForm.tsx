@@ -6,7 +6,7 @@
 // arrays of objects (FAQ/stat items) and media reference pickers. Editing
 // writes through onChange; the studio page owns debounce + persistence.
 
-import { RenderBlock } from '@/components/blocks/BlockRenderer';
+import { AssocPerson, RenderBlock } from '@/components/blocks/BlockRenderer';
 
 export type FieldDef = {
   type: 'string' | 'integer' | 'enum' | 'boolean' | 'array' | 'object';
@@ -47,6 +47,83 @@ function defaultFor(def: FieldDef): unknown {
   if (def.type === 'boolean') return false;
   if (def.type === 'integer') return '';
   return '';
+}
+
+function BoardMemberSelector({
+  people,
+  lang,
+  value,
+  onChange,
+}: {
+  people: AssocPerson[];
+  lang: 'zh' | 'en';
+  value: unknown;
+  onChange: (value: number[]) => void;
+}) {
+  const selectedIds = Array.isArray(value)
+    ? [...new Set(value.map(Number).filter(Number.isInteger))]
+    : [];
+  const selectedSet = new Set(selectedIds);
+  const peopleById = new Map(people.map((person) => [Number(person.id), person]));
+  const orderedPeople = [
+    ...selectedIds.map((id) => peopleById.get(id)).filter((person): person is AssocPerson => Boolean(person)),
+    ...people.filter((person) => !selectedSet.has(Number(person.id))),
+  ];
+
+  const move = (id: number, direction: -1 | 1) => {
+    const index = selectedIds.indexOf(id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= selectedIds.length) return;
+    const next = [...selectedIds];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  };
+
+  return (
+    <div className="hk-field hk-member-selector">
+      <div className="hk-member-selector__head">
+        <span className="hk-field__label">指定展示成員</span>
+        {selectedIds.length ? <button type="button" className="hk-text-action" onClick={() => onChange([])}>清除選擇</button> : null}
+      </div>
+      <p className="hk-member-selector__hint">
+        {selectedIds.length ? `已指定 ${selectedIds.length} 位，按下列順序展示。` : '目前為自動模式，會依角色篩選與顯示數量取用成員。'}
+      </p>
+      <div className="hk-member-selector__list">
+        {orderedPeople.map((person) => {
+          const id = Number(person.id);
+          const selectedIndex = selectedIds.indexOf(id);
+          const selected = selectedIndex >= 0;
+          const name = (lang === 'en' ? person.nameEn || person.nameZh : person.nameZh || person.nameEn) || `#${id}`;
+          const title = lang === 'en' ? person.titleEn || person.titleZh : person.titleZh || person.titleEn;
+          return (
+            <div className={`hk-member-selector__row${selected ? ' is-selected' : ''}`} key={id}>
+              <label className="hk-member-selector__identity">
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={(event) => onChange(event.target.checked ? [...selectedIds, id] : selectedIds.filter((entry) => entry !== id))}
+                />
+                <span className="hk-member-selector__avatar">
+                  {person.avatarUrl ? <img src={person.avatarUrl} alt="" /> : name.slice(0, 1)}
+                </span>
+                <span className="hk-member-selector__copy">
+                  <strong>{name}</strong>
+                  {title ? <small>{title}</small> : null}
+                </span>
+              </label>
+              {selected ? (
+                <div className="hk-member-selector__order">
+                  <span>{selectedIndex + 1}</span>
+                  <button type="button" title="向前移動" aria-label={`${name} 向前移動`} disabled={selectedIndex === 0} onClick={() => move(id, -1)}>↑</button>
+                  <button type="button" title="向後移動" aria-label={`${name} 向後移動`} disabled={selectedIndex === selectedIds.length - 1} onClick={() => move(id, 1)}>↓</button>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function FieldInput({
@@ -235,18 +312,25 @@ export default function PropertyForm({
   lang,
   onChange,
   onPickMedia,
+  people = [],
 }: {
   definition: Definition;
   block: RenderBlock;
   lang: 'zh' | 'en';
   onChange: (scope: 'contentZh' | 'contentEn' | 'settings', key: string, value: unknown) => void;
   onPickMedia: (apply: (mediaId: string | null) => void) => void;
+  people?: AssocPerson[];
 }) {
   const scope = lang === 'en' ? 'contentEn' : 'contentZh';
   const content = block[scope] as Record<string, unknown>;
   const settings = block.settings as Record<string, unknown>;
   const contentFields = Object.entries(definition.schema.content.fields);
-  const settingsFields = Object.entries(definition.schema.settings.fields);
+  const isBoard = definition.type === 'association.board';
+  const hasSelectedMembers = isBoard && Array.isArray(settings.selectedMemberIds) && settings.selectedMemberIds.length > 0;
+  const automaticBoardFields = new Set(['term', 'roles', 'status', 'limit']);
+  const settingsFields = Object.entries(definition.schema.settings.fields).filter(([key]) => (
+    (!isBoard || key !== 'selectedMemberIds') && (!hasSelectedMembers || !automaticBoardFields.has(key))
+  ));
 
   return (
     <div className="hk-form">
@@ -260,6 +344,14 @@ export default function PropertyForm({
       {settingsFields.length > 0 ? (
         <div className="hk-form__group">
           <div className="hk-form__group-title">設置</div>
+          {isBoard ? (
+            <BoardMemberSelector
+              people={people}
+              lang={lang}
+              value={settings.selectedMemberIds}
+              onChange={(value) => onChange('settings', 'selectedMemberIds', value)}
+            />
+          ) : null}
           {settingsFields.map(([key, def]) => (
             <FieldInput key={`${block.id}:settings:${key}`} fieldKey={key} def={def} value={settings[key]} onChange={(value) => onChange('settings', key, value)} onPickMedia={onPickMedia} />
           ))}

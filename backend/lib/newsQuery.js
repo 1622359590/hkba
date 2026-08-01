@@ -45,6 +45,21 @@ function queryPublishedNews(conn, { year, categoryId, tagId, page = 1, pageSize 
   return { items, total, page: safePage, pageSize: safeSize };
 }
 
+function queryPublishedNewsByIds(conn, ids = []) {
+  const ordered = [...new Set(ids.filter((id) => typeof id === 'string' && id.trim()).map((id) => id.trim()))].slice(0, 24);
+  if (!ordered.length) return [];
+  const rows = conn
+    .prepare(
+      `SELECT id, slug, title_zh, title_en, summary_zh, summary_en, cover_media_id,
+              published_at, display_year, ${EFFECTIVE_YEAR_SQL} AS effective_year
+       FROM news_items
+       WHERE status = 'published' AND id IN (${ordered.map(() => '?').join(',')})`
+    )
+    .all(...ordered);
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ordered.map((id) => byId.get(id)).filter(Boolean);
+}
+
 // getPublishedNewsBySlug(conn, slug) — one published item with its blocks at
 // published_revision, or null.
 function getPublishedNewsBySlug(conn, slug) {
@@ -72,4 +87,4 @@ function listPublishedYears(conn) {
     .map((row) => row.year);
 }
 
-module.exports = { EFFECTIVE_YEAR_SQL, queryPublishedNews, getPublishedNewsBySlug, listPublishedYears };
+module.exports = { EFFECTIVE_YEAR_SQL, queryPublishedNews, queryPublishedNewsByIds, getPublishedNewsBySlug, listPublishedYears };

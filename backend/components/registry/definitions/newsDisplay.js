@@ -43,8 +43,10 @@ module.exports = [
     name: { zh: '新聞列表', en: 'News List' },
     description: '新聞中心主列表和年度列表，支持前台篩選與分頁。',
     extraSettings: {
-      variant: { type: 'enum', values: ['compact', 'thumb', 'timeline'], default: 'thumb', label: '變體' },
+      variant: { type: 'enum', values: ['compact', 'thumb', 'timeline', 'editorial'], default: 'thumb', label: '變體' },
       pageSize: { type: 'integer', min: 5, max: 50, default: 10, label: '每頁數量' },
+      showSummary: { type: 'boolean', default: true, label: '顯示摘要' },
+      showDate: { type: 'boolean', default: true, label: '顯示日期' },
     },
   }),
   newsDisplay({
@@ -52,6 +54,7 @@ module.exports = [
     name: { zh: '焦點新聞', en: 'Featured News' },
     description: '一個主新聞加 2-4 個次要新聞。',
     extraSettings: {
+      variant: { type: 'enum', values: ['cards', 'flagship'], default: 'cards', label: '變體' },
       source: { type: 'enum', values: ['auto', 'pinned'], default: 'auto', label: '來源' },
       pinnedIds: { type: 'array', item: { type: 'string' }, default: [], label: '指定新聞' },
       secondaryCount: { type: 'integer', min: 2, max: 4, default: 3, label: '次要新聞數' },
@@ -71,7 +74,10 @@ module.exports = [
     name: { zh: '分類標籤', en: 'Category Tabs' },
     description: '在組件內切換新聞欄目；最多 8 個一級標籤。',
     extraSettings: {
+      variant: { type: 'enum', values: ['plain', 'technology'], default: 'plain', label: '變體' },
       maxTabs: { type: 'integer', min: 2, max: 8, default: 8, label: '標籤上限' },
+      showYearFilter: { type: 'boolean', default: true, label: '顯示年份篩選' },
+      showCategoryFilter: { type: 'boolean', default: true, label: '顯示欄目篩選' },
     },
   }),
   newsDisplay({

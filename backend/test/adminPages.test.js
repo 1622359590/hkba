@@ -82,10 +82,11 @@ test('GET definitions returns the registry in the unified envelope', async () =>
   const body = await res.json();
   assert.equal(body.success, true);
   assert.ok(body.meta.requestId);
-  assert.equal(body.data.definitions.length, 30);
+  assert.equal(body.data.definitions.length, 34);
   const hero = body.data.definitions.find((d) => d.type === 'content.hero');
   assert.equal(hero.version, 1);
   assert.ok(hero.schema.content.fields.title.required);
+  assert.ok(body.data.definitions.some((definition) => definition.type === 'association.events'));
 });
 
 test('definitions requires authentication; publisher (content.read) may read', async () => {
@@ -189,6 +190,19 @@ test('renaming a published slug records a 301 redirect', async () => {
   assert.equal(redirect.status_code, 301);
 });
 
+test('lists page versions for the studio history panel', async () => {
+  const teamId = await getNodeId('/about/our-team');
+  const res = await get(`/api/admin/pages/${teamId}/versions`);
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  const published = body.data.publishedVersions.find((version) => version.revision === 3);
+  assert.ok(published);
+  assert.equal(published.status, 'published');
+  assert.equal(published.blockCount, 0);
+  assert.equal(body.data.currentDraft, null);
+  assert.deepEqual(body.data.snapshots, []);
+});
+
 test('tree is nested and carries status flags', async () => {
   const res = await get('/api/admin/pages/tree');
   const body = await res.json();
@@ -290,6 +304,57 @@ test('mutationId replays return the stored response without double-applying', as
   assert.equal(second.data.replayed, true);
   const blocks = (await (await get(`/api/admin/pages/${id}/draft`)).json()).data.blocks;
   assert.equal(blocks.length, 1);
+});
+
+test('successful draft mutations create one understandable snapshot and replays do not duplicate it', async () => {
+  const { id, draft } = await freshPageWithDraft('snapshot-capture-test');
+  const baseline = db.prepare('SELECT * FROM page_draft_snapshots WHERE page_id = ? ORDER BY revision').all(id);
+  assert.equal(baseline.length, 1);
+  assert.equal(baseline[0].revision, 1);
+
+  const payload = {
+    expectedRevision: draft.version.revision,
+    mutationId: 'snapshot-mutation-1',
+    block: { componentType: 'content.hero', contentZh: { title: '快照標題' } },
+  };
+  await post(`/api/admin/pages/${id}/draft/blocks`, payload);
+  await post(`/api/admin/pages/${id}/draft/blocks`, payload);
+
+  const history = await (await get(`/api/admin/pages/${id}/versions`)).json();
+  assert.equal(history.data.currentDraft.revision, 2);
+  assert.equal(history.data.snapshots.length, 2);
+  const latest = history.data.snapshots[0];
+  assert.equal(latest.revision, 2);
+  assert.equal(latest.summary.added.length, 1);
+  assert.equal(latest.summary.added[0].componentType, 'content.hero');
+
+  const detail = await (await get(`/api/admin/pages/${id}/snapshots/${latest.id}`)).json();
+  assert.equal(detail.data.snapshot.blockCount, 1);
+  assert.equal(detail.data.snapshot.summary.added[0].blockId, latest.summary.added[0].blockId);
+});
+
+test('snapshot restore creates a new draft revision and snapshot deletion never touches the draft', async () => {
+  const { id, draft } = await freshPageWithDraft('snapshot-actions-test');
+  const baselineId = db.prepare('SELECT id FROM page_draft_snapshots WHERE page_id = ? AND revision = 1').get(id).id;
+  const added = await (await post(`/api/admin/pages/${id}/draft/blocks`, {
+    expectedRevision: draft.version.revision,
+    mutationId: 'snapshot-actions-add',
+    block: { componentType: 'content.hero', contentZh: { title: '稍後移除' } },
+  })).json();
+  assert.equal(added.data.revision, 2);
+
+  const restored = await post(`/api/admin/pages/${id}/snapshots/${baselineId}/restore`, {});
+  assert.equal(restored.status, 200);
+  const restoredBody = await restored.json();
+  assert.equal(restoredBody.data.revision, 3);
+  const current = await (await get(`/api/admin/pages/${id}/draft`)).json();
+  assert.equal(current.data.blocks.length, 0);
+
+  const revisionTwo = db.prepare('SELECT id FROM page_draft_snapshots WHERE page_id = ? AND revision = 2').get(id).id;
+  const removed = await del(`/api/admin/pages/${id}/snapshots/${revisionTwo}`);
+  assert.equal(removed.status, 200);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM page_versions WHERE page_id = ? AND status = ?').get(id, 'draft').count, 1);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM page_draft_snapshots WHERE id = ?').get(revisionTwo).count, 0);
 });
 
 test('layout nesting rules are enforced on block insert', async () => {

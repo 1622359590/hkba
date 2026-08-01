@@ -198,6 +198,8 @@ jobs:
             DOTENV_CONFIG_PATH=.env node -r dotenv/config db/seed-if-empty.js
           fi
 
+          DOTENV_CONFIG_PATH=.env node -r dotenv/config scripts/migrate-content.js --no-backup
+
           if pm2 describe hkba-api >/dev/null 2>&1; then
             pm2 reload hkba-api --update-env
           else
@@ -211,10 +213,12 @@ jobs:
             npm install
           fi
           rm -rf .next
-          npm run build
+          HKBA_API_INTERNAL="http://127.0.0.1:$BACKEND_PORT" npm run build
 
           pm2 delete hkba-web >/dev/null 2>&1 || true
-          PORT="$FRONTEND_PORT" pm2 start npm \
+          PORT="$FRONTEND_PORT" \
+          HKBA_API_INTERNAL="http://127.0.0.1:$BACKEND_PORT" \
+          pm2 start npm \
             --name hkba-web \
             --cwd "$DEPLOY_PATH/frontend" \
             -- start

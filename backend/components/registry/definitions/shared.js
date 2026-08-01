@@ -29,8 +29,30 @@ const linkField = {
   },
 };
 
+const optionalLinkField = {
+  type: 'object',
+  fields: {
+    label: { type: 'string', maxLength: 80, label: '按鈕文字' },
+    url: { type: 'string', maxLength: 500, label: '連結' },
+  },
+};
+
+const optionalLinkRule = (fieldName, label) => (config) => {
+  const link = config[fieldName];
+  if (!link || typeof link !== 'object' || Array.isArray(link)) return null;
+  const hasLabel = typeof link.label === 'string' && link.label.trim().length > 0;
+  const hasUrl = typeof link.url === 'string' && link.url.trim().length > 0;
+  if (hasLabel === hasUrl) return null;
+  const missingField = hasLabel ? 'url' : 'label';
+  return {
+    field: `${fieldName}.${missingField}`,
+    code: 'required',
+    message: `${label}的按鈕文字與連結需要同時填寫`,
+  };
+};
+
 // Fields referencing a media_assets row are marked `media: true` so
 // lib/mediaReferences.js can extract them from block configs (D8).
 const mediaRefField = (label, required = false) => ({ type: 'string', maxLength: 64, required, label, media: true });
 
-module.exports = { newsQueryFields, specificYearRule, linkField, mediaRefField };
+module.exports = { newsQueryFields, specificYearRule, linkField, optionalLinkField, optionalLinkRule, mediaRefField };

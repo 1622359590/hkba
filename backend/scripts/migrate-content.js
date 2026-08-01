@@ -31,6 +31,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { imageSize } = require('../lib/imageSize');
+const { ensureSystemPages } = require('../lib/ensureSystemPages');
 
 const MIME_BY_EXT = {
   '.png': 'image/png',
@@ -637,6 +638,7 @@ function runMigration(conn, options = {}) {
     work();
   } else {
     conn.transaction(work)();
+    ctx.report.systemPages = ensureSystemPages(conn);
   }
   return verify(ctx);
 }

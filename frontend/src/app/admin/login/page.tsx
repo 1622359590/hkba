@@ -31,20 +31,20 @@ function LoginForm() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div className="admin-login" style={{ minHeight: '100vh', background: '#F3F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 auto 16px', boxShadow: '0 4px 24px rgba(99,102,241,0.3)' }}>H</div>
-          <h1 style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 4 }}>HKBA 管理後台</h1>
-          <p style={{ fontSize: 13, color: '#71717a' }}>請輸入帳號密碼登入</p>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'linear-gradient(135deg, #E5C46E, #B9973F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#241A08', margin: '0 auto 16px', boxShadow: '0 6px 20px rgba(154,114,28,0.2)' }}>H</div>
+          <h1 style={{ fontSize: 18, fontWeight: 700, color: '#18212B', marginBottom: 4 }}>HKBA 管理後台</h1>
+          <p style={{ fontSize: 13, color: '#788694' }}>請輸入帳號密碼登入</p>
         </div>
-        <form onSubmit={handleLogin} style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 28 }}>
+        <form onSubmit={handleLogin} style={{ background: '#FFFFFF', border: '1px solid #DCE2E8', borderRadius: 12, padding: 28, boxShadow: '0 12px 36px rgba(24,33,43,0.08)' }}>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, color: '#71717a', marginBottom: 6, fontWeight: 500 }}>用戶名</label>
+            <label style={{ display: 'block', fontSize: 12, color: '#526170', marginBottom: 6, fontWeight: 600 }}>用戶名</label>
             <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="form-input" required />
           </div>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 12, color: '#71717a', marginBottom: 6, fontWeight: 500 }}>密碼</label>
+            <label style={{ display: 'block', fontSize: 12, color: '#526170', marginBottom: 6, fontWeight: 600 }}>密碼</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="form-input" required />
           </div>
           {error && <p style={{ fontSize: 13, color: '#ef4444', marginBottom: 12 }}>{error}</p>}

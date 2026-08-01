@@ -43,7 +43,7 @@ export default function ContactPage() {
         <div style={{ ...c, position: 'relative' }}>
           <div style={{ animation: 'fadeInUp 0.8s cubic-bezier(0.22,1,0.36,1) forwards' }}>
             <div className="section-label">{t('聯繫我們', 'Contact')}</div>
-            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 20 }}>{t('聯絡我們', 'Get in Touch')}</h1>
+            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 700, letterSpacing: 0, marginBottom: 20 }}>{t('聯絡我們', 'Get in Touch')}</h1>
             <div className="divider" />
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function ContactPage() {
               {items.map((item, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="18" height="18" fill="none" stroke="#818cf8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} /></svg>
+                    <svg width="18" height="18" fill="none" stroke="var(--cyan)" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} /></svg>
                   </div>
                   <div>
                     <div style={{ fontSize: 11, color: '#71717a', marginBottom: 2 }}>{item.label}</div>

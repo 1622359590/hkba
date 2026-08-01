@@ -11,6 +11,7 @@ const { getDb } = require('../db/init');
 const { resolvePreviewToken } = require('../lib/previewTokens');
 const { loadBlocks } = require('../lib/drafts');
 const { loadNewsBlocks } = require('../lib/newsDrafts');
+const { loadSnapshotState } = require('../lib/draftSnapshots');
 
 function blockJson(block) {
   return {
@@ -51,6 +52,41 @@ router.get('/:token', (req, res) => {
         titleEn: node.title_en,
         seo: JSON.parse(version.seo || '{}'),
         blocks: loadBlocks(conn, version.id).map(blockJson),
+      },
+    });
+  }
+
+  if (token.object_type === 'page_snapshot') {
+    const loaded = loadSnapshotState(conn, token.object_id);
+    const node = loaded
+      ? conn.prepare('SELECT * FROM page_nodes WHERE id = ?').get(loaded.snapshot.page_id)
+      : null;
+    if (!loaded || !node || loaded.snapshot.revision !== token.revision) {
+      return res.status(410).json({ success: false, error: { code: 'PREVIEW_STALE', message: '快照不存在或已刪除' } });
+    }
+    return res.json({
+      success: true,
+      data: {
+        objectType: 'page_snapshot',
+        objectId: node.id,
+        snapshotId: loaded.snapshot.id,
+        revision: loaded.snapshot.revision,
+        path: node.path,
+        titleZh: node.title_zh,
+        titleEn: node.title_en,
+        seo: loaded.state.seo,
+        blocks: loaded.state.blocks.map((block) => ({
+          id: block.id,
+          component_type: block.componentType,
+          component_version: block.componentVersion,
+          sort_order: block.sortOrder,
+          parent_block_id: block.parentBlockId,
+          is_visible: block.isVisible ? 1 : 0,
+          anchor_id: block.anchorId,
+          contentZh: block.contentZh,
+          contentEn: block.contentEn,
+          settings: block.settings,
+        })),
       },
     });
   }

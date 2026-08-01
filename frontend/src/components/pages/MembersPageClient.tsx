@@ -30,7 +30,7 @@ export default function MembersPage() {
         <div style={{ ...c, position: 'relative' }}>
           <div style={{ animation: 'fadeInUp 0.8s cubic-bezier(0.22,1,0.36,1) forwards' }}>
             <div className="section-label">{t('會員單位', 'Members')}</div>
-            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 12 }}>{t('合作夥伴與會員', 'Partners & Members')}</h1>
+            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 700, letterSpacing: 0, marginBottom: 12 }}>{t('合作夥伴與會員', 'Partners & Members')}</h1>
             <p className="section-desc">{t('攜手共建區塊鏈生態系統', 'Building the blockchain ecosystem together')}</p>
             <div className="divider" style={{ marginTop: 20 }} />
           </div>

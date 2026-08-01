@@ -74,7 +74,7 @@ export default function EventsAdmin() {
           <div key={item.id} className="admin-content-row">
             {item.cover_image && <img src={item.cover_image} alt="" style={{ width: 80, height: 48, objectFit: 'cover', borderRadius: 8 }} />}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{item.title_zh || item.title_en}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-1)' }}>{item.title_zh || item.title_en}</div>
               <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>{item.event_date ? new Date(item.event_date).toLocaleDateString() : '-'} · {item.location_zh || item.location_en || '-'}</div>
             </div>
             <span style={badge(!!item.is_published)}>{item.is_published ? '已發佈' : '草稿'}</span>

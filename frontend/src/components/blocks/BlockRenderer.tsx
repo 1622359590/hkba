@@ -7,7 +7,18 @@
 // News-display components render their query configuration as data cards
 // until the public query endpoints mount with the frontend-switch milestone.
 
-import { CSSProperties, ReactNode, useState } from 'react';
+import { CSSProperties, FormEvent, ReactNode, useState } from 'react';
+import PartnerCarousel from '@/components/ui/PartnerCarousel';
+import LeadershipGlassCard from '@/components/ui/LeadershipGlassCard';
+import { partnerShowsDetails, resolvePartnerCarouselOptions } from '@/lib/partnerCarousel.mjs';
+import { newsCardClassName, shouldShowMediaPlaceholder } from '@/lib/publicMediaPresentation.mjs';
+import { selectBoardMembers } from '@/lib/selectBoardMembers.mjs';
+import NewsHero from '@/components/news/NewsHero';
+import FeaturedNews from '@/components/news/FeaturedNews';
+import NewsFeed from '@/components/news/NewsFeed';
+import NewsFilters from '@/components/news/NewsFilters';
+import { selectNewsLayout } from '@/components/news/newsViewModel.mjs';
+import type { NewsViewItem } from '@/components/news/newsTypes';
 
 export type RenderBlock = {
   id: string;
@@ -28,12 +39,15 @@ export type MediaMap = Record<string, { url: string; altZh?: string; altEn?: str
 // limit. When no news prop is provided (studio canvas), query components
 // keep rendering their configuration placeholder cards.
 export type NewsCardData = {
+  id?: string;
   slug: string;
   title: string;
   summary: string;
   year: number | null;
   publishedAt?: string | null;
   coverUrl?: string | null;
+  categoryId?: string;
+  category?: string;
 };
 
 // Structured association data for association.* components (visual-strike
@@ -57,10 +71,24 @@ export type AssocPerson = {
   instagram: string;
 };
 export type AssocMilestone = { id: number; year: string; titleZh: string; titleEn: string; descriptionZh: string; descriptionEn: string };
+export type AssocEvent = {
+  id: number;
+  titleZh: string;
+  titleEn: string;
+  descriptionZh: string;
+  descriptionEn: string;
+  eventDate: string;
+  endDate: string;
+  locationZh: string;
+  locationEn: string;
+  coverUrl: string;
+  registrationUrl: string;
+};
 export type AssocData = {
   partners: AssocPartner[];
   people: AssocPerson[];
   milestones: AssocMilestone[];
+  events: AssocEvent[];
   contact: Record<string, string>;
   resources: unknown[];
 };
@@ -75,11 +103,17 @@ function text(block: RenderBlock, lang: Lang, field: string, fallback = ''): str
   return typeof other === 'string' && other ? other : fallback;
 }
 
-function MediaImage({ id, media, lang, ratio }: { id?: unknown; media: MediaMap; lang: Lang; ratio?: string }) {
+function localizedContent(block: RenderBlock, lang: Lang): Record<string, unknown> {
+  return lang === 'en' ? block.contentEn : block.contentZh;
+}
+
+function MediaImage({ id, media, lang, ratio, editable = true }: { id?: unknown; media: MediaMap; lang: Lang; ratio?: string; editable?: boolean }) {
   const asset = typeof id === 'string' ? media[id] : undefined;
   const aspect = ratio === '4:3' ? '4 / 3' : ratio === '1:1' ? '1 / 1' : '16 / 9';
   if (!asset) {
-    return <div className="hk-block__media-placeholder" style={{ aspectRatio: aspect }}>未選擇媒體</div>;
+    return shouldShowMediaPlaceholder({ hasAsset: false, editable })
+      ? <div className="hk-block__media-placeholder" style={{ aspectRatio: aspect }}>未選擇媒體</div>
+      : null;
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -91,6 +125,11 @@ function MediaImage({ id, media, lang, ratio }: { id?: unknown; media: MediaMap;
   );
 }
 
+function ExternalImage({ src, alt }: { src: string; alt: string }) {
+  if (!src) return null;
+  return <img src={src} alt={alt} loading="lazy" className="hk-block__external-image" />;
+}
+
 function RichText({ html }: { html: string }) {
   return <div className="hk-block__richtext" dangerouslySetInnerHTML={{ __html: html }} />;
 }
@@ -99,9 +138,15 @@ function Button({ link, lang }: { link: unknown; lang: Lang }) {
   const value = (link || {}) as { label?: string; url?: string };
   if (!value.label) return null;
   return (
-    <span className="hk-block__button" data-url={value.url || '#'}>
+    <a
+      className="hk-block__button"
+      href={value.url || '#'}
+      onClick={(event) => {
+        if (event.currentTarget.closest('.hk-canvas-block')) event.preventDefault();
+      }}
+    >
       {value.label || (lang === 'en' ? 'Learn more' : '了解更多')}
-    </span>
+    </a>
   );
 }
 
@@ -142,28 +187,27 @@ function NewsCards({ type, settings, news, lang }: { type: string; settings: Rec
   const featured = type === 'news.featured';
   return (
     <div
-      className="hk-news-cards"
-      style={type === 'news.list' ? { display: 'grid', gap: 14 } : { display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${featured ? 260 : 220}px, 1fr))`, gap: 18 }}
+      className={`hk-news-cards hk-news-cards--${type.replace('news.', '')}`}
     >
       {items.map((item) => (
         <a
           key={item.slug}
           href={`/news/${item.slug}`}
-          className="hk-news-card"
-          style={{ display: 'block', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden', textDecoration: 'none', background: 'var(--surface-1)' }}
+          className={newsCardClassName(type, Boolean(item.coverUrl))}
         >
           {item.coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={item.coverUrl} alt={item.title} style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', display: 'block' }} />
           ) : null}
-          <span style={{ display: 'block', padding: '14px 16px' }}>
-            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-3)', marginBottom: 6 }}>
+          <span className="hk-news-card__body">
+            <span className="hk-news-card__meta">
               {[item.year, item.publishedAt ? String(item.publishedAt).slice(0, 10) : ''].filter(Boolean).join(' · ')}
             </span>
-            <span style={{ display: 'block', fontSize: 14.5, fontWeight: 700, color: 'var(--text-1)', lineHeight: 1.45 }}>{item.title}</span>
+            <span className="hk-news-card__title">{item.title}</span>
             {type !== 'news.list' && item.summary ? (
-              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-2)', marginTop: 6, lineHeight: 1.6 }}>{item.summary}</span>
+              <span className="hk-news-card__summary">{item.summary}</span>
             ) : null}
+            <span className="hk-news-card__action">{lang === 'en' ? 'Read article' : '閱讀文章'} <span aria-hidden="true">↗</span></span>
           </span>
         </a>
       ))}
@@ -171,13 +215,30 @@ function NewsCards({ type, settings, news, lang }: { type: string; settings: Rec
   );
 }
 
+function premiumNewsItems(news: NewsCardData[]): NewsViewItem[] {
+  return news.map((item) => ({
+    id: item.id || item.slug,
+    href: `/news/${item.slug}`,
+    title: item.title,
+    summary: item.summary,
+    category: item.category || '',
+    date: item.publishedAt ? String(item.publishedAt).slice(0, 10) : '',
+    year: item.year || undefined,
+    image: item.coverUrl ? { src: item.coverUrl, alt: item.title } : undefined,
+  }));
+}
+
 // ---- association data components (public context) ----
 
 const GROUP_LABELS: Record<string, { zh: string; en: string }> = {
   honorary_chairman: { zh: '榮譽主席', en: 'Honorary Chairman' },
+  co_chairman: { zh: '聯席會長', en: 'Co-Chairman' },
   chairman: { zh: '會長', en: 'Chairman' },
   president: { zh: '主席', en: 'President' },
-  vice_chairman: { zh: '副會長', en: 'Vice Chairman' },
+  vice_chairman: { zh: '副主席', en: 'Vice Chairman' },
+  industry_expert: { zh: '業界專家顧問', en: 'Industry Expert' },
+  ambassador: { zh: '協會大使', en: 'HKBA Ambassador' },
+  secretary_general: { zh: '聯席秘書長', en: 'Secretary General' },
   advisor: { zh: '顧問', en: 'Advisor' },
   member: { zh: '成員', en: 'Member' },
 };
@@ -212,8 +273,8 @@ function AssocHead({ block, lang }: { block: RenderBlock; lang: Lang }) {
   );
 }
 
-// Logo on a bright tile (DESIGN.md: partner logos stay in color on brighter
-// tiles). Falls back to the partner initial when the image fails.
+// Every partner logo shares the same neutral glass mat so transparent artwork
+// remains legible without introducing one-off per-brand treatments.
 function LogoTile({ src, name }: { src: string; name: string }) {
   const [failed, setFailed] = useState(false);
   return (
@@ -267,37 +328,53 @@ function AssocPartners({ block, lang, settings, assoc }: { block: RenderBlock; l
   const variant = String(settings.variant || 'logo-wall');
   const items = assoc.partners.filter((partner) => !group || partner.group === group);
   if (!items.length) return <AssocEmpty lang={lang} kind="partners" />;
-  const list = (
-    <>
-      {items.map((partner) => {
-        const card = (
-          <>
-            <LogoTile src={partner.logoUrl} name={partner.name} />
-            <span className="hk-partner__name">{partner.name}</span>
-            {variant === 'cards' && partner.websiteUrl ? (
-              <span className="hk-partner__site">{partner.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
-            ) : null}
-          </>
-        );
-        return partner.websiteUrl ? (
-          <a key={partner.id} className="hk-partner" href={partner.websiteUrl} target="_blank" rel="noreferrer">
-            {card}
-          </a>
-        ) : (
-          <div key={partner.id} className="hk-partner">
-            {card}
-          </div>
-        );
-      })}
-    </>
-  );
+  const carouselOptions = resolvePartnerCarouselOptions(settings);
+  const showDetails = partnerShowsDetails(variant);
+  const renderPartner = (partner: AssocPartner, duplicate: boolean) => {
+    const card = (
+      <>
+        <LogoTile src={partner.logoUrl} name={partner.name} />
+        {showDetails ? <span className="hk-partner__name">{partner.name}</span> : null}
+        {showDetails && partner.websiteUrl ? (
+          <span className="hk-partner__site">{partner.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+        ) : null}
+      </>
+    );
+    return partner.websiteUrl ? (
+      <a
+        key={`${duplicate ? 'duplicate-' : ''}${partner.id}`}
+        className="hk-partner"
+        href={partner.websiteUrl}
+        target="_blank"
+        rel="noreferrer"
+        tabIndex={duplicate ? -1 : undefined}
+      >
+        {card}
+      </a>
+    ) : (
+      <div key={`${duplicate ? 'duplicate-' : ''}${partner.id}`} className="hk-partner">
+        {card}
+      </div>
+    );
+  };
   return (
     <>
       <AssocHead block={block} lang={lang} />
       {variant === 'carousel' ? (
-        <div className="hk-partner-carousel">{list}</div>
+        <PartnerCarousel
+          items={items}
+          ariaLabel={lang === 'en' ? 'Partners' : '合作夥伴'}
+          autoPlay={carouselOptions.autoPlay}
+          speed={carouselOptions.speed}
+          direction={carouselOptions.direction}
+          pauseOnHover={carouselOptions.pauseOnHover}
+          className="hk-partner-carousel"
+          renderItem={renderPartner}
+        />
       ) : (
-        <div className={`hk-partner-grid${variant === 'cards' ? ' hk-partner-grid--cards' : ''}`}>{list}</div>
+        <div className={`hk-partner-grid${variant === 'cards' ? ' hk-partner-grid--cards' : ''}`}>
+          {items.map((partner) => renderPartner(partner, false))}
+        </div>
       )}
     </>
   );
@@ -326,8 +403,8 @@ function AssocTimeline({ block, lang, settings, assoc }: { block: RenderBlock; l
 }
 
 function AssocPeople({ block, lang, settings, assoc, board }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData; board: boolean }) {
-  const roles = Array.isArray(settings.roles) ? (settings.roles as unknown[]).map(String).filter(Boolean) : [];
-  const items = board && roles.length ? assoc.people.filter((person) => roles.includes(person.group)) : assoc.people;
+  const [activePersonId, setActivePersonId] = useState<number | null>(null);
+  const items = board ? selectBoardMembers(assoc.people, settings) as AssocPerson[] : assoc.people;
   if (!items.length) return <AssocEmpty lang={lang} kind="people" />;
   const showBio = board && settings.showBio !== false;
   const showSocial = board && settings.showSocial !== false;
@@ -337,37 +414,40 @@ function AssocPeople({ block, lang, settings, assoc, board }: { block: RenderBlo
       <div className={`hk-people-grid${board ? ' hk-people-grid--board' : ''}`}>
         {items.map((person) => {
           const name = personName(person, lang);
+          if (board) {
+            return (
+              <LeadershipGlassCard
+                key={person.id}
+                personId={person.id}
+                role={person.group}
+                activePersonId={activePersonId}
+                setActivePersonId={setActivePersonId}
+              >
+                <div className="hk-person__portrait">
+                  <PersonAvatar src={person.avatarUrl} name={name} large />
+                </div>
+                <span className="hk-person__badge">{groupLabel(person.group, lang)}</span>
+                <div className="hk-person__name">{name}</div>
+                <div className="hk-person__title">{personTitle(person, lang)}</div>
+                {showBio && personBio(person, lang) ? <div className="hk-person__bio">{personBio(person, lang)}</div> : null}
+                {showSocial ? (
+                  <div className="hk-person__socials">
+                    <SocialLink kind="facebook" url={person.facebook} />
+                    <SocialLink kind="twitter" url={person.twitter} />
+                    <SocialLink kind="linkedin" url={person.linkedin} />
+                    <SocialLink kind="instagram" url={person.instagram} />
+                  </div>
+                ) : null}
+              </LeadershipGlassCard>
+            );
+          }
           return (
-            <div key={person.id} className={`hk-person${board ? '' : ' hk-person--compact'}`}>
-              {board ? (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 2 }}>
-                    <PersonAvatar src={person.avatarUrl} name={name} large />
-                    <div>
-                      <span className="hk-person__badge">{groupLabel(person.group, lang)}</span>
-                      <div className="hk-person__name" style={{ marginTop: 6 }}>{name}</div>
-                    </div>
-                  </div>
-                  <div className="hk-person__title" style={{ marginTop: 8 }}>{personTitle(person, lang)}</div>
-                  {showBio && personBio(person, lang) ? <div className="hk-person__bio">{personBio(person, lang)}</div> : null}
-                  {showSocial ? (
-                    <div className="hk-person__socials">
-                      <SocialLink kind="facebook" url={person.facebook} />
-                      <SocialLink kind="twitter" url={person.twitter} />
-                      <SocialLink kind="linkedin" url={person.linkedin} />
-                      <SocialLink kind="instagram" url={person.instagram} />
-                    </div>
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  <PersonAvatar src={person.avatarUrl} name={name} />
-                  <div>
-                    <div className="hk-person__name">{name}</div>
-                    <div className="hk-person__title">{personTitle(person, lang)}</div>
-                  </div>
-                </>
-              )}
+            <div key={person.id} className="hk-person hk-person--compact">
+              <PersonAvatar src={person.avatarUrl} name={name} />
+              <div>
+                <div className="hk-person__name">{name}</div>
+                <div className="hk-person__title">{personTitle(person, lang)}</div>
+              </div>
             </div>
           );
         })}
@@ -437,11 +517,139 @@ function AssocContact({ block, lang, settings, assoc }: { block: RenderBlock; la
   );
 }
 
-function AssocEmpty({ lang, kind }: { lang: Lang; kind: 'partners' | 'timeline' | 'people' | 'contact' | 'resources' }) {
+function AssocMap({ block, lang, settings, assoc }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData }) {
+  const src = String(assoc.contact?.map_embed_url || '');
+  if (!src) return <AssocEmpty lang={lang} kind="contact" />;
+  const height = Math.max(240, Math.min(800, Number(settings.height) || 460));
+  return (
+    <>
+      <AssocHead block={block} lang={lang} />
+      <iframe
+        className={`hk-map${settings.rounded === false ? ' hk-map--square' : ''}`}
+        src={src}
+        title={lang === 'en' ? 'HKBA location map' : '香港區塊鏈協會地圖'}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        allowFullScreen
+        style={{ height }}
+      />
+    </>
+  );
+}
+
+type MembershipPlan = {
+  name?: string;
+  price?: string;
+  benefits?: string[];
+  buttonLabel?: string;
+  buttonUrl?: string;
+};
+
+function MembershipPlans({ block, lang, settings }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown> }) {
+  const scope = localizedContent(block, lang);
+  const plans = Array.isArray(scope.plans) ? (scope.plans as MembershipPlan[]) : [];
+  const columns = Math.max(1, Math.min(4, Number(settings.columns) || 3));
+  return (
+    <BlockShell block={block}>
+      <AssocHead block={block} lang={lang} />
+      <div className="hk-plan-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+        {plans.map((plan, index) => (
+          <article key={`${plan.name}-${index}`} className="hk-plan">
+            <div className="hk-plan__name">{plan.name}</div>
+            <div className="hk-plan__price">{plan.price}</div>
+            <ul className="hk-plan__benefits">
+              {(Array.isArray(plan.benefits) ? plan.benefits : []).map((benefit, benefitIndex) => <li key={benefitIndex}>{benefit}</li>)}
+            </ul>
+            {plan.buttonUrl ? <a className="hk-block__button" href={plan.buttonUrl}>{plan.buttonLabel || (lang === 'en' ? 'Download form' : '下載登記表格')}</a> : null}
+          </article>
+        ))}
+      </div>
+    </BlockShell>
+  );
+}
+
+function ContactForm({ block, lang, settings }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown> }) {
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setStatus('sending');
+    try {
+      const response = await fetch('/api/contact/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!response.ok) throw new Error('submit failed');
+      setForm({ name: '', email: '', subject: '', message: '' });
+      setStatus('sent');
+    } catch {
+      setStatus('error');
+    }
+  };
+  const update = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
+  return (
+    <BlockShell block={block}>
+      <AssocHead block={block} lang={lang} />
+      <form className="hk-contact-form" onSubmit={submit}>
+        <label>{lang === 'en' ? 'Name' : '姓名'}<input required value={form.name} onChange={(event) => update('name', event.target.value)} /></label>
+        <label>{lang === 'en' ? 'Email' : '電郵'}<input required type="email" value={form.email} onChange={(event) => update('email', event.target.value)} /></label>
+        {settings.showSubject !== false ? <label className="hk-contact-form__wide">{lang === 'en' ? 'Subject' : '主旨'}<input value={form.subject} onChange={(event) => update('subject', event.target.value)} /></label> : null}
+        <label className="hk-contact-form__wide">{lang === 'en' ? 'Message' : '留言'}<textarea required rows={6} value={form.message} onChange={(event) => update('message', event.target.value)} /></label>
+        <div className="hk-contact-form__actions">
+          <button className="hk-block__button" type="submit" disabled={status === 'sending'}>{status === 'sending' ? (lang === 'en' ? 'Sending...' : '提交中...') : text(block, lang, 'submitLabel', lang === 'en' ? 'Submit' : '提交')}</button>
+          {status === 'sent' ? <span className="is-success">{lang === 'en' ? 'Message sent.' : '留言已送出。'}</span> : null}
+          {status === 'error' ? <span className="is-error">{lang === 'en' ? 'Please try again.' : '提交失敗，請稍後重試。'}</span> : null}
+        </div>
+      </form>
+    </BlockShell>
+  );
+}
+
+function AssocEvents({ block, lang, settings, assoc }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const status = String(settings.status || 'all');
+  const limit = Math.max(1, Math.min(50, Number(settings.limit) || 12));
+  const showLocation = settings.showLocation !== false;
+  const events = (assoc.events || [])
+    .filter((event) => status === 'all' || (status === 'upcoming' ? event.eventDate >= today : event.eventDate < today))
+    .slice(0, limit);
+
+  return (
+    <>
+      <AssocHead block={block} lang={lang} />
+      {events.length ? (
+        <div className="hk-block__events">
+          {events.map((event) => {
+            const title = lang === 'en' ? event.titleEn || event.titleZh : event.titleZh || event.titleEn;
+            const description = lang === 'en' ? event.descriptionEn || event.descriptionZh : event.descriptionZh || event.descriptionEn;
+            const location = lang === 'en' ? event.locationEn || event.locationZh : event.locationZh || event.locationEn;
+            return (
+              <article key={event.id} className="hk-block__event-card">
+                <time className="hk-block__event-date" dateTime={event.eventDate}>{event.eventDate || (lang === 'en' ? 'Date pending' : '日期待定')}</time>
+                <h3>{title}</h3>
+                {description ? <p>{description}</p> : null}
+                {showLocation && location ? <div className="hk-block__event-meta">{location}</div> : null}
+                {event.registrationUrl ? (
+                  <a className="hk-block__event-link" href={event.registrationUrl} target="_blank" rel="noreferrer">
+                    {lang === 'en' ? 'View event' : '查看活動'} →
+                  </a>
+                ) : null}
+              </article>
+            );
+          })}
+        </div>
+      ) : <AssocEmpty lang={lang} kind="events" />}
+    </>
+  );
+}
+
+function AssocEmpty({ lang, kind }: { lang: Lang; kind: 'partners' | 'timeline' | 'people' | 'events' | 'contact' | 'resources' }) {
   const labels = {
     partners: { zh: '暫無合作夥伴資料', en: 'No partners yet' },
     timeline: { zh: '暫無里程碑資料', en: 'No milestones yet' },
     people: { zh: '暫無成員資料', en: 'No members yet' },
+    events: { zh: '暫無活動資料', en: 'No events yet' },
     contact: { zh: '暫無聯繫資料', en: 'No contact details yet' },
     resources: { zh: '暫無資源下載', en: 'No resources yet' },
   }[kind];
@@ -458,7 +666,7 @@ function AssocEmpty({ lang, kind }: { lang: Lang; kind: 'partners' | 'timeline' 
   );
 }
 
-function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: ReactNode, news?: NewsCardData[], assoc?: AssocData): ReactNode {
+function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: ReactNode, news?: NewsCardData[], assoc?: AssocData, editable = false): ReactNode {
   const t = block.component_type;
   const settings = block.settings as Record<string, unknown>;
 
@@ -480,6 +688,22 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
 
   // ---- news display ----
   if (t.startsWith('news.') && t !== 'news.header') {
+    const variant = String(settings.variant || '');
+    if (news && variant === 'flagship') {
+      const requestedIds = Array.isArray(settings.pinnedIds) ? settings.pinnedIds.filter((id): id is string => typeof id === 'string') : [];
+      const allItems = premiumNewsItems(news);
+      const pinnedItems = settings.source === 'pinned' ? requestedIds.map((id) => allItems.find((item) => item.id === id)).filter((item): item is NewsViewItem => Boolean(item)) : [];
+      const layout = selectNewsLayout(allItems, pinnedItems, Math.min(4, Math.max(2, Number(settings.secondaryCount || 2))));
+      return <BlockShell block={block}>{settings.source === 'pinned' && requestedIds.length && pinnedItems.length < requestedIds.length ? <p className="news-preview-note">{lang === 'en' ? 'Some pinned stories are not published; showing the latest available stories.' : '部分指定新聞尚未發佈，預覽已回退至最新內容。'}</p> : null}{layout.featured ? <FeaturedNews featured={layout.featured} secondary={layout.secondary} lang={lang} /> : null}</BlockShell>;
+    }
+    if (news && variant === 'editorial') {
+      return <BlockShell block={block}><NewsFeed items={premiumNewsItems(news).slice(0, Number(settings.pageSize || settings.limit || 9))} lang={lang} showSummary={settings.showSummary !== false} showDate={settings.showDate !== false} /></BlockShell>;
+    }
+    if (news && variant === 'technology') {
+      const yearValues = [...new Set(news.map((item) => item.year).filter((value): value is number => Number.isInteger(value)))].sort((a, b) => b - a);
+      const categoryValues = [...new Map(news.filter((item) => item.categoryId && item.category).map((item) => [item.categoryId!, { id: item.categoryId!, name: item.category! }])).values()];
+      return <BlockShell block={block}><NewsFilters lang={lang} years={yearValues} categories={categoryValues} year={0} categoryId="" loading={false} showYearFilter={settings.showYearFilter !== false} showCategoryFilter={settings.showCategoryFilter !== false} onYearChange={() => undefined} onCategoryChange={() => undefined} /></BlockShell>;
+    }
     // Public context: real published cards when the caller supplies data.
     if (news && (t === 'news.grid' || t === 'news.list' || t === 'news.featured')) {
       return (
@@ -513,10 +737,12 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
 
   // ---- news header ----
   if (t === 'news.header') {
+    const coverId = block.contentZh.coverMediaId || block.contentEn.coverMediaId;
+    const hasCover = typeof coverId === 'string' && Boolean(media[coverId]);
     return (
       <BlockShell block={block}>
-        <div className="hk-block__news-header">
-          <MediaImage id={block.contentZh.coverMediaId} media={media} lang={lang} />
+        <div className={`hk-block__news-header${hasCover ? ' has-cover' : ' is-no-cover'}`}>
+          <MediaImage id={coverId} media={media} lang={lang} editable={editable} />
           <h1 style={{ fontSize: 30, fontWeight: 800, margin: '18px 0 8px', color: 'var(--text-1)' }}>{text(block, lang, 'title')}</h1>
           <p style={{ color: 'var(--text-2)', fontSize: 15 }}>{text(block, lang, 'summary')}</p>
           <div style={{ color: 'var(--text-3)', fontSize: 12, marginTop: 10 }}>
@@ -530,21 +756,28 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
   // ---- content components ----
   switch (t) {
     case 'content.hero':
+      {
+      const scope = localizedContent(block, lang);
+      if (settings.variant === 'network-news') {
+        return <BlockShell block={block}><NewsHero lang={lang} title={text(block, lang, 'title')} subtitle={text(block, lang, 'subtitle')} total={news?.length || 0} categoryCount={new Set((news || []).map((item) => item.categoryId).filter(Boolean)).size} activeYear={(news || []).find((item) => item.year)?.year || undefined} latestDate={(news || []).find((item) => item.publishedAt)?.publishedAt?.slice(0, 10)} /></BlockShell>;
+      }
+      const hasMedia = typeof scope.backgroundMediaId === 'string' && Boolean(scope.backgroundMediaId);
       return (
         <BlockShell block={block}>
-          <div className="hk-block__hero">
+          <div className={`hk-block__hero${hasMedia ? '' : ' hk-block__hero--no-media'}`}>
             <div>
               <h1 style={{ fontSize: 34, fontWeight: 800, color: 'var(--text-1)', marginBottom: 12 }}>{text(block, lang, 'title')}</h1>
               <p style={{ color: 'var(--text-2)', fontSize: 16, marginBottom: 18 }}>{text(block, lang, 'subtitle')}</p>
               <div style={{ display: 'flex', gap: 10 }}>
-                <Button link={block.contentZh.primaryButton} lang={lang} />
-                <Button link={block.contentZh.secondaryButton} lang={lang} />
+                <Button link={scope.primaryButton} lang={lang} />
+                <Button link={scope.secondaryButton} lang={lang} />
               </div>
             </div>
-            <MediaImage id={block.contentZh.backgroundMediaId} media={media} lang={lang} />
+            {hasMedia ? <MediaImage id={scope.backgroundMediaId} media={media} lang={lang} /> : null}
           </div>
         </BlockShell>
       );
+      }
     case 'content.rich-text':
       return (
         <BlockShell block={block}>
@@ -564,17 +797,21 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
         </BlockShell>
       );
     case 'content.image-text': {
-      const mediaFirst = block.contentZh.mediaPosition !== 'right';
+      const scope = localizedContent(block, lang);
+      const mediaFirst = settings.mediaPosition !== 'right';
+      const visual = scope.externalMediaUrl
+        ? <ExternalImage src={String(scope.externalMediaUrl)} alt={text(block, lang, 'title')} />
+        : <MediaImage id={scope.mediaId} media={media} lang={lang} />;
       return (
         <BlockShell block={block}>
           <div className="hk-block__image-text">
-            {mediaFirst && <MediaImage id={block.contentZh.mediaId} media={media} lang={lang} />}
+            {mediaFirst && visual}
             <div>
               <h2 style={{ fontSize: 22, fontWeight: 750, color: 'var(--text-1)', marginBottom: 10 }}>{text(block, lang, 'title')}</h2>
-              <RichText html={text(block, lang, 'html')} />
-              <Button link={block.contentZh.button} lang={lang} />
+              <RichText html={text(block, lang, 'body')} />
+              <Button link={scope.button} lang={lang} />
             </div>
-            {!mediaFirst && <MediaImage id={block.contentZh.mediaId} media={media} lang={lang} />}
+            {!mediaFirst && visual}
           </div>
         </BlockShell>
       );
@@ -594,20 +831,28 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
       );
     }
     case 'content.stats': {
-      const items = Array.isArray(block.contentZh.items) ? (block.contentZh.items as { value?: string; label?: string }[]) : [];
+      const scope = localizedContent(block, lang);
+      const items = Array.isArray(scope.items) ? (scope.items as { value?: string; unit?: string; label?: string; description?: string }[]) : [];
+      const features = settings.variant === 'features';
       return (
         <BlockShell block={block}>
-          <div className="hk-block__stats">
+          {text(block, lang, 'title') ? <h2 className="hk-block__stats-title">{text(block, lang, 'title')}</h2> : null}
+          <div className={`hk-block__stats${features ? ' hk-block__stats--features' : ''}`}>
             {items.map((item, index) => (
               <div key={index} className="hk-block__stat">
-                <div className="hk-block__stat-value">{item.value || '—'}</div>
+                <div className="hk-block__stat-value">{item.value || '—'}{item.unit || ''}</div>
                 <div className="hk-block__stat-label">{item.label || ''}</div>
+                {item.description ? <div className="hk-block__stat-description">{item.description}</div> : null}
               </div>
             ))}
           </div>
         </BlockShell>
       );
     }
+    case 'content.membership-plans':
+      return <MembershipPlans block={block} lang={lang} settings={settings} />;
+    case 'content.contact-form':
+      return <ContactForm block={block} lang={lang} settings={settings} />;
     case 'content.quote':
       return (
         <BlockShell block={block}>
@@ -665,6 +910,8 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
     case 'association.members':
     case 'association.board':
     case 'association.contact':
+    case 'association.map':
+    case 'association.events':
     case 'association.resources': {
       // Studio canvas (no assoc data): keep the configuration placeholder.
       if (!assoc) {
@@ -681,6 +928,8 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
           {t === 'association.members' ? <AssocPeople block={block} lang={lang} settings={settings} assoc={assoc} board={false} /> : null}
           {t === 'association.board' ? <AssocPeople block={block} lang={lang} settings={settings} assoc={assoc} board /> : null}
           {t === 'association.contact' ? <AssocContact block={block} lang={lang} settings={settings} assoc={assoc} /> : null}
+          {t === 'association.map' ? <AssocMap block={block} lang={lang} settings={settings} assoc={assoc} /> : null}
+          {t === 'association.events' ? <AssocEvents block={block} lang={lang} settings={settings} assoc={assoc} /> : null}
           {t === 'association.resources' ? (
             <>
               <AssocHead block={block} lang={lang} />
@@ -691,7 +940,6 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
       );
     }
     case 'association.related-pages':
-    case 'association.events':
       // Not part of the current registry; keep a quiet placeholder.
       return (
         <BlockShell block={block}>
@@ -737,7 +985,7 @@ export default function BlockRenderer({
 
   const renderTree = (parentId: string | null): ReactNode =>
     (childrenOf.get(parentId) || []).map((block) => {
-      const rendered = renderBlock(block, lang, media, renderTree(block.id), news, assoc);
+      const rendered = renderBlock(block, lang, media, renderTree(block.id), news, assoc, Boolean(onSelect));
       if (!onSelect) return <div key={block.id}>{rendered}</div>;
       return (
         <div

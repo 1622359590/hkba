@@ -171,9 +171,6 @@ export default function AdminDashboard() {
     <div style={{ display: 'grid', gap: 22 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <GlobalSearch entries={searchEntries} />
-        <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
-          星系視圖為簡版：點擊節點進入模組，動態展開與縮放屬後續增強
-        </span>
       </div>
       {loading ? <LoadingState label="正在同步星系狀態…" /> : <GalaxyMap nodes={nodes} onRetry={() => setRetry((value) => value + 1)} />}
     </div>

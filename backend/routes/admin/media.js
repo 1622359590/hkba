@@ -18,10 +18,14 @@ const { getDb } = require('../../db/init');
 const { recordAudit, auditEvent } = require('../../lib/audit');
 const {
   MediaRejected,
-  storeUpload,
+  prepareUpload,
+  persistLocalUpload,
   removeStored,
   PDF_MAX_BYTES,
 } = require('../../lib/mediaStore');
+const { getStorageSettings } = require('../../lib/storageSettings');
+const { deleteOssObject, putOssObject } = require('../../lib/objectStorage');
+const { mediaAssetUrl } = require('../../lib/mediaAssetUrl');
 
 router.use(requestContext);
 
@@ -39,8 +43,9 @@ const upload = multer({
 function assetJson(row) {
   return {
     id: row.id,
-    url: `/uploads/${row.storage_key}`,
+    url: mediaAssetUrl(row),
     storageKey: row.storage_key,
+    storageProvider: row.storage_provider || 'local',
     originalFilename: row.original_filename,
     mimeType: row.mime_type,
     kind: row.mime_type === 'application/pdf' ? 'pdf' : 'image',
@@ -65,17 +70,35 @@ function getAsset(conn, id) {
 }
 
 // POST /api/admin/media/uploads (spec §7 step 1-3 combined per D10)
-router.post('/uploads', ...write, upload.single('file'), (req, res) => {
+router.post('/uploads', ...write, upload.single('file'), async (req, res) => {
   const conn = getDb();
+  const storage = getStorageSettings(conn);
+  const useOss = storage.enabled && storage.provider === 'oss';
   let stored;
   try {
-    stored = storeUpload({
+    const prepared = prepareUpload({
       buffer: req.file ? req.file.buffer : null,
       originalFilename: req.file ? req.file.originalname : '',
+      storagePrefix: useOss ? storage.objectPrefix : 'media',
     });
+    if (useOss) {
+      const uploaded = await putOssObject(storage, {
+        key: prepared.storageKey,
+        content: prepared.content,
+        mimeType: prepared.mimeType,
+      });
+      const { content, ...metadata } = prepared;
+      stored = { ...metadata, storageProvider: 'oss', publicUrl: uploaded.url };
+    } else {
+      stored = { ...persistLocalUpload(prepared), storageProvider: 'local', publicUrl: null };
+    }
   } catch (error) {
     if (error instanceof MediaRejected) {
       return res.fail('UPLOAD_REJECTED', '檔案未通過校驗', error.fields);
+    }
+    if (useOss) {
+      console.error('OSS media upload failed:', error?.code || error?.name || 'unknown');
+      return res.fail('STORAGE_UPLOAD_FAILED', 'OSS 上傳失敗，請檢查儲存設置後重試');
     }
     throw error;
   }
@@ -83,8 +106,8 @@ router.post('/uploads', ...write, upload.single('file'), (req, res) => {
   conn
     .prepare(
       `INSERT INTO media_assets
-         (id, storage_key, original_filename, mime_type, size_bytes, width, height, checksum, status, uploaded_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)`
+         (id, storage_key, original_filename, mime_type, size_bytes, width, height, checksum, status, uploaded_by, storage_provider, public_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)`
     )
     .run(
       stored.id,
@@ -95,7 +118,9 @@ router.post('/uploads', ...write, upload.single('file'), (req, res) => {
       stored.width,
       stored.height,
       stored.checksum,
-      req.admin.id
+      req.admin.id,
+      stored.storageProvider,
+      stored.publicUrl
     );
 
   recordAudit(conn, auditEvent(req, {
@@ -218,7 +243,7 @@ router.delete('/:id', ...write, (req, res) => {
 
 // DELETE /api/admin/media/:id/permanent — only with media.delete and zero
 // recorded references (spec §7; see header note on strictness).
-router.delete('/:id/permanent', ...erase, (req, res) => {
+router.delete('/:id/permanent', ...erase, async (req, res) => {
   const conn = getDb();
   const asset = getAsset(conn, req.params.id);
   if (!asset) return res.fail('NOT_FOUND', '媒體不存在');
@@ -232,8 +257,17 @@ router.delete('/:id/permanent', ...erase, (req, res) => {
     ]);
   }
 
+  try {
+    if (asset.storage_provider === 'oss') {
+      await deleteOssObject(getStorageSettings(conn), asset.storage_key);
+    } else {
+      removeStored(asset.storage_key);
+    }
+  } catch (error) {
+    console.error('media storage deletion failed:', error?.code || error?.name || 'unknown');
+    return res.fail('STORAGE_UPLOAD_FAILED', '無法刪除儲存中的媒體，資料庫記錄已保留');
+  }
   conn.prepare('DELETE FROM media_assets WHERE id = ?').run(asset.id);
-  removeStored(asset.storage_key);
   recordAudit(conn, auditEvent(req, {
     actorId: req.admin.id,
     actorName: req.admin.username,

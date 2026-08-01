@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
-const API_INTERNAL = process.env.HKBA_API_INTERNAL || "http://127.0.0.1:37900";
+const API_INTERNAL = process.env.HKBA_API_INTERNAL || "http://127.0.0.1:5002";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['127.0.0.1'],
   turbopack: {
     root: process.cwd(),
   },
@@ -10,11 +11,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:37900/api/:path*',
+        destination: `${API_INTERNAL}/api/:path*`,
       },
       {
         source: '/uploads/:path*',
-        destination: 'http://127.0.0.1:37900/uploads/:path*',
+        destination: `${API_INTERNAL}/uploads/:path*`,
       },
     ];
   },
@@ -39,7 +40,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      { protocol: 'http', hostname: 'localhost', port: '37900' },
+      { protocol: 'http', hostname: 'localhost', port: '5002' },
     ],
   },
 };

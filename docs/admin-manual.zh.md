@@ -79,7 +79,7 @@
 - 內容遷移（`backend/scripts/migrate-content.js`）在寫入前也會自動做一次檔案備份（可用 `--no-backup` 跳過）。
 - `backend/scripts/migrate-content.js` 仍保留同步檔案備份供離線遷移使用；在線服務與定時任務應直接運行上述 CLI，避免手工複製主 `.db` 文件而漏掉 WAL 資料。
 
-資料庫回退：先 `pm2 stop hkba-api`，保留當前失敗資料庫副本，再把選定 `.bak` 複製為 `backend/db/hkba.db`，執行 `chown www:www`，重啟 API 並訪問 `http://127.0.0.1:37900/api/health` 確認 `status=ok`，最後重啟前端並 `pm2 save`。
+資料庫回退：先 `pm2 stop hkba-api`，保留當前失敗資料庫副本，再把選定 `.bak` 複製為 `backend/db/hkba.db`，執行 `chown www:www`，重啟 API 並訪問 `http://127.0.0.1:5002/api/health` 確認 `status=ok`，最後重啟前端並 `pm2 save`。
 
 ## 10. 常見錯誤與恢復
 

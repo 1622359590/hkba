@@ -4,13 +4,13 @@ const assert = require('node:assert/strict');
 const registry = require('./index');
 const { definitions } = registry;
 
-test('registers the full first-batch catalog (30 components)', () => {
-  assert.equal(definitions.length, 30);
+test('registers the full component catalog (34 components)', () => {
+  assert.equal(definitions.length, 34);
   const byCategory = definitions.reduce((acc, d) => {
     acc[d.category] = (acc[d.category] || 0) + 1;
     return acc;
   }, {});
-  assert.deepEqual(byCategory, { news: 6, content: 13, association: 6, layout: 5 });
+  assert.deepEqual(byCategory, { news: 6, content: 15, association: 8, layout: 5 });
 });
 
 test('every definition is well-formed', () => {
@@ -44,6 +44,28 @@ test('news display components share the yearMode query contract', () => {
   }
 });
 
+test('premium news variants expose editable CMS controls', () => {
+  const hero = registry.getDefinition('content.hero').schema.settings.fields;
+  assert.ok(hero.variant.values.includes('network-news'));
+
+  const featured = registry.getDefinition('news.featured').schema.settings.fields;
+  assert.ok(featured.variant.values.includes('flagship'));
+  assert.deepEqual(featured.source.values, ['auto', 'pinned']);
+  assert.equal(featured.secondaryCount.min, 2);
+  assert.equal(featured.secondaryCount.max, 4);
+
+  const list = registry.getDefinition('news.list').schema.settings.fields;
+  assert.ok(list.variant.values.includes('editorial'));
+  assert.equal(list.pageSize.min, 5);
+  assert.equal(list.showSummary.type, 'boolean');
+  assert.equal(list.showDate.type, 'boolean');
+
+  const tabs = registry.getDefinition('news.category-tabs').schema.settings.fields;
+  assert.ok(tabs.variant.values.includes('technology'));
+  assert.equal(tabs.showYearFilter.type, 'boolean');
+  assert.equal(tabs.showCategoryFilter.type, 'boolean');
+});
+
 test('year is required when yearMode is specific', () => {
   const bad = registry.validateBlockConfig('news.grid', {
     settings: { yearMode: 'specific' },
@@ -67,6 +89,76 @@ test('validateBlockConfig prefixes errors with the config scope', () => {
   const result = registry.validateBlockConfig('content.hero', { contentZh: {} });
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((error) => error.field === 'contentZh.title' && error.code === 'required'));
+});
+
+test('hero secondary button is optional but requires a complete link when used', () => {
+  const completeContent = {
+    title: 'HKBA',
+    subtitle: '',
+    backgroundMediaId: '',
+    primaryButton: { label: '了解更多', url: '/about' },
+    secondaryButton: { label: '', url: '' },
+  };
+  const optional = registry.validateBlockConfig('content.hero', {
+    contentZh: completeContent,
+    contentEn: completeContent,
+    settings: {},
+  });
+  assert.equal(optional.ok, true);
+
+  const partial = registry.validateBlockConfig('content.hero', {
+    contentZh: { ...completeContent, secondaryButton: { label: '聯繫我們', url: '' } },
+    contentEn: completeContent,
+    settings: {},
+  });
+  assert.equal(partial.ok, false);
+  assert.ok(partial.errors.some((error) => error.field === 'contentZh.secondaryButton.url' && error.code === 'required'));
+});
+
+test('official-site content components expose editable structured fields', () => {
+  const plans = registry.getDefinition('content.membership-plans');
+  assert.equal(plans.schema.content.fields.plans.type, 'array');
+  assert.equal(plans.schema.content.fields.plans.item.fields.benefits.type, 'array');
+
+  const form = registry.getDefinition('content.contact-form');
+  assert.equal(form.schema.content.fields.title.required, true);
+
+  const map = registry.getDefinition('association.map');
+  assert.equal(map.schema.settings.fields.height.type, 'integer');
+
+  const imageText = registry.getDefinition('content.image-text');
+  assert.equal(imageText.schema.content.fields.externalMediaUrl.type, 'string');
+  const stats = registry.getDefinition('content.stats');
+  assert.deepEqual(stats.schema.settings.fields.variant.values, ['metrics', 'features']);
+});
+
+test('partner carousel exposes validated playback settings', () => {
+  const fields = registry.getDefinition('association.partners').schema.settings.fields;
+  assert.equal(fields.autoPlay.default, true);
+  assert.deepEqual(fields.speed.values, ['slow', 'normal', 'fast']);
+  assert.equal(fields.speed.default, 'slow');
+  assert.deepEqual(fields.direction.values, ['left', 'right']);
+  assert.equal(fields.direction.default, 'left');
+  assert.equal(fields.pauseOnHover.default, true);
+
+  const valid = registry.validateBlockConfig('association.partners', {
+    settings: {
+      group: '',
+      variant: 'carousel',
+      autoPlay: true,
+      speed: 'slow',
+      direction: 'left',
+      pauseOnHover: true,
+    },
+  });
+  assert.equal(valid.ok, true);
+
+  const invalid = registry.validateBlockConfig('association.partners', {
+    settings: { variant: 'carousel', speed: 'warp', direction: 'up' },
+  });
+  assert.equal(invalid.ok, false);
+  assert.ok(invalid.errors.some((error) => error.field === 'settings.speed' && error.code === 'enum'));
+  assert.ok(invalid.errors.some((error) => error.field === 'settings.direction' && error.code === 'enum'));
 });
 
 test('migrateConfig chains pure migration functions', () => {
@@ -99,7 +191,7 @@ test('migrateConfig chains pure migration functions', () => {
 
 test('listDefinitions strips migration functions from metadata', () => {
   const listed = registry.listDefinitions();
-  assert.equal(listed.length, 30);
+  assert.equal(listed.length, 34);
   for (const entry of listed) {
     assert.equal(typeof entry.migrationsDeclared, 'boolean');
     assert.equal(entry.migrations, undefined);

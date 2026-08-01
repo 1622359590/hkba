@@ -1,0 +1,1685 @@
+{
+  "source": {
+    "capturedAt": "2026-08-01T11:21:10.705Z",
+    "pages": [
+      "https://hkba.club/",
+      "https://hkba.club/abouthkba.html",
+      "https://hkba.club/membership.html",
+      "https://hkba.club/member.html",
+      "https://hkba.club/contact.html",
+      "https://hkba.club/news.html"
+    ]
+  },
+  "home": {
+    "introZh": "HongKongBlockchain.org 香港區塊鏈協會 HKBA.club 是一個區塊鏈組織，致力於推動區塊鏈技術在香港及其周邊地區的發展，並為人們提供一個交流和合作的平台。",
+    "introEn": "HKBA aims to promote blockchain literacy and build a strong talent pipeline for the Web3 ecosystem in Hong Kong and the Greater Bay Area. Hong Kong has become a burgeoning hub for Web3 and blockchain, and HKBA is here to facilitate and encourage a healthy and sustainable development of the industry."
+  },
+  "about": {
+    "zh": [
+      "香港區塊鏈協會（Hong Kong Blockchain Association）是一個致力於推動和發展區塊鏈技術的組織。協會成立於2017年，旨在促進香港的區塊鏈生態系統發展，並推動區塊鏈技術在不同領域的應用。協會的使命是通過教育、研究和推廣來提高公眾對區塊鏈技術的認識和理解。協會組織各類活動，包括會議、研討會和培訓課程，旨在促進區塊鏈技術的知識分享和合作。",
+      "協會的成員來自不同領域，包括學術界、企業界和政府部門，他們共同致力於推動香港成為一個區塊鏈創新和應用的中心。協會與相關機構和組織建立了廣泛的合作夥伴關係，以推動區塊鏈技術的發展，並與國際社群進行交流與合作。",
+      "香港區塊鏈協會是一個重要的組織，致力於推動區塊鏈技術在香港及其周邊地區的發展，並為人們提供一個交流和合作的平台。"
+    ],
+    "en": [
+      "Hong Kong Blockchain Association was formed in 2017 by co-founders TonyTong.co, Thomas Cheung, Julian GSRMatrix.vc, Madison Blockchain, Since then, HKBA has grown to become the leading industry association for the Blockchain and Web3 community in Hong Kong and the Greater Bay Area.",
+      "HKBA seeks to empower its members and the community to leverage blockchain and Web3 technologies for business growth and transformation. HKBA is dedicated to being an open platform for members to engage with multiple stakeholders, and promote best practices in a collaborative, open, and transparent manner.",
+      "HKBA aims to promote blockchain literacy and build a strong talent pipeline for the Web3 ecosystem in Hong Kong and the Greater Bay Area. Hong Kong has become a burgeoning hub for Web3 and Blockchain and HKBA is here to facilitate and encourage a healthy and sustainable development of the industry."
+    ]
+  },
+  "stats": [
+    {
+      "value": "2017",
+      "labelZh": "協會成立",
+      "labelEn": "Founded"
+    },
+    {
+      "value": "1.8K+",
+      "labelZh": "社群成員",
+      "labelEn": "Community members"
+    },
+    {
+      "value": "86+",
+      "labelZh": "合作項目",
+      "labelEn": "Projects"
+    },
+    {
+      "value": "63+",
+      "labelZh": "行業榮譽",
+      "labelEn": "Awards"
+    }
+  ],
+  "members": [
+    {
+      "nameZh": "蔡维德教授",
+      "nameEn": "Prof. Wei-Tek Tsai",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "China Big Data & Blockchain Expert 大數據及區塊鏈專家\n北京航空航天大學教授 國家特聘教授\n美國多項軟件工程及服務計算項目負責人\n中國開源軟件推進聯盟（China OSS Promotion Union）專家委員會",
+      "bioEn": "China Big Data & Blockchain Expert 大數據及區塊鏈專家\n北京航空航天大學教授 國家特聘教授\n美國多項軟件工程及服務計算項目負責人\n中國開源軟件推進聯盟（China OSS Promotion Union）專家委員會",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/cwd.png",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "王兟",
+      "nameEn": "Sing Wang",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "香港我哋家主席\n曾任全球五大私募基金之一TPG德太集團全球合夥人及大中華區聯席主席\nTOM.com 集團 CEO\nGoldman Sachs高盛中國科技業務負責人\n美國麥肯錫 McKinsey 戰略諮詢顧問",
+      "bioEn": "香港我哋家主席\n曾任全球五大私募基金之一TPG德太集團全球合夥人及大中華區聯席主席\nTOM.com 集團 CEO\nGoldman Sachs高盛中國科技業務負責人\n美國麥肯錫 McKinsey 戰略諮詢顧問",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/singwang.png",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "朱嘉明教授",
+      "nameEn": "Prof. Zhu JiaMing",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "Economist 大中華區著名經濟學家\nDigital Asset 數字資產研究院院長\n聯合國工業發展組織的經濟學家\n麻省理工學院斯隆管理學院 (MIT) MBA",
+      "bioEn": "Economist 大中華區著名經濟學家\nDigital Asset 數字資產研究院院長\n聯合國工業發展組織的經濟學家\n麻省理工學院斯隆管理學院 (MIT) MBA",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/zjm.png",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "郭毅可教授",
+      "nameEn": "Prof. GUO Yike",
+      "titleZh": "HKBA前榮譽主席2021-2022",
+      "titleEn": "HKBA前榮譽主席2021-2022",
+      "bioZh": "香港科技大學 HKUST.edu.hk 郭毅可教授 首席副校長\n帝國學院 (Imperial College London) 數據科學研究所所長\n創立企業數據分析平台公司 InforSense\n歐洲科學院院士MAE\n英國電腦學會院士FBCS",
+      "bioEn": "香港科技大學 HKUST.edu.hk 郭毅可教授 首席副校長\n帝國學院 (Imperial College London) 數據科學研究所所長\n創立企業數據分析平台公司 InforSense\n歐洲科學院院士MAE\n英國電腦學會院士FBCS",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/gyk.png",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "汪扬",
+      "nameEn": "",
+      "titleZh": "香港区块链协会荣誉主席",
+      "titleEn": "香港区块链协会荣誉主席",
+      "bioZh": "香港科技大学副校长\n数学家\n数学系讲座教授\n理学院院长\n香港科技大学大数据生物智能实验室主任\n香港科技大学大数据研究所副所长",
+      "bioEn": "香港科技大学副校长\n数学家\n数学系讲座教授\n理学院院长\n香港科技大学大数据生物智能实验室主任\n香港科技大学大数据研究所副所长",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/wy.png",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "林家禮博士",
+      "nameEn": "Dr. Lee George Lam",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "香港數碼港董事局前主席 Former Chairman of Hong Kong\nCyberport.HK/香港貿易發展局一帶一路委員會委員",
+      "bioEn": "香港數碼港董事局前主席 Former Chairman of Hong Kong\nCyberport.HK/香港貿易發展局一帶一路委員會委員",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/ljl.png",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "邱達根",
+      "nameEn": "Duncan Chiu",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "香港立法會議員 Legislative Council\n團結香港基金/Our HK Foundation\n香港資訊科技聯會會長\nHKITJC.org.hk/Innovate for Future 創科未來 召集人\n慧科資本聯合創始人/荔園有限公司主席\nWeb3 Angel Investor 投資者",
+      "bioEn": "香港立法會議員 Legislative Council\n團結香港基金/Our HK Foundation\n香港資訊科技聯會會長\nHKITJC.org.hk/Innovate for Future 創科未來 召集人\n慧科資本聯合創始人/荔園有限公司主席\nWeb3 Angel Investor 投資者",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/qgd.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "張俊勇",
+      "nameEn": "Thomas Cheung",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "前港區全國人大代表\nFormer Delegate to China National People's Congress NPC InnoAngel.com\n香港英諾天使基金合夥人\n香港中華總商會會董\n香港區塊鏈學會HKBS",
+      "bioEn": "前港區全國人大代表\nFormer Delegate to China National People's Congress NPC InnoAngel.com\n香港英諾天使基金合夥人\n香港中華總商會會董\n香港區塊鏈學會HKBS",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/zjy.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "蔡文胜",
+      "nameEn": "Cai WenSheng",
+      "titleZh": "HKBA前榮譽主席",
+      "titleEn": "HKBA前榮譽主席",
+      "bioZh": "Renowned Internet Serial Entrepreneur\nAngel Investor in Web3 Startups\n美圖 Meitu.com 創始人\n著名天使投資人\n香港首例投資加密貨幣上市公司CEO",
+      "bioEn": "Renowned Internet Serial Entrepreneur\nAngel Investor in Web3 Startups\n美圖 Meitu.com 創始人\n著名天使投資人\n香港首例投資加密貨幣上市公司CEO",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/cws.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "柳志偉",
+      "nameEn": "Liu ZhiWei",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "淳大集團董事長\n華興資本集團創始人兼首席執行官\nRDPay.com\n清華大學五道口金融學院港澳校友會會長",
+      "bioEn": "淳大集團董事長\n華興資本集團創始人兼首席執行官\nRDPay.com\n清華大學五道口金融學院港澳校友會會長",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/ljw.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陳建榮",
+      "nameEn": "Prof. Timmy Tan",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "SK Techno-lube 創始人\n菲律宾华商总会\nSuperAngelsVentures Manila",
+      "bioEn": "SK Techno-lube 創始人\n菲律宾华商总会\nSuperAngelsVentures Manila",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/cjr.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陳燿璋",
+      "nameEn": "Anson Chan",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "寶聲集團主席\nInnoAngel.com 香港英諾天使基金合夥人\n香港産學研合作促進會會長",
+      "bioEn": "寶聲集團主席\nInnoAngel.com 香港英諾天使基金合夥人\n香港産學研合作促進會會長",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/cyz.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "馬鴻銘",
+      "nameEn": "John Ma",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "佳寧娜控股執行董事\n一帶一路科技金融協會創會主席\n廖創興企業獨立非執行董事",
+      "bioEn": "佳寧娜控股執行董事\n一帶一路科技金融協會創會主席\n廖創興企業獨立非執行董事",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/mhm.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "劉小鷹",
+      "nameEn": "Steve Lau",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "老鷹天使基金創始人EaglesFund.com\n中國青年天使會\n香港上市公司長遠控股 Fortune Telecom 創始人",
+      "bioEn": "老鷹天使基金創始人EaglesFund.com\n中國青年天使會\n香港上市公司長遠控股 Fortune Telecom 創始人",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/lxy.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "雷志斌",
+      "nameEn": "Prof. James LEI Zhibin",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "區塊鏈金融科技專家\nETD (Ethereum Data) Blockchain Lab\nASTRI.org 香港應用科技研究院\n香港科技大學教授 University of Science & Technology UST.hk\n湖北⼤學信息科學學院特聘教授",
+      "bioEn": "區塊鏈金融科技專家\nETD (Ethereum Data) Blockchain Lab\nASTRI.org 香港應用科技研究院\n香港科技大學教授 University of Science & Technology UST.hk\n湖北⼤學信息科學學院特聘教授",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/ljb.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "鄧迪",
+      "nameEn": "Deng Di",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "太一雲集團創始人 TaiYiYun.com\n北京雲聯科技創始人\n中國工信部認證雲計算專家\n瑞士 Davos 達沃斯 - 全球區塊鏈商業理事會 (GBBC) 中國代表團團長\n清華大學中國產業研究中心理事",
+      "bioEn": "太一雲集團創始人 TaiYiYun.com\n北京雲聯科技創始人\n中國工信部認證雲計算專家\n瑞士 Davos 達沃斯 - 全球區塊鏈商業理事會 (GBBC) 中國代表團團長\n清華大學中國產業研究中心理事",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/dd.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "梁捷揚",
+      "nameEn": "Jay Liang",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "金沙江數字基金 合夥人 GSR Matrix Fund\nOES Capital 東方億泰資本 合夥人\n美中工商協會名譽主席 聯席會長\n陽明山未來學社",
+      "bioEn": "金沙江數字基金 合夥人 GSR Matrix Fund\nOES Capital 東方億泰資本 合夥人\n美中工商協會名譽主席 聯席會長\n陽明山未來學社",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/ljy.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "于佳宁 博士",
+      "nameEn": "Dr. Yu JiaNing",
+      "titleZh": "HKBA 榮譽主席",
+      "titleEn": "HKBA 榮譽主席",
+      "bioZh": "Founder & President of Huobi University\n火大教育 校长\n中国通信工业协会区块链专委会 轮值主席\n中国移动通信联合会元宇宙产业委员会执行主任\n原工信部信息中心工业经济研究所所长",
+      "bioEn": "Founder & President of Huobi University\n火大教育 校长\n中国通信工业协会区块链专委会 轮值主席\n中国移动通信联合会元宇宙产业委员会执行主任\n原工信部信息中心工业经济研究所所长",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/yjn.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Albert Saychuan Cheok",
+      "nameEn": "",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "新加坡上市公司 Amplefield Limited 主席\n香港国际标准资源控股有限公司主席\nSuperAngel Investor\n亚洲区块链联盟ABA\nAsia Blockchain Alliance",
+      "bioEn": "新加坡上市公司 Amplefield Limited 主席\n香港国际标准资源控股有限公司主席\nSuperAngel Investor\n亚洲区块链联盟ABA\nAsia Blockchain Alliance",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Albert.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "李尚信",
+      "nameEn": "Samson Lee",
+      "titleZh": "CEO of CoinStreet 高爾街",
+      "titleEn": "CEO of CoinStreet 高爾街",
+      "bioZh": "Co-Founder & Co-Chairman of NFT Association of Hong Kong 香港非同質化代幣協會\nSTO Winner of “Security Tokens Realised Awards London 2020\nCo-organizer TADS Awards\nFintech & Blockchain Committee of Hang Seng University of Hong Kong",
+      "bioEn": "Co-Founder & Co-Chairman of NFT Association of Hong Kong 香港非同質化代幣協會\nSTO Winner of “Security Tokens Realised Awards London 2020\nCo-organizer TADS Awards\nFintech & Blockchain Committee of Hang Seng University of Hong Kong",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/lcx.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陳家豪",
+      "nameEn": "Emil Chan HKBA",
+      "titleZh": "HKBA Honorary Chairman 榮譽主席",
+      "titleEn": "HKBA Honorary Chairman 榮譽主席",
+      "bioZh": "亞洲元宇宙聯盟 Co-Chairman\n陳家豪先生擁有超過20年於亞太區外資銀行的信息科技管理及行政經驗\n對金融科技如大數據、區塊鏈、Open API 等技術之應用有其獨特見解\n近年以多家知名大學客席講師身份培訓專業人才及參與多家金融科技初創公司之顧問，推動大灣區經濟持續發展",
+      "bioEn": "亞洲元宇宙聯盟 Co-Chairman\n陳家豪先生擁有超過20年於亞太區外資銀行的信息科技管理及行政經驗\n對金融科技如大數據、區塊鏈、Open API 等技術之應用有其獨特見解\n近年以多家知名大學客席講師身份培訓專業人才及參與多家金融科技初創公司之顧問，推動大灣區經濟持續發展",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/cjh.webp",
+      "group": "honorary_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "唐儀",
+      "nameEn": "TonyTong.co",
+      "titleZh": "HKBA 執行會長",
+      "titleEn": "HKBA 執行會長",
+      "bioZh": "Edi.College 元宇宙教育學院聯合創始人\nSuperAngelsVentures.com 超級天使團執行主席\n一帶一路科技金融協會執行主席\n亞洲元宇宙聯盟聯合創始人",
+      "bioEn": "Edi.College 元宇宙教育學院聯合創始人\nSuperAngelsVentures.com 超級天使團執行主席\n一帶一路科技金融協會執行主席\n亞洲元宇宙聯盟聯合創始人",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/ty.jpg",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Ander Tsui",
+      "nameEn": "",
+      "titleZh": "AnderTsui, Co-Chairman",
+      "titleEn": "AnderTsui, Co-Chairman",
+      "bioZh": "Hong Kong Blockchain Association\nSuperChainCapital (Singapore) Founder\nVertexLabs.UK Founder\n亞洲元宇宙聯盟 AsiaMeta.club Alliance",
+      "bioEn": "Hong Kong Blockchain Association\nSuperChainCapital (Singapore) Founder\nVertexLabs.UK Founder\n亞洲元宇宙聯盟 AsiaMeta.club Alliance",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Ander.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "柴舸洋",
+      "nameEn": "Chai GeYang",
+      "titleZh": "HKBA Co-Chairman 聯席會長",
+      "titleEn": "HKBA Co-Chairman 聯席會長",
+      "bioZh": "Tagging.club 創始人\nSocialFaceAI.com 創始人 CEO\n鉑睿智能傳媒 創始人\n亚洲区块链联盟ABA\n亞洲元宇宙聯盟 AsiaMeta.club Alliance",
+      "bioEn": "Tagging.club 創始人\nSocialFaceAI.com 創始人 CEO\n鉑睿智能傳媒 創始人\n亚洲区块链联盟ABA\n亞洲元宇宙聯盟 AsiaMeta.club Alliance",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/chy.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "蔡全",
+      "nameEn": "Charley Tsai HKBA",
+      "titleZh": "香港区块链协会创会联席主席",
+      "titleEn": "香港区块链协会创会联席主席",
+      "bioZh": "海南自由贸易港金融发展中心特邀专家\n国际金融科技、清结算和交易金融专家\n创建国内第一家交易银行业务事业部\n曾任职香港渣打银行总行、中国银行和南非投行等",
+      "bioEn": "海南自由贸易港金融发展中心特邀专家\n国际金融科技、清结算和交易金融专家\n创建国内第一家交易银行业务事业部\n曾任职香港渣打银行总行、中国银行和南非投行等",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/cq.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "王岳華",
+      "nameEn": "Richard Wang HKBA",
+      "titleZh": "HKBA 聯席會長",
+      "titleEn": "HKBA 聯席會長",
+      "bioZh": "Web3 VC區塊鏈投資人\nDFJ.com 德鼎創新基金\nDraperDragon.com 管理合夥人\n臺灣交通大學 電信工程碩士\n亞洲元宇宙聯盟 AsiaMeta.club Alliance",
+      "bioEn": "Web3 VC區塊鏈投資人\nDFJ.com 德鼎創新基金\nDraperDragon.com 管理合夥人\n臺灣交通大學 電信工程碩士\n亞洲元宇宙聯盟 AsiaMeta.club Alliance",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/wyh.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "林華 博士",
+      "nameEn": "Dr. Lin Hua CFA FRM",
+      "titleZh": "香港区块链协会联席主席北京紫金智能金融研究院院长",
+      "titleEn": "香港区块链协会联席主席北京紫金智能金融研究院院长",
+      "bioZh": "央行《金融会计》编委，\n中国金融会计学会常务理事\n财政部企业会计准则咨询委員\n中国证券基金业协会资产证券化顾问",
+      "bioEn": "央行《金融会计》编委，\n中国金融会计学会常务理事\n财政部企业会计准则咨询委員\n中国证券基金业协会资产证券化顾问",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/lh.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "趙旭",
+      "nameEn": "Michael Xu Zhao",
+      "titleZh": "HKBA 聯席會長",
+      "titleEn": "HKBA 聯席會長",
+      "bioZh": "Crypto1.vip Acquisition SPAC Nasdaq:DAOO\nIDCM.io 創始人\n曾任职PBOC 國家外管局SAFE\n亞洲元宇宙聯盟 AsiaMeta.club Alliance",
+      "bioEn": "Crypto1.vip Acquisition SPAC Nasdaq:DAOO\nIDCM.io 創始人\n曾任职PBOC 國家外管局SAFE\n亞洲元宇宙聯盟 AsiaMeta.club Alliance",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/zxun.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "勞維信博士",
+      "nameEn": "Dr. WaiShunLo",
+      "titleZh": "HKBA Co-Chairman 聯席會長",
+      "titleEn": "HKBA Co-Chairman 聯席會長",
+      "bioZh": "DL Capital 點亮資本合夥人\n前海國際區塊鏈生態圈聯盟主席\nCUHK香港中文大學訊息工程系兼任教授",
+      "bioEn": "DL Capital 點亮資本合夥人\n前海國際區塊鏈生態圈聯盟主席\nCUHK香港中文大學訊息工程系兼任教授",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/lwx.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Dixon Sze EABA.io",
+      "nameEn": "",
+      "titleZh": "HKBA EABA.io 聯席會長",
+      "titleEn": "HKBA EABA.io 聯席會長",
+      "bioZh": "Founder & Chairman of\nCosmos Information Technology Ltd\nGaia Venture Sg\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Founder & Chairman of\nCosmos Information Technology Ltd\nGaia Venture Sg\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Dixon.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "張壽松",
+      "nameEn": "Sossion",
+      "titleZh": "HKBA Co-Chairman 聯席會長",
+      "titleEn": "HKBA Co-Chairman 聯席會長",
+      "bioZh": "AsiaBlockchain.club\n亞洲區塊鏈協會會長\nJU.com Jubi 聚幣網創始人 聚鏈集團董事長",
+      "bioEn": "AsiaBlockchain.club\n亞洲區塊鏈協會會長\nJU.com Jubi 聚幣網創始人 聚鏈集團董事長",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Sossion.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "石柱",
+      "nameEn": "Shi Zhu",
+      "titleZh": "HKBA Co-Chairman 聯席會長",
+      "titleEn": "HKBA Co-Chairman 聯席會長",
+      "bioZh": "中國文化基金會主席\n前中國駐新西蘭經濟商務領事",
+      "bioEn": "中國文化基金會主席\n前中國駐新西蘭經濟商務領事",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Shi.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "HKBA Co-Chairman 聯席會長",
+      "nameEn": "",
+      "titleZh": "香港区块链协会创会联席主席",
+      "titleEn": "香港区块链协会创会联席主席",
+      "bioZh": "縱橫資產管理公司 CEO\nNYU Stern 商學院金融學博士",
+      "bioEn": "縱橫資產管理公司 CEO\nNYU Stern 商學院金融學博士",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/George.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陈序",
+      "nameEn": "",
+      "titleZh": "香港区块链协会 联合会长",
+      "titleEn": "香港区块链协会 联合会长",
+      "bioZh": "元宇宙和Web3智库MetaZ创始人\n香港半山智库创始发起人\n中国国际科技促进会元宇宙专业委员会副主任\nCoindesk中国前联合出版人",
+      "bioEn": "元宇宙和Web3智库MetaZ创始人\n香港半山智库创始发起人\n中国国际科技促进会元宇宙专业委员会副主任\nCoindesk中国前联合出版人",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/cx2.webp",
+      "group": "co_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "張海標",
+      "nameEn": "Billzhang",
+      "titleZh": "Bill Investment CEO",
+      "titleEn": "Bill Investment CEO",
+      "bioZh": "HKBA 常务副会长Vice Chairman\nDaTong International Technology Co Ltd CEO",
+      "bioEn": "HKBA 常务副会长Vice Chairman\nDaTong International Technology Co Ltd CEO",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Billzhang2.jpg",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "曾崇瑞",
+      "nameEn": "Sam Tsang",
+      "titleZh": "HKBA 常务副会长Vice Chairman",
+      "titleEn": "HKBA 常务副会长Vice Chairman",
+      "bioZh": "iDom.Capital 创始人Founder\n盛俊盈達（香港）總裁\nHCFSME(港中聯) 執行會長\nWeb3.0產業發展委員會 會長\n青年事務發展委員會 主席\nEdi.College - 專家顧問導師",
+      "bioEn": "iDom.Capital 创始人Founder\n盛俊盈達（香港）總裁\nHCFSME(港中聯) 執行會長\nWeb3.0產業發展委員會 會長\n青年事務發展委員會 主席\nEdi.College - 專家顧問導師",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/sam926.jpg?v2",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Michael Gaard",
+      "nameEn": "HKBA USA Com2000",
+      "titleZh": "HKBA USA: Michael Gaard, Com2000 Chairman",
+      "titleEn": "HKBA USA: Michael Gaard, Com2000 Chairman",
+      "bioZh": "Former Andersen Consulting ( Accenture )\nPWC Partner for North America banking consulting services\nInformation Advantage financial services\nUnisys, Contata Solutions, USA",
+      "bioEn": "Former Andersen Consulting ( Accenture )\nPWC Partner for North America banking consulting services\nInformation Advantage financial services\nUnisys, Contata Solutions, USA",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Michael.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "黄翬",
+      "nameEn": "David Wong",
+      "titleZh": "HKBA GBA副主席",
+      "titleEn": "HKBA GBA副主席",
+      "bioZh": "Com2000/Kingdee.com 金蝶国际软件CSO 0268HK\n前美国摩根史坦利 Morgan Stanley USA\n亚洲区块链联盟ABA Asia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Com2000/Kingdee.com 金蝶国际软件CSO 0268HK\n前美国摩根史坦利 Morgan Stanley USA\n亚洲区块链联盟ABA Asia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/David.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "蔡卓軒",
+      "nameEn": "Rody Choi",
+      "titleZh": "香港區塊鏈協會 HKBA.club Vice",
+      "titleEn": "香港區塊鏈協會 HKBA.club Vice",
+      "bioZh": "Chairman, Blockway.io Chairman\nLIEUX CEO, Blockchain Expert\n世界物聯網組織 WBOTO.org Founder\n博愛醫院董事\nWeb3 投資者",
+      "bioEn": "Chairman, Blockway.io Chairman\nLIEUX CEO, Blockchain Expert\n世界物聯網組織 WBOTO.org Founder\n博愛醫院董事\nWeb3 投資者",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Rody.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "雷淦政",
+      "nameEn": "Ray",
+      "titleZh": "HKBA GBA 副主席",
+      "titleEn": "HKBA GBA 副主席",
+      "bioZh": "FoxYear.com 松狐科技CEO&创始人\nLuckyCaker 联合创始人\n元宇宙教育学院 Edi.College 大湾区分院 院长GBA\n亚洲区块链联盟ABA Asia Blockchain Alliance",
+      "bioEn": "FoxYear.com 松狐科技CEO&创始人\nLuckyCaker 联合创始人\n元宇宙教育学院 Edi.College 大湾区分院 院长GBA\n亚洲区块链联盟ABA Asia Blockchain Alliance",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/ray.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Tony Chan",
+      "nameEn": "HKBA NFTA.HK",
+      "titleZh": "HKBA 副主席",
+      "titleEn": "HKBA 副主席",
+      "bioZh": "Tony Chan Chi Lun HKBA NFTA\nHK NFT Association of Hong Kong\nAPE Asia Pioneer Entertainment\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Tony Chan Chi Lun HKBA NFTA\nHK NFT Association of Hong Kong\nAPE Asia Pioneer Entertainment\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/TonyChan.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "郭谷彰",
+      "nameEn": "Chester Kuo",
+      "titleZh": "HKBA Taipei",
+      "titleEn": "HKBA Taipei",
+      "bioZh": "BOXTradEx.com CEO\nBlockTown Technology\nFormer Director of BTCBOX Japan\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "BOXTradEx.com CEO\nBlockTown Technology\nFormer Director of BTCBOX Japan\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Chester.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "江雨",
+      "nameEn": "Rain",
+      "titleZh": "Jiang - HKBA NFT GameFi Expert",
+      "titleEn": "Jiang - HKBA NFT GameFi Expert",
+      "bioZh": "1Box Exchange\n1BoxNFT.com\nHKBA.club / Edi.College 客席講師",
+      "bioEn": "1Box Exchange\n1BoxNFT.com\nHKBA.club / Edi.College 客席講師",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Rain.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Jaime Enrique",
+      "nameEn": "Gonzale HKBA Manila",
+      "titleZh": "IPVI CEO, EOS Philippines 發起人",
+      "titleEn": "IPVI CEO, EOS Philippines 發起人",
+      "bioZh": "Philippine Stock Exchange PSE 菲律賓上市公司 IPVG創始人",
+      "bioEn": "Philippine Stock Exchange PSE 菲律賓上市公司 IPVG創始人",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Jaime.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "黄善春",
+      "nameEn": "Shawn ShanChun",
+      "titleZh": "Huang HKBA UK",
+      "titleEn": "Huang HKBA UK",
+      "bioZh": "Founder & CEO of Future FinTech Group Inc\n(NASDAQ: FTFT) FTFT.com FTFTx.com\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Founder & CEO of Future FinTech Group Inc\n(NASDAQ: FTFT) FTFT.com FTFTx.com\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Shawn.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "余駿劻",
+      "nameEn": "Simon Je",
+      "titleZh": "HKBA 副主席",
+      "titleEn": "HKBA 副主席",
+      "bioZh": "寶利國際金融集團主席\n香港國際區塊鏈金融總會HKIBFA主席\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "寶利國際金融集團主席\n香港國際區塊鏈金融總會HKIBFA主席\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Simon.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "鄭思怡",
+      "nameEn": "Sisley",
+      "titleZh": "HKBA Vice Chairman 副主席",
+      "titleEn": "HKBA Vice Chairman 副主席",
+      "bioZh": "HKBA Web3 Accelerator\nBayswork Web3 Hub Founder\n前海香港商會 副會長 秘書長\nSolos Co-founder 前海巾幗匯 Founder\nWeb3 Incubator, Accelerator",
+      "bioEn": "HKBA Web3 Accelerator\nBayswork Web3 Hub Founder\n前海香港商會 副會長 秘書長\nSolos Co-founder 前海巾幗匯 Founder\nWeb3 Incubator, Accelerator",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Sisley.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "黃瑞瑩",
+      "nameEn": "Vera Wong",
+      "titleZh": "Sino Wealth Asset Management Director",
+      "titleEn": "Sino Wealth Asset Management Director",
+      "bioZh": "國新資產管理 董事\nHKBA Vice President\n香港區塊鏈協會副會長\n前海Web3Hub合夥人",
+      "bioEn": "國新資產管理 董事\nHKBA Vice President\n香港區塊鏈協會副會長\n前海Web3Hub合夥人",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/VeraWong.jpg",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陈柏珲",
+      "nameEn": "",
+      "titleZh": "HKBA Singapore Web3A.org",
+      "titleEn": "HKBA Singapore Web3A.org",
+      "bioZh": "亚洲区块链产业研究院院长\n中国经济体制改革研究会产业改革与企业发展委员会专家委员会委员\n中国领导人才专委会理事\nHKBA 亞洲元宇宙聯盟\nAsia Metaverse Alliance\nAsiaMeta.club",
+      "bioEn": "亚洲区块链产业研究院院长\n中国经济体制改革研究会产业改革与企业发展委员会专家委员会委员\n中国领导人才专委会理事\nHKBA 亞洲元宇宙聯盟\nAsia Metaverse Alliance\nAsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/cpf.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "周國華",
+      "nameEn": "Zhou GuoHua",
+      "titleZh": "HKBA Web3A.org",
+      "titleEn": "HKBA Web3A.org",
+      "bioZh": "天天在綫董事長\n三十人論壇理事長",
+      "bioEn": "天天在綫董事長\n三十人論壇理事長",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Zhou.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "林萬强",
+      "nameEn": "Steven Lin",
+      "titleZh": "HKBA Web3A.org",
+      "titleEn": "HKBA Web3A.org",
+      "bioZh": "萬駿集團 董事長\n兩岸和平發展聯合總會 名譽主席\n香港福建僑民會副理事長\nHKBA 亞洲元宇宙聯盟\nAsia Metaverse Alliance\nAsiaMeta.club",
+      "bioEn": "萬駿集團 董事長\n兩岸和平發展聯合總會 名譽主席\n香港福建僑民會副理事長\nHKBA 亞洲元宇宙聯盟\nAsia Metaverse Alliance\nAsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Steven.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "蔡偉立",
+      "nameEn": "Willy Choi",
+      "titleZh": "HKBA Builder",
+      "titleEn": "HKBA Builder",
+      "bioZh": "A8&腾讯运营专家",
+      "bioEn": "A8&腾讯运营专家",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Willy.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "安東",
+      "nameEn": "Anton Trantin",
+      "titleZh": "香港区块链协会 HKBA Vice Chairman 副主席",
+      "titleEn": "香港区块链协会 HKBA Vice Chairman 副主席",
+      "bioZh": "HKBA Technology and Investing Partner\nSoftware engineer\n中国领导人才专委会理事\nEntrepreneur & investor, Com2000\n9Cat.io Plasma.Finance Advisor & Investor",
+      "bioEn": "HKBA Technology and Investing Partner\nSoftware engineer\n中国领导人才专委会理事\nEntrepreneur & investor, Com2000\n9Cat.io Plasma.Finance Advisor & Investor",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Anton.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Henry Li",
+      "nameEn": "",
+      "titleZh": "HKBA Vietnam Hanoi",
+      "titleEn": "HKBA Vietnam Hanoi",
+      "bioZh": "香港区块链协会 HKBA Vice Chairman 副主席\nHenry Li, Denco Law Firm, Hanoi\nVietnam, Finance Advisor & Investor\nHKBA 亞洲元宇宙聯盟\nAsia Metaverse Alliance\nAsiaMeta.club",
+      "bioEn": "香港区块链协会 HKBA Vice Chairman 副主席\nHenry Li, Denco Law Firm, Hanoi\nVietnam, Finance Advisor & Investor\nHKBA 亞洲元宇宙聯盟\nAsia Metaverse Alliance\nAsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Henry.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陳宜飆博士",
+      "nameEn": "Dr. Chen YiBiao",
+      "titleZh": "香港区块链协会 HKBA Vice Chairman 副會長",
+      "titleEn": "香港区块链协会 HKBA Vice Chairman 副會長",
+      "bioZh": "香港國際金融評論》《加密貨幣與數字資產》主編陳宜飆博士\nHKBA FinTech & Blockchain Book Editor\nHKBA 亞洲元宇宙聯盟\nAsia Metaverse Alliance\nAsiaMeta.club",
+      "bioEn": "香港國際金融評論》《加密貨幣與數字資產》主編陳宜飆博士\nHKBA FinTech & Blockchain Book Editor\nHKBA 亞洲元宇宙聯盟\nAsia Metaverse Alliance\nAsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/YiBiao.webp",
+      "group": "vice_chairman",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Josephine Nguyen HKBA",
+      "nameEn": "",
+      "titleZh": "Head of Partnerships VC Alliance",
+      "titleEn": "Head of Partnerships VC Alliance",
+      "bioZh": "Hong Kong Blockchain Association HKBA\nAerial Capital, Director of Partnership\nDGG Network, Chief Growth Officer\nDGG Network, Chief Growth Officer",
+      "bioEn": "Hong Kong Blockchain Association HKBA\nAerial Capital, Director of Partnership\nDGG Network, Chief Growth Officer\nDGG Network, Chief Growth Officer",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/jose.png",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/HongKongBA",
+        "twitter": "https://twitter.com/HKBAclub",
+        "linkedin": "https://Linkedin.com/in/JosephineHuongNguyen",
+        "instagram": ""
+      }
+    },
+    {
+      "nameZh": "Paul Wong",
+      "nameEn": "HKBA Cloud",
+      "titleZh": "CoffeeCloud.io CEO",
+      "titleEn": "CoffeeCloud.io CEO",
+      "bioZh": "Paul Wong is HKBA Industry Expert on distributed cloud storage IDC\nNFT on IPFS / Filecoin\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Paul Wong is HKBA Industry Expert on distributed cloud storage IDC\nNFT on IPFS / Filecoin\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Paul.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "https://Linkedin.com/in/JosephineHuongNguyen",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Sam Greenwood",
+      "nameEn": "",
+      "titleZh": "ApogeeLabs.io Co-Founder Web3 NFT",
+      "titleEn": "ApogeeLabs.io Co-Founder Web3 NFT",
+      "bioZh": "Black Sheep Consulting BaaBaa.io\n2019 HKU MBA\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Black Sheep Consulting BaaBaa.io\n2019 HKU MBA\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Greenwood.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "哈门",
+      "nameEn": "Harmen Brenninkmeijer",
+      "titleZh": "HKBA GameFi Expert European Gaming Association",
+      "titleEn": "HKBA GameFi Expert European Gaming Association",
+      "bioZh": "欧洲网络游戏协会\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "欧洲网络游戏协会\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Harmen.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "劉伯麟",
+      "nameEn": "Alan Lau",
+      "titleZh": "HKBA IDC Expert",
+      "titleEn": "HKBA IDC Expert",
+      "bioZh": "新一代國際數據中心 NGIDC.com.hk\n廣州新一代數據中心 GZIDC.com , Data-Hash.com 創始人\nFounder & Director; 前中國聯通 China Unicom",
+      "bioEn": "新一代國際數據中心 NGIDC.com.hk\n廣州新一代數據中心 GZIDC.com , Data-Hash.com 創始人\nFounder & Director; 前中國聯通 China Unicom",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Alan.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "張偉安",
+      "nameEn": "Simon Cheung",
+      "titleZh": "Wai On HKBA",
+      "titleEn": "Wai On HKBA",
+      "bioZh": "Hong Kong International Family Office Association\n邁進國權資本 KingdomCF.com\n香港國際區塊鏈金融總會HKIBFA 副主席\n天元金融集團投資執行官",
+      "bioEn": "Hong Kong International Family Office Association\n邁進國權資本 KingdomCF.com\n香港國際區塊鏈金融總會HKIBFA 副主席\n天元金融集團投資執行官",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Cheung.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "余沛恒律師",
+      "nameEn": "Henry Yu",
+      "titleZh": "KBA FinTech Blockchain NFT Legal Expert 法律專家",
+      "titleEn": "KBA FinTech Blockchain NFT Legal Expert 法律專家",
+      "bioZh": "HKBA Legal\nProfessional experience in IT, Corporate Finance, Wealth Management\n亚洲区块链联盟ABA",
+      "bioEn": "HKBA Legal\nProfessional experience in IT, Corporate Finance, Wealth Management\n亚洲区块链联盟ABA",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/HenryYu.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "方宏進",
+      "nameEn": "Fang HongJing",
+      "titleZh": "HKBA 香港数码动力CEO",
+      "titleEn": "HKBA 香港数码动力CEO",
+      "bioZh": "质谱溯源链创始人\nHong Kong Blockchain\nAssociation HKBA.club\n亞洲元宇宙聯盟",
+      "bioEn": "质谱溯源链创始人\nHong Kong Blockchain\nAssociation HKBA.club\n亞洲元宇宙聯盟",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Fang.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "周兵",
+      "nameEn": "Zhou Bin HKBA Beijing",
+      "titleZh": "GlobalSTO.net CTO",
+      "titleEn": "GlobalSTO.net CTO",
+      "bioZh": "Former Microsoft, Alibaba.\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Former Microsoft, Alibaba.\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Zhoub.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Yu Hong",
+      "nameEn": "Jacky Chan HKBA",
+      "titleZh": "HKBA Web3 Investor",
+      "titleEn": "HKBA Web3 Investor",
+      "bioZh": "MHub.ltd 香港分子區塊鏈中心CEO\nHK Science Park\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "MHub.ltd 香港分子區塊鏈中心CEO\nHK Science Park\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/YuHong.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Eva Shan HKBA NY",
+      "nameEn": "",
+      "titleZh": "ASG集團董事 Chartered Accountant",
+      "titleEn": "ASG集團董事 Chartered Accountant",
+      "bioZh": "多倫多大學法律碩士學位\nHKBA.club 香港區塊鏈聯會\nEdi.College 元宇宙教育學院",
+      "bioEn": "多倫多大學法律碩士學位\nHKBA.club 香港區塊鏈聯會\nEdi.College 元宇宙教育學院",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/EvaShan.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "呂濤江",
+      "nameEn": "Lu TaoJiang",
+      "titleZh": "中泰國際 ZhongTai",
+      "titleEn": "中泰國際 ZhongTai",
+      "bioZh": "ZTSC.com.hk\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "ZTSC.com.hk\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/LuTao.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "吳思進",
+      "nameEn": "",
+      "titleZh": "比特元Bityuan",
+      "titleEn": "比特元Bityuan",
+      "bioZh": "本科bachelor 浙江大學 機械制造工業與設備專業\n碩士master 浙江大學 經濟學 Economics\n杭州復雜美科技有限公司 執行董事 CEO",
+      "bioEn": "本科bachelor 浙江大學 機械制造工業與設備專業\n碩士master 浙江大學 經濟學 Economics\n杭州復雜美科技有限公司 執行董事 CEO",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/wsj.jpg",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "楊思中",
+      "nameEn": "Michael Yeung",
+      "titleZh": "HKBA.club 香港區塊鏈聯會",
+      "titleEn": "HKBA.club 香港區塊鏈聯會",
+      "bioZh": "Edi.College 元宇宙教育學院\nMetaPlayers.io Musifi\nNFT 貓盒媒體",
+      "bioEn": "Edi.College 元宇宙教育學院\nMetaPlayers.io Musifi\nNFT 貓盒媒體",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Michaely.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陳慶",
+      "nameEn": "Karen Chen",
+      "titleZh": "Singapore Stock",
+      "titleEn": "Singapore Stock",
+      "bioZh": "Exchange SGX\nHiggs Block , 前 UBS 瑞士銀行(中國)行長",
+      "bioEn": "Exchange SGX\nHiggs Block , 前 UBS 瑞士銀行(中國)行長",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/KarenChen.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "黃幸娟 博士",
+      "nameEn": "Dr. Anny Wong",
+      "titleZh": "Microsoft 微軟公司華南區發起人",
+      "titleEn": "Microsoft 微軟公司華南區發起人",
+      "bioZh": "前HKScience Park香港科技園業務發展總監\n前Cisco思科系統大中華地區營運部總經理\n前IBM大華西地區總經理",
+      "bioEn": "前HKScience Park香港科技園業務發展總監\n前Cisco思科系統大中華地區營運部總經理\n前IBM大華西地區總經理",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Anny.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "賈可",
+      "nameEn": "Jia Ke - HKBA Shenzhen",
+      "titleZh": "賈可 Jia Ke JavaONE金奖",
+      "titleEn": "賈可 Jia Ke JavaONE金奖",
+      "bioZh": "中国首个国家数字娱乐基地 提案人\n中国首家上市游戏公司深圳中青宝 原总经理",
+      "bioEn": "中国首个国家数字娱乐基地 提案人\n中国首家上市游戏公司深圳中青宝 原总经理",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Jia.webp",
+      "group": "industry_expert",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "唐樂庭",
+      "nameEn": "TREVOR TONG HKBA WEB3A.ORG",
+      "titleZh": "Web3 投資者-教育企業家",
+      "titleEn": "Web3 投資者-教育企業家",
+      "bioZh": "曾開設演藝人管理公司 協助影視和音樂人材出演\n創立 Khemsiri Music 把音樂和影視放上元宇宙,透過 NFT 把學生和藝人的作品顯現\n香港主板上市元宇宙公司 MetaSpaceX 原始股東\nMX-space.com 策略官",
+      "bioEn": "曾開設演藝人管理公司 協助影視和音樂人材出演\n創立 Khemsiri Music 把音樂和影視放上元宇宙,透過 NFT 把學生和藝人的作品顯現\n香港主板上市元宇宙公司 MetaSpaceX 原始股東\nMX-space.com 策略官",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/TREVOR.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "王梓濤",
+      "nameEn": "PHILLIP WONG",
+      "titleZh": "HKBA.club CFO",
+      "titleEn": "HKBA.club CFO",
+      "bioZh": "SuperAngelsVentures.com 超級天使團 Web3 Investor\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "SuperAngelsVentures.com 超級天使團 Web3 Investor\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/PHILLIP.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "DAVID",
+      "nameEn": "THOMS HKBA CLOUD",
+      "titleZh": "CoffeeCloud.io HKBA",
+      "titleEn": "CoffeeCloud.io HKBA",
+      "bioZh": "Marketing Expert on distributed cloud storage IDC\nNFT on IPFS / Filecoin\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Marketing Expert on distributed cloud storage IDC\nNFT on IPFS / Filecoin\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/DAVID2.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "梁耀忠",
+      "nameEn": "DEREK LEUNG",
+      "titleZh": "HKBA Blockchain & Marketing Consultant",
+      "titleEn": "HKBA Blockchain & Marketing Consultant",
+      "bioZh": "香港嶺南大學 Master of Science in Banking & Finance\n國際銀行及金融碩士\nBlockchain & Internet Marketing\n區塊鏈應用顧問",
+      "bioEn": "香港嶺南大學 Master of Science in Banking & Finance\n國際銀行及金融碩士\nBlockchain & Internet Marketing\n區塊鏈應用顧問",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/DEREK.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "JOSHUA",
+      "nameEn": "GALLOWAY USA",
+      "titleZh": "HKBA NFT GameFi Expert",
+      "titleEn": "HKBA NFT GameFi Expert",
+      "bioZh": "Lepricon.io CEO,* Plutus.VC\nInternational Game Developers Association IGDA.org\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Lepricon.io CEO,* Plutus.VC\nInternational Game Developers Association IGDA.org\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/JOSHUA.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陳錦清",
+      "nameEn": "CASEY CHEN",
+      "titleZh": "Silver Bear Capital, HKOTC.co",
+      "titleEn": "Silver Bear Capital, HKOTC.co",
+      "bioZh": "亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/CASEY.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "DIMA",
+      "nameEn": "RAKETA HKBA EUROPE",
+      "titleZh": "HKBA Russia Rep",
+      "titleEn": "HKBA Russia Rep",
+      "bioZh": "Reputation.House , F6S.com Moscow-HK\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Reputation.House , F6S.com Moscow-HK\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/DIMA.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "SEBASTIAN",
+      "nameEn": "",
+      "titleZh": "ASG集團 金融科技投資 Boston Univ",
+      "titleEn": "ASG集團 金融科技投資 Boston Univ",
+      "bioZh": "亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/SEBASTIAN.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "MEL SONGCO",
+      "nameEn": "HKBA MANILA PHILIPPINES",
+      "titleZh": "IDAXA.org Asia Blockchain & Crypto Association ABACA",
+      "titleEn": "IDAXA.org Asia Blockchain & Crypto Association ABACA",
+      "bioZh": "Hong Kong Blockchain\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "Hong Kong Blockchain\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/MEL.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "盛品儒",
+      "nameEn": "JAMES SHING",
+      "titleZh": "HKBA WEB3A.ORG 杉杉創投",
+      "titleEn": "HKBA WEB3A.ORG 杉杉創投",
+      "bioZh": "江蘇省政協委員* 前任亞洲電視ATV董事\nHong Kong Blockchain Association\nHKBA.club 亞洲元宇宙聯盟\nAsia Meterverse Alliance\nAsiaBlockchain.club",
+      "bioEn": "江蘇省政協委員* 前任亞洲電視ATV董事\nHong Kong Blockchain Association\nHKBA.club 亞洲元宇宙聯盟\nAsia Meterverse Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/JAMESSHING.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "樸琴英",
+      "nameEn": "JennyPark",
+      "titleZh": "幣兒礦業聯合創始人",
+      "titleEn": "幣兒礦業聯合創始人",
+      "bioZh": "HKBA韓國協會大使\n亚洲区块链联盟ABA",
+      "bioEn": "HKBA韓國協會大使\n亚洲区块链联盟ABA",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/JennyPark.jpg",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "唐國勝",
+      "nameEn": "JT",
+      "titleZh": "HKBA ABA 亚洲区块链联盟",
+      "titleEn": "HKBA ABA 亚洲区块链联盟",
+      "bioZh": "基準式區塊鏈研究院創始人\nKevin Chen HashKey.com\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "bioEn": "基準式區塊鏈研究院創始人\nKevin Chen HashKey.com\n亚洲区块链联盟ABA\nAsia Blockchain Alliance\nAsiaBlockchain.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/tgs.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "陳國俊",
+      "nameEn": "JONATHAN CHAN",
+      "titleZh": "Pacific Century Group",
+      "titleEn": "Pacific Century Group",
+      "bioZh": "盈科拓展集團\nHong Kong Blockchain Association\nHKBA.club 亞洲元宇宙聯盟\nAsia Meterverse\nAlliance AsiaMeta.club",
+      "bioEn": "盈科拓展集團\nHong Kong Blockchain Association\nHKBA.club 亞洲元宇宙聯盟\nAsia Meterverse\nAlliance AsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/JONATHANCHAN.webp",
+      "group": "ambassador",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "楊靈娜",
+      "nameEn": "Lynn Yang",
+      "titleZh": "前海Web3 Hub CEO",
+      "titleEn": "前海Web3 Hub CEO",
+      "bioZh": "香港區塊鏈協會秘書長\nFoxAI 首席運營官\nLink1.news 鏈1傳媒CEO\nFoxYear 3D Metaverse 運營官",
+      "bioEn": "香港區塊鏈協會秘書長\nFoxAI 首席運營官\nLink1.news 鏈1傳媒CEO\nFoxYear 3D Metaverse 運營官",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Lynn.webp",
+      "group": "secretary_general",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Eva Wu",
+      "nameEn": "",
+      "titleZh": "MSc in Computer Science (HKU)",
+      "titleEn": "MSc in Computer Science (HKU)",
+      "bioZh": "Bachelor in Computer Science (HUST) & Finance ( WHU )\nProfessional experience in IT, Corporate Finance, Wealth Management",
+      "bioEn": "Bachelor in Computer Science (HUST) & Finance ( WHU )\nProfessional experience in IT, Corporate Finance, Wealth Management",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Eva.webp",
+      "group": "secretary_general",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "唐雨贊",
+      "nameEn": "Brian Tong",
+      "titleZh": "香港區塊鏈協會 副主席",
+      "titleEn": "香港區塊鏈協會 副主席",
+      "bioZh": "Web3 VC元宇宙 投資人\nHoshiBoshi Lab 創始人\nOrienta lab Limited 創始人\nZRF Fund 中融金谷基金 董事",
+      "bioEn": "Web3 VC元宇宙 投資人\nHoshiBoshi Lab 創始人\nOrienta lab Limited 創始人\nZRF Fund 中融金谷基金 董事",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/BrianTong.png",
+      "group": "secretary_general",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/softrugpro",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "Annie Wu",
+      "nameEn": "",
+      "titleZh": "香港区块链协会联席秘书长",
+      "titleEn": "香港区块链协会联席秘书长",
+      "bioZh": "香港中本传媒CEO\nChatNews 創始人\n深圳卓本传媒创始人\n亚洲元宇宙联盟秘书长\nAsiaMeta.club",
+      "bioEn": "香港中本传媒CEO\nChatNews 創始人\n深圳卓本传媒创始人\n亚洲元宇宙联盟秘书长\nAsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/AnnieWu.webp",
+      "group": "secretary_general",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "李木木",
+      "nameEn": "Alma Li",
+      "titleZh": "香港区块链协会HKBA秘书长",
+      "titleEn": "香港区块链协会HKBA秘书长",
+      "bioZh": "香港中文大学CUHK珠三角校友会副会长\n0xCUHK 发起人 Cyber Media 賽博傳媒",
+      "bioEn": "香港中文大学CUHK珠三角校友会副会长\n0xCUHK 发起人 Cyber Media 賽博傳媒",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Alma.webp",
+      "group": "secretary_general",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "蘇鈺淇",
+      "nameEn": "Noel So",
+      "titleZh": "香港區塊鏈協會 HKBA.club 秘書",
+      "titleEn": "香港區塊鏈協會 HKBA.club 秘書",
+      "bioZh": "中國好聲音 Sing China 統籌委員\n中國新欹聲 運營公司 廣東省委員\nMCN Multi Channel Network 專業運營官\n亞洲元宇宙聯盟 Asia Meta Alliance\nAsiaMeta.club",
+      "bioEn": "中國好聲音 Sing China 統籌委員\n中國新欹聲 運營公司 廣東省委員\nMCN Multi Channel Network 專業運營官\n亞洲元宇宙聯盟 Asia Meta Alliance\nAsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Noel.webp",
+      "group": "secretary_general",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "諸葛暢",
+      "nameEn": "Annie",
+      "titleZh": "香港區塊鏈協會 HKBA.club 秘書",
+      "titleEn": "香港區塊鏈協會 HKBA.club 秘書",
+      "bioZh": "亞洲元宇宙聯盟 Asia Meta Alliance\nAsiaMeta.club",
+      "bioEn": "亞洲元宇宙聯盟 Asia Meta Alliance\nAsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Annie.webp",
+      "group": "secretary_general",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    },
+    {
+      "nameZh": "勞嘉寧",
+      "nameEn": "Pinky Lao",
+      "titleZh": "HKBA 協會秘書",
+      "titleEn": "HKBA 協會秘書",
+      "bioZh": "亞洲元宇宙聯盟\nAsia Meta Alliance\nAsiaMeta.club",
+      "bioEn": "亞洲元宇宙聯盟\nAsia Meta Alliance\nAsiaMeta.club",
+      "avatarUrl": "https://hkba.club/assets/img/home-4/Pinky.webp",
+      "group": "secretary_general",
+      "socials": {
+        "facebook": "https://www.facebook.com/",
+        "twitter": "https://twitter.com/",
+        "linkedin": "",
+        "instagram": "https://www.instagram.com/"
+      }
+    }
+  ],
+  "membershipPlans": [
+    {
+      "name": "執行會長 executive chairman",
+      "price": "￥ 250,000 /Year",
+      "benefits": [
+        "享有常務會長單位所有權益",
+        "出任輪值主席，代表協會開展社會工作",
+        "可指定協會的戰略目標和計劃",
+        "牽頭發起專業委員會，並出任專委會主席",
+        "受會長委托召集及主持理事會"
+      ],
+      "buttonLabel": "下载登记表格",
+      "buttonUrl": "https://hkbaweb.oss-cn-shenzhen.aliyuncs.com/web/HKBA-Membership-Application2023.docx"
+    },
+    {
+      "name": "副會長 Vice president",
+      "price": "￥ 125,000 /Year",
+      "benefits": [
+        "享有理事單位所權益",
+        "參與協會運作及規劃",
+        "代表協會與各級政府領導會面",
+        "提供各類企業資源對接服務",
+        "可使用協會會址進行商務洽談"
+      ],
+      "buttonLabel": "下载登记表格",
+      "buttonUrl": "https://hkbaweb.oss-cn-shenzhen.aliyuncs.com/web/HKBA-Membership-Application2023.docx"
+    },
+    {
+      "name": "分會會長 Chapter President",
+      "price": "￥ 125,000 /Year",
+      "benefits": [
+        "享有理事單位所權益",
+        "參與分會的運作及規劃",
+        "享有分會領導團隊的權力",
+        "可使用協會會址進行商務洽談（不限次數）",
+        "所有參會活動安排貴賓坐席"
+      ],
+      "buttonLabel": "下载登记表格",
+      "buttonUrl": "https://hkbaweb.oss-cn-shenzhen.aliyuncs.com/web/HKBA-Membership-Application2023.docx"
+    },
+    {
+      "name": "理事單位 Director unit",
+      "price": "￥ 50,000 /Year",
+      "benefits": [
+        "享受會員所有權益",
+        "參與協會理事大會",
+        "指定企業2人參與協會所有公開性活動",
+        "可加入協會專項委員會",
+        "可參與專屬深港及大灣區名企行活動"
+      ],
+      "buttonLabel": "下载登记表格",
+      "buttonUrl": "https://hkbaweb.oss-cn-shenzhen.aliyuncs.com/web/HKBA-Membership-Application2023.docx"
+    },
+    {
+      "name": "個人 personal",
+      "price": "￥ 5000 /Year",
+      "benefits": [
+        "安排會員參加投資論壇、研討會會、專題講座",
+        "為創新創業企業提供參與比賽、融資對接機會",
+        "免費為會員提供金融服務咨詢",
+        "享受協會合作商戶的折扣福利",
+        "向政府有關部門反應會員的意見、要求和建議"
+      ],
+      "buttonLabel": "下载登记表格",
+      "buttonUrl": "https://hkbaweb.oss-cn-shenzhen.aliyuncs.com/web/HKBA-Membership-Application2023.docx"
+    },
+    {
+      "name": "誌願者 volunteer",
+      "price": "Free",
+      "benefits": [
+        "提供參加投資沙龍等公開性活動的機會",
+        "享受協會合作商戶的折扣福利",
+        "有機會參觀行業優質企業",
+        "有機會進入行業優質企業實習",
+        "參加元宇宙學院 Edi.College 舉辦的講座活動"
+      ],
+      "buttonLabel": "下载登记表格",
+      "buttonUrl": "https://hkbaweb.oss-cn-shenzhen.aliyuncs.com/web/HKBA-Membership-Application2023.docx"
+    }
+  ],
+  "membership": {
+    "imageUrl": "https://hkba.club/assets/img/inner-pages/about.webp",
+    "introZh": "HKBA 香港區塊鏈協會（聯盟）成立於 2017 年，是一個開放、自主、平等的去中心化組織 Decentralized Organization DAO。亞洲元宇宙聯盟 AsiaMeta.club 為大中華區業內專家提供交流的渠道，通過學習、交流及推廣區塊鏈技術及應用，致力於成為鏈接大中華及元宇宙世界的銜接平台，並將香港打造成新時代的金融科技中心。",
+    "introEn": "Founded in 2017, Hong Kong Blockchain Association (HKBA.club) is an organization with open mind, equality and decentralization. Through learning, communication and promotion of blockchain technology and its applications, HKBA aims to establish a platform to connect blockchain practitioners in Greater China and around the world. HKBA is also committed to building Hong Kong as the financial technology center in the new blockchain and fintech era.",
+    "benefitsZh": [
+      {
+        "label": "開拓人脈",
+        "description": "香港區塊鏈協會 HKBA 是香港最國際化的本地區塊鏈商會，助您擴闊商業圈和開拓新業務。"
+      },
+      {
+        "label": "緊貼市場",
+        "description": "HKBA 雄厚和具廣泛代表性的會員網絡，主導我們成為金融科技界之聲，締造更佳的營商環境，同時盡早掌握大中華地區的區塊鏈發展趨勢。"
+      },
+      {
+        "label": "最新資訊",
+        "description": "只需一個 HKBA 企業會籍，貴公司的所有全職員工均可享用本會的各項服務和優惠。"
+      },
+      {
+        "label": "免費培訓",
+        "description": "參加 Blockchain、NFT、Metaverse Education 知識型活動和培訓坊，緊貼市場最新發展和更新技能。"
+      },
+      {
+        "label": "發表建議",
+        "description": "反映您對 FinTech 與 Virtual Assets Management 政策的意見，締造更佳的營商環境。"
+      }
+    ],
+    "benefitsEn": [
+      {
+        "label": "Grow Your Network",
+        "description": "Connect with HKBA's international blockchain community in Hong Kong to expand your business network and discover new opportunities."
+      },
+      {
+        "label": "Stay Close to the Market",
+        "description": "Join a broad member network, contribute to the fintech industry voice and keep pace with blockchain trends across Greater China."
+      },
+      {
+        "label": "Latest Information",
+        "description": "One HKBA corporate membership gives all full-time employees access to association services and member benefits."
+      },
+      {
+        "label": "Free Training",
+        "description": "Join blockchain, NFT and metaverse education events and workshops to keep knowledge and skills current."
+      },
+      {
+        "label": "Make Your Voice Heard",
+        "description": "Share views on fintech and virtual asset management policy to help create a better business environment."
+      }
+    ]
+  },
+  "contact": {
+    "address_zh": "香港九龍尖沙咀漢口道5-15號漢口中心217室",
+    "address_en": "Hankow Centre, Room 217, 5-15 Hankow Road, Tsim Sha Tsui TST, Kowloon, Hong Kong",
+    "phone": "+852 6224 4422",
+    "email": "info@HKBA.club",
+    "business": "商務合作：WhatsApp David +852 6224 4422",
+    "education": "EDI.college 課程查詢或客制化服務：WhatsApp Cindy +852 6182 0903",
+    "enquiries": "會務查詢：WhatsApp Ms So +852 9097 1709 / 6182 0903 / 5509 4404 Phillip",
+    "facebook": "https://www.facebook.com/185793572074637",
+    "twitter": "https://www.twitter.com/HKBAclub",
+    "youtube": "https://www.youtube.com/channel/UCxdIHJTUX_rZSm-X9vDxiTg",
+    "instagram": "https://www.instagram.com/ttpact",
+    "linkedin": "https://www.linkedin.com/company/hongkongblockchainassociation",
+    "map_embed_url": "https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3691.4693788371087!2d114.1755445!3d22.2980814!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x340400efc13fffff%3A0x5f67cd1fc2b196cf!2sTsim%20Sha%20Tsui%20Centre!5e0!3m2!1szh-CN!2sus!4v1690441801691!5m2!1szh-CN!2sus"
+  }
+}

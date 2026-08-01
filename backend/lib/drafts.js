@@ -6,6 +6,11 @@
 // replays return the stored response without re-applying (mutation_log).
 
 const crypto = require('crypto');
+const {
+  captureDraftState,
+  summarizeDraftChange,
+  createDraftSnapshot,
+} = require('./draftSnapshots');
 
 class DraftConflict extends Error {
   constructor(currentRevision) {
@@ -32,7 +37,10 @@ function getDraftVersion(conn, pageId) {
 // for never-published pages (spec §4 GET draft).
 function getOrCreateDraft(conn, node) {
   const existing = getDraftVersion(conn, node.id);
-  if (existing) return { version: existing, created: false };
+  if (existing) {
+    ensureBaselineSnapshot(conn, node, existing);
+    return { version: existing, created: false };
+  }
 
   let revision = 1;
   let sourceVersionId = null;
@@ -87,7 +95,25 @@ function getOrCreateDraft(conn, node) {
   }
 
   conn.prepare('UPDATE page_nodes SET draft_version_id = ?, updated_at = datetime(\'now\') WHERE id = ?').run(id, node.id);
-  return { version: conn.prepare('SELECT * FROM page_versions WHERE id = ?').get(id), created: true };
+  const version = conn.prepare('SELECT * FROM page_versions WHERE id = ?').get(id);
+  ensureBaselineSnapshot(conn, node, version);
+  return { version, created: true };
+}
+
+function ensureBaselineSnapshot(conn, node, draft) {
+  const exists = conn.prepare(
+    'SELECT 1 FROM page_draft_snapshots WHERE page_id = ? AND revision = ?'
+  ).get(node.id, draft.revision);
+  if (exists) return;
+  const state = captureDraftState(conn, draft.id);
+  if (!state) return;
+  createDraftSnapshot(conn, {
+    pageId: node.id,
+    revision: draft.revision,
+    sourceVersionId: draft.id,
+    state,
+    summary: { baseline: true, added: [], removed: [], moved: [], changed: [], seoFields: [] },
+  });
 }
 
 function findMutation(conn, mutationId) {
@@ -108,7 +134,7 @@ function recordMutation(conn, { mutationId, ownerId, revision, response }) {
 //   replay check -> revision check -> transaction(fn, bump revision, log).
 // fn receives the draft version row and must return the response payload;
 // the helper augments it with the new revision.
-function applyDraftMutation(conn, node, { expectedRevision, mutationId }, fn) {
+function applyDraftMutation(conn, node, { expectedRevision, mutationId, createdBy = null }, fn) {
   if (mutationId) {
     const replay = findMutation(conn, mutationId);
     if (replay) {
@@ -127,11 +153,21 @@ function applyDraftMutation(conn, node, { expectedRevision, mutationId }, fn) {
   }
 
   const run = conn.transaction(() => {
+    const beforeState = captureDraftState(conn, draft.id);
     const payload = fn(draft);
     const nextRevision = draft.revision + 1;
     conn
       .prepare("UPDATE page_versions SET revision = ? WHERE id = ?")
       .run(nextRevision, draft.id);
+    const afterState = captureDraftState(conn, draft.id);
+    createDraftSnapshot(conn, {
+      pageId: node.id,
+      revision: nextRevision,
+      sourceVersionId: draft.id,
+      createdBy,
+      state: afterState,
+      summary: summarizeDraftChange(beforeState, afterState),
+    });
     const response = { ...payload, revision: nextRevision };
     if (mutationId) {
       recordMutation(conn, { mutationId, ownerId: node.id, revision: nextRevision, response });

@@ -12,17 +12,25 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import BlockRenderer, { AssocData, NewsCardData } from '@/components/blocks/BlockRenderer';
+import { HomeHero, HomeMission } from '@/components/home/HomeMockupSections';
 import { fetchPublicAssociation, fetchPublicNews, fetchPublicPage, PublicPage, PublicNewsListItem } from '@/lib/publicContent';
 import { useLang } from '@/lib/useLang';
+import { resolvePublicPagePresentation } from '@/lib/publicPagePresentation';
+import LeadershipIntro from '@/components/pages/LeadershipIntro';
+import PublishedNewsExperience, { hasPremiumNewsBlocks } from '@/components/news/PublishedNewsExperience';
+
 
 function toCard(item: PublicNewsListItem, lang: 'zh' | 'en'): NewsCardData {
   return {
+    id: item.id,
     slug: item.slug,
     title: (lang === 'en' ? item.titleEn || item.titleZh : item.titleZh || item.titleEn) || item.slug,
     summary: lang === 'en' ? item.summaryEn || item.summaryZh : item.summaryZh || item.summaryEn,
     year: item.year,
     publishedAt: item.publishedAt,
     coverUrl: item.cover?.url || null,
+    categoryId: item.categories[0]?.id,
+    category: lang === 'en' ? item.categories[0]?.nameEn || item.categories[0]?.nameZh : item.categories[0]?.nameZh,
   };
 }
 
@@ -49,9 +57,29 @@ export default function PublicPageSwitch({ path, children }: { path: string; chi
 
   if (!page) return <>{children}</>;
 
+  if (path === '/news' && hasPremiumNewsBlocks(page)) {
+    return <PublishedNewsExperience page={page} lang={lang} />;
+  }
+
+  const isHome = path === '/';
+  const pageClass = path === '/' ? 'home' : path.replace(/^\//, '').replace(/[^a-z0-9-]/gi, '-') || 'page';
+  const presentation = resolvePublicPagePresentation(path, page.blocks);
+  const firstBlock = isHome ? presentation.blocks.slice(0, 1) : presentation.blocks;
+  const remainingBlocks = isHome ? presentation.blocks.slice(1) : [];
+
   return (
-    <div className="public-blocks" style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px 96px' }}>
-      <BlockRenderer blocks={page.blocks} lang={lang} media={page.media} news={news} assoc={assoc} />
+    <div className={`public-blocks public-page--${pageClass}`}>
+      {presentation.intro === 'leadership' ? <LeadershipIntro /> : null}
+      {isHome ? <><HomeHero /><HomeMission /></> : presentation.intro ? (
+        <div className="public-page__body">
+          <div className="team-directory__heading">
+            <h2>{lang === 'en' ? 'Committee members' : '委員會成員'}</h2>
+            <p>{lang === 'en' ? 'Explore the committee by role and professional background.' : '按職務組別瀏覽領導委員會成員及其專業背景。'}</p>
+          </div>
+          <BlockRenderer blocks={firstBlock} lang={lang} media={page.media} news={news} assoc={assoc} />
+        </div>
+      ) : <BlockRenderer blocks={firstBlock} lang={lang} media={page.media} news={news} assoc={assoc} />}
+      {isHome && <div className="public-home-content"><BlockRenderer blocks={remainingBlocks} lang={lang} media={page.media} news={news} assoc={assoc} /></div>}
     </div>
   );
 }

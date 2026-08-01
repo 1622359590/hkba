@@ -19,7 +19,7 @@ export default function EventsPage() {
         <div style={{ ...c, position: 'relative' }}>
           <div style={{ animation: 'fadeInUp 0.8s cubic-bezier(0.22,1,0.36,1) forwards' }}>
             <div className="section-label">{t('活動中心', 'Events')}</div>
-            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 20 }}>{t('協會活動', 'Association Events')}</h1>
+            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 700, letterSpacing: 0, marginBottom: 20 }}>{t('協會活動', 'Association Events')}</h1>
             <div className="divider" />
           </div>
         </div>
@@ -30,7 +30,7 @@ export default function EventsPage() {
             <div key={e.id} className="glass-card content-reveal" style={{ display: 'flex', overflow: 'hidden', animationDelay: `${0.08 * i}s` }}>
               {e.cover_image && <div style={{ width: 240, flexShrink: 0, overflow: 'hidden' }}><img src={imgUrl(e.cover_image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>}
               <div style={{ padding: 28, flex: 1 }}>
-                <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13, color: '#818cf8' }}>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13, color: 'var(--cyan)' }}>
                   <span>📅 {e.event_date ? new Date(e.event_date).toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}</span>
                   {(e.location_zh || e.location_en) && <span style={{ color: '#71717a' }}>📍 {t(e.location_zh, e.location_en)}</span>}
                 </div>
@@ -55,7 +55,7 @@ export default function EventsPage() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 18,
                   padding: '9px 20px', fontSize: 13, fontWeight: 650, textDecoration: 'none',
-                  color: '#A5B4FC', border: '1px solid rgba(99,102,241,0.45)', borderRadius: 10,
+                  color: 'var(--indigo)', border: '1px solid rgba(99,102,241,0.45)', borderRadius: 10,
                   background: 'rgba(99,102,241,0.1)', transition: 'background 0.2s ease, border-color 0.2s ease',
                 }}
               >

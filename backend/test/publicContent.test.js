@@ -205,6 +205,19 @@ test('public news list filters by year and category; years and categories endpoi
   assert.ok(cat.publishedCount >= 1);
 });
 
+test('public pinned-news lookup preserves request order and excludes unpublished rows', async () => {
+  const published = db.prepare("SELECT id FROM news_items WHERE slug = 'm8-news-slug'").get();
+  db.prepare(
+    `INSERT INTO news_items
+      (id, slug, title_zh, title_en, summary_zh, summary_en, status)
+     VALUES ('draft-pin', 'draft-pin', '草稿', 'Draft', '草稿摘要', 'Draft summary', 'draft')`
+  ).run();
+
+  const res = await publicGet(`/news/by-ids?ids=draft-pin,${published.id},${published.id}`);
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.data.items.map((item) => item.id), [published.id]);
+});
+
 test('public news detail returns blocks with component_type and media map', async () => {
   const res = await publicGet('/news/item/m8-news-slug');
   assert.equal(res.status, 200, JSON.stringify(res.body));
@@ -245,15 +258,17 @@ test('sitemap-data lists published pages and news only', async () => {
   assert.ok(res.body.data.news.some((entry) => entry.slug === 'm8-news-slug'));
 });
 
-test('association endpoint serves structured partners, people, milestones and contact', async () => {
+test('association endpoint serves structured partners, people, milestones, events and contact', async () => {
   // Seed one of each (init defaults already insert milestones/contact rows).
   db.prepare("INSERT INTO partners (name, logo_url, website_url, group_name, sort_order, is_active) VALUES ('Assoc Partner', '/uploads/p.png', 'https://example.com', 'default', 99, 1)").run();
   db.prepare("INSERT INTO partners (name, logo_url, group_name, sort_order, is_active) VALUES ('Inactive Partner', '/uploads/x.png', 'default', 100, 0)").run();
   db.prepare("INSERT INTO team_members (name_zh, name_en, title_zh, avatar_url, group_name, sort_order, is_active) VALUES ('測試人', 'Test Person', '會長', '/uploads/a.png', 'chairman', 99, 1)").run();
+  db.prepare("INSERT INTO events (title_zh, title_en, description_zh, event_date, location_zh, registration_url, is_published) VALUES ('公開活動', 'Public Event', '活動摘要', '2026-09-12', '香港', 'https://example.com/register', 1)").run();
+  db.prepare("INSERT INTO events (title_zh, event_date, is_published) VALUES ('未公開活動', '2026-10-01', 0)").run();
 
   const res = await publicGet('/association');
   assert.equal(res.status, 200);
-  const { partners, people, milestones, contact, resources } = res.body.data;
+  const { partners, people, milestones, events, contact, resources } = res.body.data;
 
   const partner = partners.find((entry) => entry.name === 'Assoc Partner');
   assert.ok(partner);
@@ -271,6 +286,8 @@ test('association endpoint serves structured partners, people, milestones and co
 
   assert.ok(milestones.length >= 1);
   assert.ok(milestones.every((entry) => entry.year && entry.titleZh !== undefined));
+  assert.ok(events.some((entry) => entry.titleEn === 'Public Event' && entry.locationZh === '香港'));
+  assert.ok(!events.some((entry) => entry.titleZh === '未公開活動'));
   assert.equal(contact.email, 'info@hkba.club');
   assert.ok(Array.isArray(resources));
 });

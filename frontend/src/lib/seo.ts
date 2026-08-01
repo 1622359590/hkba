@@ -9,7 +9,7 @@
 import type { Metadata } from 'next';
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.hkba.hk';
-const API_INTERNAL = process.env.HKBA_API_INTERNAL || 'http://127.0.0.1:37900';
+const API_INTERNAL = process.env.HKBA_API_INTERNAL || 'http://127.0.0.1:5002';
 
 type SeoPayload = {
   seo?: Record<string, string | undefined>;

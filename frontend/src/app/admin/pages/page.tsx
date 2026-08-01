@@ -1,68 +1,109 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { adminGet, adminPut, adminRequestError, notifyAdminDataChanged } from '@/lib/adminApi';
-import { BilingualField, AdminCard } from '@/components/admin/FormControls';
-import type { PageContent } from '@/lib/api';
-import { ActionButton } from '@/components/admin/ActionButton';
-import { EmptyState, ErrorState, LoadingState, Toast } from '@/components/ui/Feedback';
+
+import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { adminGetData, adminRequestError } from '@/lib/adminApi';
+import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Feedback';
+
+type PageNode = {
+  id: string;
+  node_type: 'page' | 'section';
+  slug: string;
+  path: string;
+  title_zh: string;
+  title_en: string;
+  navigation_status: 'visible' | 'hidden' | 'external';
+  has_draft: boolean;
+  is_published: boolean;
+  missing_en: boolean;
+  children: PageNode[];
+};
+
+function flattenPages(nodes: PageNode[], depth = 0): Array<PageNode & { depth: number }> {
+  return nodes.flatMap((node) => [
+    { ...node, depth },
+    ...flattenPages(node.children || [], depth + 1),
+  ]);
+}
 
 export default function PagesAdmin() {
-  const [pages, setPages] = useState<PageContent[]>([]);
-  const [editing, setEditing] = useState<PageContent | null>(null);
-  const [form, setForm] = useState({ title_zh: '', title_en: '', content_zh: '', content_en: '' });
+  const [tree, setTree] = useState<PageNode[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; message: string } | null>(null);
-  const [retry, setRetry] = useState(0);
-  const load = async () => {
-    setLoading(true); setError('');
-    try { setPages(await adminGet<PageContent[]>('/api/pages')); } catch (requestError) { setError(adminRequestError(requestError)); } finally { setLoading(false); }
-  };
-  useEffect(() => { load(); }, [retry]);
 
-  const handleSave = async () => {
-    if (!editing) return;
-    setSaving(true);
-    try { await adminPut(`/api/pages/${editing.slug}`, form); setEditing(null); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: '頁面內容已保存。' }); await load(); }
-    catch (requestError) { setToast({ tone: 'error', message: adminRequestError(requestError) }); }
-    finally { setSaving(false); }
-  };
-  const pageHelp: Record<string, string> = {
-    about: '前台「關於協會」頁面的主內容。',
-    membership: '會員服務相關文案，可用於會員/合作機構介紹。',
-  };
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await adminGetData<{ tree: PageNode[] }>('/api/admin/pages/tree');
+      setTree(data.tree);
+    } catch (requestError) {
+      setError(adminRequestError(requestError));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const pages = useMemo(
+    () => flattenPages(tree).filter((node) => node.node_type === 'page'),
+    [tree]
+  );
+  const publishedCount = pages.filter((page) => page.is_published).length;
+  const draftCount = pages.filter((page) => page.has_draft).length;
 
   return (
     <div>
       <div className="admin-page-heading">
-        <h1 className="admin-page-title">頁面內容</h1>
+        <div>
+          <h1 className="admin-page-title">頁面管理</h1>
+          <p className="admin-page-subtitle">
+            {pages.length} 個頁面 · {publishedCount} 個已發佈 · {draftCount} 個草稿
+          </p>
+        </div>
+        {pages[0] && (
+          <Link className="admin-action" href={`/admin/studio?id=${pages[0].id}`}>
+            開啟工作室
+          </Link>
+        )}
       </div>
-      {editing && (
-        <AdminCard title={`編輯: ${editing.slug}`} actions={<button type="button" onClick={() => setEditing(null)} className="admin-action is-muted">取消</button>}>
-          <BilingualField label="頁面標題" valueZh={form.title_zh} valueEn={form.title_en} onChangeZh={v => setForm(f => ({...f, title_zh: v}))} onChangeEn={v => setForm(f => ({...f, title_en: v}))} />
-          <BilingualField label="頁面內容 (HTML)" type="textarea" rows={15} valueZh={form.content_zh} valueEn={form.content_en} onChangeZh={v => setForm(f => ({...f, content_zh: v}))} onChangeEn={v => setForm(f => ({...f, content_en: v}))} />
-          <ActionButton type="button" onClick={handleSave} pending={saving} style={{ fontSize: 13, marginTop: 8 }}>保存</ActionButton>
-        </AdminCard>
-      )}
-      {loading && <LoadingState label="正在載入頁面內容..." />}
-      {!loading && error && <ErrorState message={error} onRetry={() => setRetry(value => value + 1)} />}
-      {!loading && !error && <div className="admin-list-stack">
-        {pages.map(page => (
-          <div key={page.id} className="admin-content-row" style={{ justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: '#818cf8', fontFamily: 'monospace' }}>{page.slug}</span>
-              <div>
-                <div style={{ fontSize: 14, color: '#fff' }}>{page.title_zh || page.title_en}</div>
-                {pageHelp[page.slug] && <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>{pageHelp[page.slug]}</div>}
+
+      {loading && <LoadingState label="正在載入頁面樹..." />}
+      {!loading && error && <ErrorState message={error} onRetry={load} />}
+      {!loading && !error && (
+        <div className="admin-list-stack">
+          {pages.map((page) => (
+            <div key={page.id} className="admin-content-row admin-page-row">
+              <div className="admin-page-row__identity" style={{ paddingLeft: page.depth * 18 }}>
+                <span className="admin-page-row__path">{page.path}</span>
+                <div>
+                  <div className="admin-page-row__title">{page.title_zh || page.title_en || page.slug}</div>
+                  <div className="admin-page-row__meta">
+                    {page.title_en || '尚未填寫英文標題'}
+                    {page.navigation_status === 'hidden' ? ' · 導航隱藏' : ''}
+                  </div>
+                </div>
+              </div>
+              <div className="admin-page-row__actions">
+                <span className={`hk-status-badge ${page.is_published ? 'is-published' : 'is-unpublished'}`}>
+                  {page.is_published ? '已發佈' : '未發佈'}
+                </span>
+                {page.has_draft && <span className="hk-status-badge is-draft">有草稿</span>}
+                {page.missing_en && <span className="hk-status-badge is-warning">缺英文</span>}
+                <Link className="admin-action" href={`/admin/studio?id=${page.id}`}>
+                  編輯
+                </Link>
               </div>
             </div>
-            <button type="button" onClick={() => { setEditing(page); setForm({ title_zh: page.title_zh, title_en: page.title_en, content_zh: page.content_zh, content_en: page.content_en }); }} className="admin-action">編輯</button>
-          </div>
-        ))}
-        {pages.length === 0 && <EmptyState title="暫無可編輯頁面" description="目前資料庫沒有可管理的靜態頁面。" />}
-      </div>}
-      {toast && <Toast tone={toast.tone} message={toast.message} onDismiss={() => setToast(null)} />}
+          ))}
+          {pages.length === 0 && (
+            <EmptyState title="暫無可編輯頁面" description="頁面初始化尚未完成，請重新執行內容遷移。" />
+          )}
+        </div>
+      )}
     </div>
   );
 }

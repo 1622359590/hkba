@@ -50,8 +50,8 @@ Optional secrets:
 | --- | --- | --- |
 | `DEPLOY_PORT` | `22` | SSH port |
 | `DEPLOY_PATH` | `/www/wwwroot/hkba` | Server project path |
-| `BACKEND_PORT` | `37900` | Express API port |
-| `FRONTEND_PORT` | `3000` | Next.js port |
+| `BACKEND_PORT` | `5002` | Express API port |
+| `FRONTEND_PORT` | `5001` | Next.js port |
 | `ADMIN_INITIAL_PASSWORD` | empty for existing databases | Required for the first deployment of an empty database; use at least 12 characters and do not include a newline or single quote |
 | `SEED_ON_FIRST_DEPLOY` | `false` | Set `true` to load initial content when all core content tables are empty; existing CMS content is preserved |
 
@@ -96,7 +96,7 @@ Create a site in Baota for your domain, enable SSL, and keep only this reverse p
 
 ```nginx
 location / {
-    proxy_pass http://127.0.0.1:3000;
+    proxy_pass http://127.0.0.1:5001;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
@@ -107,7 +107,7 @@ location / {
 }
 ```
 
-Delete or disable old Baota `/api/` and `/uploads/` reverse proxies. Next.js preserves those path prefixes and forwards them internally to Express on port `37900`.
+Delete or disable old Baota `/api/` and `/uploads/` reverse proxies. Next.js preserves those path prefixes and forwards them internally to Express on port `5002`.
 
 ## What The Workflow Preserves
 
@@ -172,7 +172,7 @@ cp backend/db/hkba.db backend/db/hkba.failed.$(date +%Y%m%d%H%M%S).db
 cp backend/db/backups/hkba.<timestamp>.bak backend/db/hkba.db
 chown www:www backend/db/hkba.db
 pm2 restart hkba-api --update-env
-curl --fail http://127.0.0.1:37900/api/health
+curl --fail http://127.0.0.1:5002/api/health
 pm2 restart hkba-web
 pm2 save
 ```

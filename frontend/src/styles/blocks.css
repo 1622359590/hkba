@@ -172,9 +172,47 @@
 .hk-block__stat-label { font-size: 12px; color: var(--text-2); margin-top: 4px; }
 .hk-block__stat-description { color: var(--text-3); font-size: 12px; line-height: 1.65; margin-top: 10px; }
 .hk-block__stats--features { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.hk-block__stats--features .hk-block__stat { text-align: left; padding: 20px; border-radius: 8px; }
-.hk-block__stats--features .hk-block__stat-value { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--indigo); color: #05080e; font-size: 13px; }
-.hk-block__stats--features .hk-block__stat-label { color: var(--text-1); font-size: 15px; font-weight: 750; margin-top: 18px; }
+.hk-block__stats--features .hk-block__stat {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-rows: 34px auto;
+  align-items: center;
+  align-content: start;
+  column-gap: 14px;
+  row-gap: 14px;
+  min-height: 190px;
+  text-align: left;
+  padding: 20px;
+  border-radius: 8px;
+}
+.hk-block__stats--features .hk-block__stat-value {
+  width: 48px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(34, 211, 238, 0.38);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(34,211,238,0.08));
+  color: var(--cyan) !important;
+  font-size: 12px !important;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 18px rgba(34,211,238,0.08);
+}
+.hk-block__stats--features .hk-block__stat-label {
+  min-width: 0;
+  margin-top: 0;
+  color: var(--text-1);
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+.hk-block__stats--features .hk-block__stat-description {
+  grid-column: 1 / -1;
+  align-self: start;
+  margin-top: 0;
+}
 .hk-block__quote { border-left: 3px solid var(--indigo); padding: 6px 0 6px 18px; color: var(--text-1); font-size: 17px; }
 .hk-block__quote footer { color: var(--text-3); font-size: 12.5px; margin-top: 8px; }
 .hk-block__faq-item { border-bottom: 1px solid var(--border-subtle); padding: 10px 0; color: var(--text-2); font-size: 14px; }
@@ -408,6 +446,8 @@
 }
 
 .hk-plan {
+  position: relative;
+  overflow: hidden;
   min-width: 0;
   padding: 24px;
   border: 1px solid var(--border-subtle);
@@ -416,11 +456,35 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
-.hk-plan.is-featured {
-  border-color: var(--indigo);
-  box-shadow: inset 0 3px 0 var(--indigo);
+.hk-plan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16%;
+  width: 68%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), transparent);
+  box-shadow: 0 0 12px rgba(34,211,238,0.52);
+  opacity: 0.42;
+  transition: opacity 180ms ease, width 180ms ease, left 180ms ease;
+}
+
+.hk-plan:hover,
+.hk-plan:focus-within {
+  transform: translateY(-5px);
+  border-color: rgba(34,211,238,0.58);
+  background: linear-gradient(145deg, rgba(15,31,61,0.98), rgba(9,19,39,0.98));
+  box-shadow: 0 16px 34px rgba(1,10,28,0.34), 0 0 24px rgba(37,99,235,0.1);
+}
+
+.hk-plan:hover::before,
+.hk-plan:focus-within::before {
+  left: 8%;
+  width: 84%;
+  opacity: 1;
 }
 
 .hk-plan__name { color: var(--text-2); font-size: 14px; font-weight: 700; }
@@ -472,6 +536,111 @@
 
 @media (max-width: 700px) {
   .public-blocks:not(.public-page--home) { padding: 88px 0 72px !important; }
+}
+
+/* Join page: one introduction, one explanation, one final conversion point. */
+:is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer {
+  gap: clamp(30px, 5vw, 64px);
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child > .hk-block[data-component="content.hero"] {
+  min-height: 164px !important;
+  height: auto !important;
+  padding: clamp(26px, 3vw, 38px);
+  background:
+    linear-gradient(90deg, rgba(59,130,246,0.08) 1px, transparent 1px),
+    linear-gradient(rgba(59,130,246,0.07) 1px, transparent 1px),
+    linear-gradient(145deg, rgba(17,27,46,0.98), rgba(8,16,31,0.98));
+  background-size: 42px 42px, 42px 42px, auto;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child .hk-block__hero,
+:is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child .hk-block__hero--no-media {
+  min-height: 0 !important;
+  height: auto !important;
+  display: block;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child .hk-block__hero > div:first-child {
+  min-height: 0 !important;
+  display: grid;
+  grid-template-columns: minmax(320px, 1.1fr) minmax(280px, 0.9fr);
+  align-items: end;
+  gap: clamp(36px, 7vw, 96px);
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child .hk-block__hero h1 {
+  max-width: 12em;
+  margin: 0 !important;
+  font-size: clamp(2rem, 3vw, 2.8rem) !important;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child .hk-block__hero p {
+  max-width: 520px;
+  margin: 0 !important;
+  color: var(--text-2) !important;
+  font-size: 15px !important;
+  font-weight: 500;
+  line-height: 1.8;
+  letter-spacing: 0;
+  text-transform: none;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child .hk-block__hero > div:first-child > div:last-child {
+  display: none !important;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block[data-component="content.image-text"] {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(145deg, rgba(13,27,56,0.74), rgba(8,17,35,0.94));
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text {
+  min-height: 430px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+  gap: 0;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text > div:not(.hk-block__media-placeholder) {
+  padding: clamp(34px, 5vw, 58px);
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text h2 {
+  max-width: 22em;
+  font-size: clamp(1.5rem, 2.2vw, 1.85rem) !important;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text .hk-block__richtext {
+  font-size: 15px;
+  line-height: 1.9;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text .hk-block__external-image {
+  height: 100%;
+  min-height: 430px;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+:is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text .hk-block__button {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  :is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child .hk-block__hero > div:first-child,
+  :is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text {
+    grid-template-columns: 1fr;
+  }
+  :is(.public-page--join, .admin-shell .hk-canvas--join) > .hk-renderer > div:first-child .hk-block__hero p {
+    margin-top: 20px !important;
+  }
+  :is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text,
+  :is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text .hk-block__external-image {
+    min-height: 0;
+  }
+  :is(.public-page--join, .admin-shell .hk-canvas--join) .hk-block__image-text .hk-block__external-image {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .hk-plan { transition: border-color 180ms ease; }
+  .hk-plan::before { transition: none; }
+  .hk-plan:hover,
+  .hk-plan:focus-within { transform: none; }
 }
 
 /* Shared public card language */
@@ -531,6 +700,236 @@
 .hk-partner-carousel .partner-carousel__viewport:focus-visible {
   outline: 0;
   box-shadow: inset 0 0 0 2px var(--cyan);
+}
+
+/* Leadership directory: every role receives the same premium construction.
+   Rank changes the ceremonial palette and motif, never card size or quality. */
+:is(.public-main, .hk-canvas) .hk-person--board {
+  --role-primary: #b6c5d4;
+  --role-secondary: #6985a4;
+  --resting-intensity: 0.2;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 330px;
+  padding: 24px 20px 20px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--role-primary) 44%, transparent);
+  border-radius: 18px;
+  background:
+    radial-gradient(110% 78% at 18% -8%, color-mix(in srgb, var(--role-primary) calc(var(--resting-intensity) * 100%), transparent), transparent 62%),
+    linear-gradient(148deg, rgba(31, 44, 62, 0.9), rgba(7, 15, 28, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 color-mix(in srgb, var(--role-secondary) 28%, transparent),
+    inset 1px 0 0 rgba(255, 255, 255, 0.07),
+    0 16px 38px rgba(1, 8, 20, 0.28);
+  backdrop-filter: blur(20px) saturate(128%);
+  -webkit-backdrop-filter: blur(20px) saturate(128%);
+  transition: transform 240ms var(--ease-expo), border-color 240ms ease, box-shadow 420ms ease;
+}
+:is(.public-main, .hk-canvas) .hk-person--board::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  z-index: 2;
+  width: auto;
+  height: auto;
+  border: 1px solid color-mix(in srgb, var(--role-primary) 18%, transparent);
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+  opacity: 1;
+  pointer-events: none;
+}
+:is(.public-main, .hk-canvas) .hk-person--board::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.34;
+}
+.hk-person--board[data-leadership-motif="grid"]::after,
+.hk-person--board[data-leadership-motif="micro-grid"]::after {
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--role-primary) 12%, transparent) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--role-primary) 9%, transparent) 0 1px, transparent 1px 34px);
+}
+.hk-person--board[data-leadership-motif="orbit"]::after {
+  background: radial-gradient(ellipse 62% 30% at 60% 25%, transparent 48%, color-mix(in srgb, var(--role-primary) 28%, transparent) 49% 50%, transparent 51%);
+}
+.hk-person--board[data-leadership-motif="globe"]::after {
+  background:
+    radial-gradient(circle at 52% 28%, transparent 31%, color-mix(in srgb, var(--role-primary) 24%, transparent) 32% 32.6%, transparent 33.5%),
+    radial-gradient(ellipse 18% 31% at 52% 28%, transparent 47%, color-mix(in srgb, var(--role-primary) 18%, transparent) 48% 49%, transparent 50%);
+}
+.hk-person--board[data-leadership-motif="double-rule"]::after {
+  background: repeating-linear-gradient(0deg, transparent 0 30px, color-mix(in srgb, var(--role-primary) 14%, transparent) 30px 31px, transparent 31px 35px);
+}
+.hk-person--board[data-leadership-motif="wave"]::after {
+  background: radial-gradient(95% 34% at 10% 78%, transparent 48%, color-mix(in srgb, var(--role-primary) 20%, transparent) 49% 50%, transparent 51%);
+}
+.hk-person--board[data-leadership-motif="twin-line"]::after {
+  background: linear-gradient(90deg, transparent 10%, color-mix(in srgb, var(--role-primary) 26%, transparent) 10% 42%, transparent 42% 58%, color-mix(in srgb, var(--role-primary) 26%, transparent) 58% 90%, transparent 90%);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: center 22px;
+}
+.hk-person--board[data-leadership-motif="authority-line"]::after,
+.hk-person--board[data-leadership-motif="edge-line"]::after {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--role-primary) 34%, transparent), transparent 66%);
+  background-size: 62% 1px;
+  background-repeat: no-repeat;
+  background-position: 20px 22px;
+}
+.hk-person--board[data-leadership-role="honorary_chairman"] {
+  border-color: color-mix(in srgb, var(--role-secondary) 62%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 color-mix(in srgb, var(--role-secondary) 42%, transparent),
+    0 18px 44px rgba(1, 8, 20, 0.32),
+    0 0 24px color-mix(in srgb, var(--role-secondary) 8%, transparent);
+}
+.hk-person__glass-light {
+  position: absolute;
+  inset: -48% -65%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.46;
+  background: linear-gradient(112deg, transparent 43%, color-mix(in srgb, var(--role-primary) 14%, transparent) 48%, rgba(255,255,255,0.2) 49.5%, color-mix(in srgb, var(--role-secondary) 18%, transparent) 51%, transparent 56%);
+  transform: translate3d(-8%, -4%, 0);
+  transition: opacity 360ms ease, transform 700ms var(--ease-expo);
+}
+:is(.public-main, .hk-canvas) .hk-person--board:hover,
+:is(.public-main, .hk-canvas) .hk-person--board:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--role-primary) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -1px 0 color-mix(in srgb, var(--role-secondary) 48%, transparent),
+    0 20px 48px rgba(1, 8, 20, 0.36),
+    0 0 28px color-mix(in srgb, var(--role-primary) 12%, transparent);
+}
+.hk-person--board[data-leadership-role="honorary_chairman"]:hover,
+.hk-person--board[data-leadership-role="honorary_chairman"]:focus-visible {
+  border-color: color-mix(in srgb, var(--role-secondary) 76%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 color-mix(in srgb, var(--role-secondary) 52%, transparent),
+    0 20px 48px rgba(1, 8, 20, 0.36),
+    0 0 24px color-mix(in srgb, var(--role-secondary) 14%, transparent);
+}
+.hk-person--board:hover .hk-person__glass-light,
+.hk-person--board:focus-visible .hk-person__glass-light {
+  opacity: 0.6;
+  transform: translate3d(6%, 3%, 0);
+}
+.hk-person--board:focus-visible { outline: 2px solid color-mix(in srgb, var(--role-primary) 72%, transparent); outline-offset: 3px; }
+.hk-person__content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
+}
+.hk-person__portrait {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 106px;
+  height: 106px;
+  margin-bottom: 12px;
+  border: 1px solid color-mix(in srgb, var(--role-primary) 62%, transparent);
+  border-radius: 50%;
+  background: rgba(8, 17, 31, 0.58);
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--role-primary) 12%, transparent), 0 8px 24px rgba(0,0,0,0.22);
+}
+.hk-person__portrait::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid color-mix(in srgb, var(--role-secondary) 38%, transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.hk-person--board .hk-person__avatar--large {
+  width: 92px;
+  height: 92px;
+  border: 0;
+  border-radius: 50%;
+  object-fit: contain;
+}
+.hk-person--board .hk-person__badge {
+  min-width: 106px;
+  margin: 0 0 12px;
+  padding: 5px 14px;
+  color: color-mix(in srgb, var(--role-primary) 82%, white);
+  border: 1px solid color-mix(in srgb, var(--role-primary) 46%, transparent);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--role-secondary) 14%, rgba(7, 15, 28, 0.82));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 5px 16px rgba(0,0,0,0.16);
+  font-size: 11px;
+  font-weight: 720;
+  letter-spacing: 0.08em;
+}
+.hk-person--board[data-leadership-role="honorary_chairman"] .hk-person__badge {
+  color: #efe0b8;
+  border-color: color-mix(in srgb, var(--role-secondary) 68%, transparent);
+  background: linear-gradient(180deg, rgba(215, 185, 111, 0.28), rgba(59, 47, 29, 0.36));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(215,185,111,0.18), 0 5px 16px rgba(0,0,0,0.2);
+}
+.hk-person--board[data-leadership-role="secretary_general"] .hk-person__badge { border-style: double; border-width: 3px; }
+.hk-person--board .hk-person__name {
+  color: color-mix(in srgb, var(--role-primary) 22%, #f5f8fc);
+  font-size: 20px;
+  font-weight: 740;
+  line-height: 1.35;
+  text-shadow: 0 1px 16px rgba(0,0,0,0.34);
+}
+.hk-person--board[data-leadership-role="honorary_chairman"] .hk-person__name {
+  color: color-mix(in srgb, var(--role-secondary) 74%, #f5f8fc);
+}
+.hk-person--board .hk-person__title {
+  width: 100%;
+  margin-top: 7px;
+  padding-bottom: 12px;
+  color: rgba(216, 226, 240, 0.72);
+  border-bottom: 1px solid color-mix(in srgb, var(--role-primary) 22%, transparent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.hk-person--board .hk-person__bio {
+  margin-top: 12px;
+  color: rgba(196, 208, 225, 0.74);
+  font-size: 12px;
+  line-height: 1.72;
+  -webkit-line-clamp: 3;
+}
+.hk-person--board .hk-person__socials { justify-content: center; margin-top: auto; padding-top: 12px; }
+.leadership-fluid-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  animation: leadership-fluid-in 250ms ease forwards;
+}
+.leadership-fluid-layer canvas { display: block; width: 100% !important; height: 100% !important; }
+@keyframes leadership-fluid-in { to { opacity: 1; } }
+@media (max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .leadership-fluid-layer { display: none; }
+  :is(.public-main, .hk-canvas) .hk-person--board { transition: border-color 180ms ease; }
+  :is(.public-main, .hk-canvas) .hk-person--board:hover { transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :is(.public-main, .hk-canvas) .hk-person--board {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 .hk-news-cards {
   display: grid;

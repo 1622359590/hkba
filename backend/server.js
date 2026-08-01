@@ -11,18 +11,14 @@ const { isOriginAllowed } = require('./lib/corsPolicy');
 initDatabase();
 
 const app = express();
-const PORT = process.env.PORT || 37900;
+const PORT = process.env.PORT || 5002;
 const HOST = process.env.HOST || '127.0.0.1';
 
 // 中间件
 // CORS 白名单：本地默认值，可通过 ALLOWED_ORIGINS 逗号分隔覆盖
 const DEFAULT_ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:3002',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:3001',
-  'http://127.0.0.1:3002',
+  'http://localhost:5001',
+  'http://127.0.0.1:5001',
 ];
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || DEFAULT_ALLOWED_ORIGINS.join(','))
   .split(',')
@@ -73,6 +69,7 @@ app.use('/api/public', require('./routes/publicContent'));
 app.use('/api/admin/components', require('./routes/admin/components'));
 app.use('/api/admin/pages', require('./routes/admin/pages'));
 app.use('/api/admin/media', require('./routes/admin/media'));
+app.use('/api/admin/storage-settings', require('./routes/admin/storageSettings'));
 app.use('/api/admin/news', require('./routes/admin/news'));
 const newsTaxonomy = require('./routes/admin/newsTaxonomy');
 app.use('/api/admin/news-categories', newsTaxonomy.categories);

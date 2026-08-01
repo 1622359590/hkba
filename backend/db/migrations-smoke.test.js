@@ -30,6 +30,9 @@ const M1_TABLES = [
   'redirects',
   'publish_records',
   'cleanup_tasks',
+  'storage_settings',
+  'page_draft_snapshots',
+  'page_draft_snapshot_blocks',
 ];
 
 const M1_INDEXES = [
@@ -39,6 +42,8 @@ const M1_INDEXES = [
   'idx_media_assets_checksum',
   'idx_legacy_id_map_new',
   'idx_publish_records_object',
+  'idx_page_draft_snapshots_page',
+  'idx_page_draft_snapshot_blocks_snapshot',
 ];
 
 function makeTempDb(t) {
@@ -68,7 +73,7 @@ test('creates every M1 table and index on a fresh database', (t) => {
     assert.ok(objectExists(conn, 'index', index), `missing index: ${index}`);
   }
   const recorded = conn.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get().count;
-  assert.equal(recorded, 12);
+  assert.equal(recorded, 14);
   // 008 adds user_agent to audit_events.
   const auditColumns = conn.prepare('PRAGMA table_info(audit_events)').all().map((col) => col.name);
   assert.ok(auditColumns.includes('user_agent'));
@@ -76,6 +81,9 @@ test('creates every M1 table and index on a fresh database', (t) => {
   const mutationColumns = conn.prepare('PRAGMA table_info(mutation_log)').all().map((col) => col.name);
   assert.ok(mutationColumns.includes('owner_id'));
   assert.ok(!mutationColumns.includes('page_id'));
+  const mediaColumns = conn.prepare('PRAGMA table_info(media_assets)').all().map((col) => col.name);
+  assert.ok(mediaColumns.includes('storage_provider'));
+  assert.ok(mediaColumns.includes('public_url'));
 });
 
 test('partner carousel migration updates only About-page partner blocks and preserves playback choices', (t) => {

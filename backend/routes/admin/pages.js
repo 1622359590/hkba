@@ -29,6 +29,12 @@ const { syncBlockReferences, clearBlockReferences } = require('../../lib/mediaRe
 const { checkPage } = require('../../lib/publishChecks');
 const { createPreviewToken } = require('../../lib/previewTokens');
 const { recordPublish, prunePageVersions } = require('../../lib/publish');
+const {
+  captureDraftState,
+  summarizeDraftChange,
+  createDraftSnapshot,
+  loadSnapshotState,
+} = require('../../lib/draftSnapshots');
 
 router.use(requestContext);
 
@@ -160,6 +166,161 @@ router.get('/tree', ...read, (req, res) => {
     .prepare('SELECT * FROM page_nodes WHERE deleted_at IS NULL ORDER BY sort_order, created_at')
     .all();
   res.ok({ tree: buildTree(nodes), total: nodes.length });
+});
+
+function snapshotJson(row) {
+  return {
+    id: row.id,
+    revision: row.revision,
+    sourceVersionId: row.source_version_id,
+    createdAt: row.created_at,
+    createdBy: row.created_by,
+    createdByName: row.createdByName || null,
+    blockCount: Number(row.blockCount || 0),
+    summary: JSON.parse(row.change_summary || '{}'),
+  };
+}
+
+// GET /api/admin/pages/:id/versions — grouped history for the studio drawer.
+router.get('/:id/versions', ...read, (req, res) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+  const current = getDraftVersion(conn, node.id);
+  const currentDraft = current ? {
+    id: current.id,
+    revision: current.revision,
+    blockCount: conn.prepare('SELECT COUNT(*) AS count FROM page_blocks WHERE page_version_id = ?').get(current.id).count,
+    updatedAt: conn.prepare('SELECT MAX(created_at) AS updatedAt FROM page_draft_snapshots WHERE page_id = ?').get(node.id).updatedAt || current.created_at,
+  } : null;
+  const snapshots = conn.prepare(
+    `SELECT s.*, a.username AS createdByName,
+            (SELECT COUNT(*) FROM page_draft_snapshot_blocks b WHERE b.snapshot_id = s.id) AS blockCount
+     FROM page_draft_snapshots s
+     LEFT JOIN admins a ON a.id = s.created_by
+     WHERE s.page_id = ? ORDER BY s.revision DESC, s.created_at DESC`
+  ).all(node.id).map(snapshotJson);
+  const publishedVersions = conn.prepare(
+    `SELECT v.id, v.revision, v.status, v.created_at AS createdAt,
+            v.published_at AS publishedAt, v.source_version_id AS sourceVersionId,
+            (SELECT COUNT(*) FROM page_blocks b WHERE b.page_version_id = v.id) AS blockCount
+     FROM page_versions v WHERE v.page_id = ? AND v.status IN ('published', 'superseded')
+     ORDER BY v.revision DESC`
+  ).all(node.id);
+  res.ok({ currentDraft, snapshots, publishedVersions, publishedVersionId: node.published_version_id });
+});
+
+router.get('/:id/snapshots/:snapshotId', ...read, (req, res) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+  const row = conn.prepare(
+    `SELECT s.*, a.username AS createdByName,
+            (SELECT COUNT(*) FROM page_draft_snapshot_blocks b WHERE b.snapshot_id = s.id) AS blockCount
+     FROM page_draft_snapshots s LEFT JOIN admins a ON a.id = s.created_by
+     WHERE s.id = ? AND s.page_id = ?`
+  ).get(req.params.snapshotId, node.id);
+  if (!row) return res.fail('NOT_FOUND', '快照不存在');
+  res.ok({ snapshot: snapshotJson(row) });
+});
+
+router.post('/:id/snapshots/:snapshotId/preview', ...read, (req, res) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+  const snapshot = conn.prepare('SELECT * FROM page_draft_snapshots WHERE id = ? AND page_id = ?').get(req.params.snapshotId, node.id);
+  if (!snapshot) return res.fail('NOT_FOUND', '快照不存在');
+  const { token, expiresAt } = createPreviewToken(conn, {
+    objectType: 'page_snapshot',
+    objectId: snapshot.id,
+    revision: snapshot.revision,
+    createdBy: req.admin.id,
+  });
+  res.ok({ token, url: `/api/preview/${token}`, revision: snapshot.revision, expiresAt }, 201);
+});
+
+router.post('/:id/snapshots/:snapshotId/restore', ...rollback, (req, res, next) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+  const loaded = loadSnapshotState(conn, req.params.snapshotId);
+  if (!loaded || loaded.snapshot.page_id !== node.id) return res.fail('NOT_FOUND', '快照不存在');
+  const draft = getDraftVersion(conn, node.id) || getOrCreateDraft(conn, node).version;
+
+  try {
+    const result = applyDraftMutation(conn, node, {
+      expectedRevision: draft.revision,
+      mutationId: req.body?.mutationId || crypto.randomUUID(),
+      createdBy: req.admin.id,
+    }, (currentDraft) => {
+      const oldBlocks = loadBlocks(conn, currentDraft.id);
+      for (const block of oldBlocks) clearBlockReferences(conn, block.id, 'page_block');
+      conn.prepare('DELETE FROM page_blocks WHERE page_version_id = ?').run(currentDraft.id);
+      conn.prepare('UPDATE page_versions SET seo = ? WHERE id = ?')
+        .run(JSON.stringify(loaded.state.seo || {}), currentDraft.id);
+
+      const idMap = new Map(loaded.state.blocks.map((block) => [block.id, crypto.randomUUID()]));
+      const insert = conn.prepare(
+        `INSERT INTO page_blocks
+           (id, page_version_id, component_type, component_version, sort_order,
+            parent_block_id, is_visible, anchor_id, content_zh, content_en, settings)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      );
+      for (const block of loaded.state.blocks) {
+        const id = idMap.get(block.id);
+        insert.run(
+          id, currentDraft.id, block.componentType, block.componentVersion || 1,
+          block.sortOrder || 0, block.parentBlockId ? idMap.get(block.parentBlockId) : null,
+          block.isVisible === false ? 0 : 1, block.anchorId || null,
+          JSON.stringify(block.contentZh || {}), JSON.stringify(block.contentEn || {}),
+          JSON.stringify(block.settings || {})
+        );
+        const definition = registry.getDefinition(block.componentType);
+        if (definition) {
+          syncBlockReferences(conn, {
+            blockId: id,
+            definition,
+            config: { contentZh: block.contentZh || {}, contentEn: block.contentEn || {}, settings: block.settings || {} },
+          });
+        }
+      }
+      return { restoredFromSnapshotId: loaded.snapshot.id, restoredFromRevision: loaded.snapshot.revision };
+    });
+
+    recordAudit(conn, auditEvent(req, {
+      actorId: req.admin.id,
+      actorName: req.admin.username,
+      action: 'page.snapshot.restore',
+      objectType: 'page_draft_snapshot',
+      objectId: loaded.snapshot.id,
+      detail: { pageId: node.id, sourceRevision: loaded.snapshot.revision, newDraftRevision: result.revision },
+    }));
+    res.ok(result);
+  } catch (error) {
+    handleDraftError(req, res, next, error);
+  }
+});
+
+router.delete('/:id/snapshots/:snapshotId', ...write, (req, res) => {
+  const conn = getDb();
+  const node = getNode(conn, req.params.id);
+  if (!node || node.deleted_at) return res.fail('NOT_FOUND', '頁面不存在');
+  const snapshot = conn.prepare('SELECT * FROM page_draft_snapshots WHERE id = ? AND page_id = ?').get(req.params.snapshotId, node.id);
+  if (!snapshot) return res.fail('NOT_FOUND', '快照不存在');
+  const draft = getDraftVersion(conn, node.id);
+  if (draft && draft.revision === snapshot.revision) {
+    return res.fail('REFERENCE_EXISTS', '目前草稿對應的最新快照不能刪除');
+  }
+  conn.prepare('DELETE FROM page_draft_snapshots WHERE id = ?').run(snapshot.id);
+  recordAudit(conn, auditEvent(req, {
+    actorId: req.admin.id,
+    actorName: req.admin.username,
+    action: 'page.snapshot.delete',
+    objectType: 'page_draft_snapshot',
+    objectId: snapshot.id,
+    detail: { pageId: node.id, revision: snapshot.revision },
+  }));
+  res.ok({ deleted: true, id: snapshot.id });
 });
 
 // POST /api/admin/pages (spec §4)
@@ -548,7 +709,7 @@ router.patch('/:id/draft', ...write, (req, res, next) => {
     return res.fail('VALIDATION_FAILED', 'seo 必須是物件', [{ field: 'seo', code: 'type', message: 'seo 必須是物件' }]);
   }
   try {
-    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId }, (draft) => {
+    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId, createdBy: req.admin.id }, (draft) => {
       if (seo != null) {
         conn.prepare('UPDATE page_versions SET seo = ? WHERE id = ?').run(JSON.stringify(seo), draft.id);
       }
@@ -574,7 +735,7 @@ router.post('/:id/draft/blocks', ...write, (req, res, next) => {
   }
 
   try {
-    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId }, (draft) => {
+    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId, createdBy: req.admin.id }, (draft) => {
       const blocks = loadDraftBlocksJson(conn, draft.id);
       const definition = registry.getDefinition(block.componentType);
       const id = crypto.randomUUID();
@@ -631,7 +792,7 @@ router.patch('/:id/draft/blocks/:blockId', ...write, (req, res, next) => {
   const { expectedRevision, mutationId, patch = {} } = req.body || {};
 
   try {
-    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId }, (draft) => {
+    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId, createdBy: req.admin.id }, (draft) => {
       const blocks = loadDraftBlocksJson(conn, draft.id);
       const current = blocks.find((entry) => entry.id === req.params.blockId);
       if (!current) {
@@ -693,7 +854,7 @@ router.delete('/:id/draft/blocks/:blockId', ...write, (req, res, next) => {
   const mutationId = body.mutationId ?? req.query.mutationId;
 
   try {
-    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId }, (draft) => {
+    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId, createdBy: req.admin.id }, (draft) => {
       const blocks = loadDraftBlocksJson(conn, draft.id);
       const current = blocks.find((entry) => entry.id === req.params.blockId);
       if (!current) {
@@ -730,7 +891,7 @@ router.post('/:id/draft/blocks/reorder', ...write, (req, res, next) => {
   const { expectedRevision, mutationId, order } = req.body || {};
 
   try {
-    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId }, (draft) => {
+    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId, createdBy: req.admin.id }, (draft) => {
       const blocks = loadDraftBlocksJson(conn, draft.id);
       const known = new Set(blocks.map((entry) => entry.id));
       const valid = Array.isArray(order) && order.length === known.size && order.every((id) => known.has(id));
@@ -761,7 +922,7 @@ router.post('/:id/draft/blocks/:blockId/duplicate', ...write, (req, res, next) =
   const { expectedRevision, mutationId } = req.body || {};
 
   try {
-    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId }, (draft) => {
+    const result = applyDraftMutation(conn, node, { expectedRevision, mutationId, createdBy: req.admin.id }, (draft) => {
       const blocks = loadBlocks(conn, draft.id);
       const source = blocks.find((entry) => entry.id === req.params.blockId);
       if (!source) {
@@ -928,6 +1089,7 @@ router.post('/:id/rollback', ...rollback, (req, res) => {
     const maxRevision = conn.prepare('SELECT MAX(revision) AS m FROM page_versions WHERE page_id = ?').get(node.id).m || 0;
     const nextRevision = maxRevision + 1;
     let draft = getDraftVersion(conn, node.id);
+    const beforeState = draft ? captureDraftState(conn, draft.id) : null;
     const sourceBlocks = loadBlocks(conn, target.id);
 
     if (draft) {
@@ -966,6 +1128,16 @@ router.post('/:id/rollback', ...rollback, (req, res) => {
       });
     }
     conn.prepare('UPDATE page_nodes SET draft_version_id = ?, updated_at = datetime(\'now\') WHERE id = ?').run(draft.id, node.id);
+    draft = conn.prepare('SELECT * FROM page_versions WHERE id = ?').get(draft.id);
+    const afterState = captureDraftState(conn, draft.id);
+    createDraftSnapshot(conn, {
+      pageId: node.id,
+      revision: draft.revision,
+      sourceVersionId: draft.id,
+      createdBy: req.admin.id,
+      state: afterState,
+      summary: summarizeDraftChange(beforeState, afterState),
+    });
     recordPublish(conn, {
       objectType: 'page',
       objectId: node.id,

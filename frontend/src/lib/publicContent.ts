@@ -81,6 +81,14 @@ export async function fetchPublicCategories(): Promise<PublicCategory[] | null> 
   return data ? data.items : null;
 }
 
+export async function fetchPublicNewsByIds(ids: string[]): Promise<PublicNewsListItem[] | null> {
+  if (!ids.length) return [];
+  const data = await get<{ items: PublicNewsListItem[] }>(
+    `/api/public/news/by-ids?ids=${encodeURIComponent(ids.join(','))}`
+  );
+  return data ? data.items : null;
+}
+
 export type PublicNewsItemResult = { kind: 'detail'; detail: PublicNewsDetail } | { kind: 'redirect'; to: string } | { kind: 'missing' };
 
 export async function fetchPublicNewsItem(slug: string): Promise<PublicNewsItemResult> {
@@ -109,10 +117,24 @@ export type PublicPerson = {
   instagram: string;
 };
 export type PublicMilestone = { id: number; year: string; titleZh: string; titleEn: string; descriptionZh: string; descriptionEn: string };
+export type PublicEvent = {
+  id: number;
+  titleZh: string;
+  titleEn: string;
+  descriptionZh: string;
+  descriptionEn: string;
+  eventDate: string;
+  endDate: string;
+  locationZh: string;
+  locationEn: string;
+  coverUrl: string;
+  registrationUrl: string;
+};
 export type PublicAssociation = {
   partners: PublicPartner[];
   people: PublicPerson[];
   milestones: PublicMilestone[];
+  events: PublicEvent[];
   contact: Record<string, string>;
   resources: unknown[];
 };

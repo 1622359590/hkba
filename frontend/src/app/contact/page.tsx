@@ -1,14 +1,17 @@
 import type { Metadata } from 'next';
 import ContactPageClient from '@/components/pages/ContactPageClient';
-import { pageMetadata } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return pageMetadata('/contact', {
-    title: '聯繫我們 — HKBA',
-    description: '聯繫香港區塊鏈協會。Contact the Hong Kong Blockchain Association.',
-  });
+  const title = 'Contact-香港區塊鏈協會 HKBA';
+  const description = '聯繫香港區塊鏈協會。Contact the Hong Kong Blockchain Association.';
+  return {
+    title,
+    description,
+    alternates: { canonical: '/contact' },
+    openGraph: { title, description, url: '/contact', siteName: 'HKBA', type: 'website' },
+  };
 }
 
 export default function ContactPage() {

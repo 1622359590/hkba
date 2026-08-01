@@ -95,42 +95,32 @@ export default function NewsDetailClient() {
   // ---- new system: published revision blocks via the shared renderer ----
   if (detail) {
     return (
-      <>
-        <section style={{ padding: '64px 0 0', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 60%)' }} />
-          <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px', position: 'relative' }}>
-            <Link href="/news" style={{ fontSize: 13, color: '#818cf8', textDecoration: 'none', display: 'inline-block' }}>← {t('返回新聞', 'Back to News')}</Link>
-          </div>
-        </section>
-        <section style={{ paddingBottom: 96, paddingTop: 24 }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 280px', gap: 40 }}>
-            <div>
+      <main className="news-detail">
+        <div className="news-detail__glow" aria-hidden="true" />
+        <div className="news-detail__shell">
+          <Link href="/news" className="news-detail__back">← {t('返回新聞', 'Back to News')}</Link>
+          <div className="news-detail__layout">
+            <article className="news-detail__article">
               <BlockRenderer blocks={detail.blocks} lang={lang} media={detail.media} />
-            </div>
+            </article>
             {latest.length > 0 && (
-              <aside className="glass-card news-aside" style={{ padding: 20, height: 'fit-content', position: 'sticky', top: 88 }}>
-                <h2 style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 16 }}>{t('最新新聞', 'Latest News')}</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <aside className="news-detail__aside">
+                <h2>{t('最新新聞', 'Latest News')}</h2>
+                <div className="news-detail__latest-list">
                   {latest.map((item) => (
-                    <Link key={item.id} href={`/news/${item.slug}`} style={{ textDecoration: 'none', color: 'inherit', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
-                      <div style={{ fontSize: 11, color: '#818cf8', marginBottom: 4 }}>
+                    <Link key={item.id} href={`/news/${item.slug}`} className="news-detail__latest-item">
+                      <span className="news-detail__latest-meta">
                         {[item.categories[0] ? (lang === 'en' ? item.categories[0].nameEn || item.categories[0].nameZh : item.categories[0].nameZh) : '', item.year].filter(Boolean).join(' · ')}
-                      </div>
-                      <div style={{ fontSize: 13, color: '#d4d4d8', lineHeight: 1.5 }}>{lang === 'en' ? item.titleEn || item.titleZh : item.titleZh || item.titleEn}</div>
+                      </span>
+                      <span className="news-detail__latest-title">{lang === 'en' ? item.titleEn || item.titleZh : item.titleZh || item.titleEn}</span>
                     </Link>
                   ))}
                 </div>
               </aside>
             )}
           </div>
-        </section>
-        <style jsx>{`
-          @media (max-width: 900px) {
-            section div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
-            .news-aside { position: static !important; }
-          }
-        `}</style>
-      </>
+        </div>
+      </main>
     );
   }
 
@@ -142,12 +132,12 @@ export default function NewsDetailClient() {
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 60%)' }} />
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px', position: 'relative' }}>
           <div style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22,1,0.36,1) forwards' }}>
-            <Link href="/news" style={{ fontSize: 13, color: '#818cf8', textDecoration: 'none', marginBottom: 24, display: 'inline-block' }}>← {t('返回新聞', 'Back to News')}</Link>
+            <Link href="/news" style={{ fontSize: 13, color: 'var(--cyan)', textDecoration: 'none', marginBottom: 24, display: 'inline-block' }}>← {t('返回新聞', 'Back to News')}</Link>
             <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-              <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: '#818cf8', textTransform: 'uppercase' }}>{a.category}</span>
+              <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: 'var(--cyan)', textTransform: 'uppercase' }}>{a.category}</span>
               {a.published_at && <span style={{ fontSize: 13, color: '#71717a' }}>{new Date(a.published_at).toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US')}</span>}
             </div>
-            <h1 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{t(a.title_zh, a.title_en)}</h1>
+            <h1 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.5rem)', fontWeight: 700, letterSpacing: 0, lineHeight: 1.2 }}>{t(a.title_zh, a.title_en)}</h1>
           </div>
         </div>
       </section>
@@ -163,7 +153,7 @@ export default function NewsDetailClient() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {legacyLatest.map((item) => (
                   <Link key={item.id} href={`/news/${item.id}`} style={{ textDecoration: 'none', color: 'inherit', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
-                    <div style={{ fontSize: 11, color: '#818cf8', marginBottom: 4 }}>{item.category}</div>
+                    <div style={{ fontSize: 11, color: 'var(--cyan)', marginBottom: 4 }}>{item.category}</div>
                     <div style={{ fontSize: 13, color: '#d4d4d8', lineHeight: 1.5 }}>{t(item.title_zh, item.title_en)}</div>
                   </Link>
                 ))}

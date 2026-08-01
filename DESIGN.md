@@ -1,22 +1,24 @@
 # Design
 
 ## System
-HKBA uses a dark institutional interface with luminous blue-violet accents, crisp cards, restrained gradients, and white content surfaces only where they help logos or uploaded assets read correctly.
+HKBA uses a dark institutional interface with trusted gold and precise cyan accents, crisp cards, restrained gradients, and white content surfaces only where they help logos or uploaded assets read correctly.
 
 ## Color
-- Canvas: `#09090b`
-- Elevated surface: `rgba(255,255,255,0.035)`
-- Strong surface: `rgba(15,23,42,0.78)`
-- Text primary: `#fafafa`
-- Text secondary: `#a1a1aa`
-- Muted text: `#71717a`
-- Accent: `#6366f1`
-- Accent bright: `#818cf8`
-- Success: `#22c55e`
-- Warning: `#f59e0b`
+- Canvas: `#06090F`
+- Elevated surface: `#0B1120`
+- Strong surface: `#101828`
+- Text primary: `#E8EDF5`
+- Text secondary: `#8896A8`
+- Muted text: `#5A6B7F`
+- Gold accent: `#D9B656`
+- Gold hover: `#B89A3F`
+- Cyan interaction: `#67E8F9`
+- Success: `#34D399`
+- Warning: `#FBBF24`
+- Error: `#F87171`
 
 ## Typography
-Use the system UI stack with PingFang SC support. Public pages use compact editorial headings; admin pages use smaller operational headings and stable labels. Letter spacing stays neutral except for short uppercase section labels.
+Use Inter first, followed by the system UI stack with PingFang SC and Noto Sans SC support. Public pages use compact editorial headings; admin pages use smaller operational headings and stable labels. Letter spacing stays neutral except for short uppercase section labels.
 
 ## Components
 - Buttons are inline-flex controls with visible hover, focus, and active states.

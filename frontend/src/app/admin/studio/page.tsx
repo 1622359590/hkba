@@ -13,13 +13,19 @@
 // optimistic UI never overtakes the server revision. A 409 marks the save
 // state conflicted and offers a reload.
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { adminGetData, adminPostData, adminPatchData, adminDeleteData, adminRequestError } from '@/lib/adminApi';
-import BlockRenderer, { RenderBlock, MediaMap } from '@/components/blocks/BlockRenderer';
+import BlockRenderer, { AssocData, MediaMap, NewsCardData, RenderBlock } from '@/components/blocks/BlockRenderer';
 import Drawer from '@/components/admin/shell/Drawer';
 import SaveStatus, { SaveState } from '@/components/admin/shell/SaveStatus';
 import { ConfirmBar, UndoToast } from '@/components/admin/shell/ConfirmBar';
+import StudioPreviewModal, { StudioPreviewSession } from '@/components/admin/StudioPreviewModal';
+import StudioHistoryPanel, { DraftSnapshot, PublishedVersion, StudioHistory } from '@/components/admin/StudioHistoryPanel';
+import Footer from '@/components/Footer';
+import { HomeHero, HomeMission } from '@/components/home/HomeMockupSections';
+import { selectStudioBlock } from '@/lib/studioSelection.mjs';
+import { selectStudioPage } from '@/lib/studioPageNavigation.mjs';
+import { fetchPublicAssociation, fetchPublicNews, PublicNewsListItem } from '@/lib/publicContent';
 import PropertyForm, { Definition } from './PropertyForm';
 
 type TreeNode = {
@@ -47,6 +53,14 @@ type MediaItem = {
 };
 
 type DraftVersion = { id: string; revision: number; status: string; seo?: string };
+type LegacyVersionSummary = {
+  id: string;
+  revision: number;
+  status: 'draft' | 'published' | 'superseded';
+  createdAt: string;
+  publishedAt: string | null;
+  blockCount: number;
+};
 
 type CheckProblem = { field?: string; code?: string; message?: string; blockId?: string };
 
@@ -71,13 +85,13 @@ function flattenPages(nodes: TreeNode[]): TreeNode[] {
 }
 
 function StudioInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pageId = searchParams.get('id');
-
+  const [pageId, setPageId] = useState<string | null>(null);
+  const [pageSelectionReady, setPageSelectionReady] = useState(false);
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [definitions, setDefinitions] = useState<Definition[]>([]);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [associationData, setAssociationData] = useState<AssocData | undefined>(undefined);
+  const [publicNewsItems, setPublicNewsItems] = useState<PublicNewsListItem[]>([]);
   const [version, setVersion] = useState<DraftVersion | null>(null);
   const [blocks, setBlocks] = useState<RenderBlock[]>([]);
   const [loadingDraft, setLoadingDraft] = useState(false);
@@ -95,9 +109,14 @@ function StudioInner() {
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [seoForm, setSeoForm] = useState<SeoForm>(EMPTY_SEO);
   const [checkProblems, setCheckProblems] = useState<CheckProblem[]>([]);
+  const [history, setHistory] = useState<StudioHistory | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyBusyKey, setHistoryBusyKey] = useState<string | null>(null);
   const [publishConfirm, setPublishConfirm] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewSession, setPreviewSession] = useState<StudioPreviewSession | null>(null);
+  const [previewEndpoint, setPreviewEndpoint] = useState<string | null>(null);
   const [undoBlock, setUndoBlock] = useState<RenderBlock | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string; position: 'before' | 'after' } | null>(null);
 
@@ -106,9 +125,36 @@ function StudioInner() {
   const chainRef = useRef<Promise<void>>(Promise.resolve());
   const timersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const dragIdRef = useRef<string | null>(null);
+  const previewButtonRef = useRef<HTMLButtonElement>(null);
   blocksRef.current = blocks;
 
+  const selectBlock = useCallback((blockId: string) => {
+    selectStudioBlock(blockId, setSelectedId, setRightPane);
+  }, []);
+
+  const selectPage = useCallback((nextPageId: string) => {
+    selectStudioPage(nextPageId, setPageId, window.location);
+    setSelectedId(null);
+    setLeftPane(null);
+    setRightPane(null);
+  }, []);
+
   // ---------- data loading ----------
+
+  useEffect(() => {
+    const syncPageFromUrl = () => {
+      const hashPageId = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('page');
+      setPageId(hashPageId || new URLSearchParams(window.location.search).get('id'));
+      setPageSelectionReady(true);
+    };
+    syncPageFromUrl();
+    window.addEventListener('popstate', syncPageFromUrl);
+    window.addEventListener('hashchange', syncPageFromUrl);
+    return () => {
+      window.removeEventListener('popstate', syncPageFromUrl);
+      window.removeEventListener('hashchange', syncPageFromUrl);
+    };
+  }, []);
 
   const loadTree = useCallback(async () => {
     try {
@@ -151,22 +197,39 @@ function StudioInner() {
     adminGetData<{ items: MediaItem[] }>('/api/admin/media?pageSize=100')
       .then((data) => setMediaItems(data.items))
       .catch(() => setMediaItems([]));
+    fetchPublicAssociation().then((data) => setAssociationData(data || undefined));
+    fetchPublicNews({ pageSize: 24 }).then((data) => setPublicNewsItems(data?.items || []));
   }, [loadTree]);
 
   useEffect(() => {
+    if (!pageSelectionReady) return;
     if (pageId) {
       loadDraft(pageId);
     } else if (tree.length) {
       const candidate = firstPage(tree);
-      if (candidate) router.replace(`/admin/studio?id=${candidate.id}`);
+      if (candidate) selectPage(candidate.id);
     }
-  }, [pageId, tree, loadDraft, router]);
+  }, [pageId, pageSelectionReady, tree, loadDraft, selectPage]);
 
   const mediaMap = useMemo<MediaMap>(() => {
     const map: MediaMap = {};
     for (const item of mediaItems) map[item.id] = { url: item.url, altZh: item.altZh || undefined, altEn: item.altEn || undefined };
     return map;
   }, [mediaItems]);
+  const newsCards = useMemo<NewsCardData[]>(
+    () => publicNewsItems.map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      title: (lang === 'en' ? item.titleEn || item.titleZh : item.titleZh || item.titleEn) || item.slug,
+      summary: lang === 'en' ? item.summaryEn || item.summaryZh : item.summaryZh || item.summaryEn,
+      year: item.year,
+      publishedAt: item.publishedAt,
+      coverUrl: item.cover?.url || null,
+      categoryId: item.categories[0]?.id,
+      category: lang === 'en' ? item.categories[0]?.nameEn || item.categories[0]?.nameZh : item.categories[0]?.nameZh,
+    })),
+    [lang, publicNewsItems]
+  );
 
   const currentNode = useMemo(() => flattenPages(tree).find((node) => node.id === pageId) || null, [tree, pageId]);
   const selectedBlock = useMemo(() => blocks.find((block) => block.id === selectedId) || null, [blocks, selectedId]);
@@ -253,12 +316,12 @@ function StudioInner() {
         });
         revisionRef.current = response.revision;
         setBlocks((previous) => [...previous, response.block]);
-        setSelectedId(response.block.id);
+        selectBlock(response.block.id);
         setSaveState('saved');
         setSavedAt(new Date());
       });
     },
-    [enqueue, pageId]
+    [enqueue, pageId, selectBlock]
   );
 
   const deleteBlock = useCallback(
@@ -359,18 +422,34 @@ function StudioInner() {
     });
   }, [enqueue, pageId, seoForm]);
 
-  const openPreview = useCallback(async () => {
-    if (!pageId) return;
+  const requestPreview = useCallback(async (endpoint: string) => {
     setPreviewBusy(true);
     try {
-      const response = await adminPostData<{ token: string }>(`/api/admin/pages/${pageId}/preview`, {});
-      window.open(`/admin/preview/${response.token}`, '_blank', 'noopener');
+      const response = await adminPostData<StudioPreviewSession>(endpoint, {});
+      setPreviewSession(response);
+      setPreviewEndpoint(endpoint);
     } catch (error) {
       setBanner(adminRequestError(error));
     } finally {
       setPreviewBusy(false);
     }
-  }, [pageId]);
+  }, []);
+
+  const openPreview = useCallback(async () => {
+    if (!pageId) return;
+    await requestPreview(`/api/admin/pages/${pageId}/preview`);
+  }, [pageId, requestPreview]);
+
+  const refreshPreview = useCallback(async () => {
+    if (!previewEndpoint) return;
+    await requestPreview(previewEndpoint);
+  }, [previewEndpoint, requestPreview]);
+
+  const closePreview = useCallback(() => {
+    setPreviewSession(null);
+    setPreviewEndpoint(null);
+    window.setTimeout(() => previewButtonRef.current?.focus(), 0);
+  }, []);
 
   const publish = useCallback(async () => {
     if (!pageId) return;
@@ -411,6 +490,84 @@ function StudioInner() {
       setPublishing(false);
     }
   }, [pageId, loadDraft, loadTree]);
+
+  const loadHistory = useCallback(async () => {
+    if (!pageId) return;
+    setHistoryLoading(true);
+    try {
+      const data = await adminGetData<StudioHistory | { items: LegacyVersionSummary[] }>(`/api/admin/pages/${pageId}/versions`);
+      if ('snapshots' in data && Array.isArray(data.snapshots) && Array.isArray(data.publishedVersions)) {
+        setHistory(data);
+      } else {
+        const legacy = 'items' in data ? data.items : [];
+        const draft = legacy.find((entry) => entry.status === 'draft');
+        setHistory({
+          currentDraft: draft ? { id: draft.id, revision: draft.revision, blockCount: draft.blockCount, updatedAt: draft.createdAt } : null,
+          snapshots: [],
+          publishedVersions: legacy.filter((entry) => entry.status !== 'draft') as PublishedVersion[],
+          publishedVersionId: legacy.find((entry) => entry.status === 'published')?.id || null,
+        });
+      }
+    } catch (error) {
+      setBanner(adminRequestError(error));
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [pageId]);
+
+  const openHistory = useCallback(() => {
+    setRightPane('history');
+    loadHistory();
+  }, [loadHistory]);
+
+  const restorePublishedVersion = useCallback(async (entry: PublishedVersion) => {
+    if (!pageId) return;
+    setHistoryBusyKey(`published:${entry.id}`);
+    try {
+      await adminPostData(`/api/admin/pages/${pageId}/rollback`, { revision: entry.revision });
+      await Promise.all([loadDraft(pageId), loadHistory()]);
+      setBanner(null);
+    } catch (error) {
+      setBanner(adminRequestError(error));
+    } finally {
+      setHistoryBusyKey(null);
+    }
+  }, [loadDraft, loadHistory, pageId]);
+
+  const previewSnapshot = useCallback(async (snapshot: DraftSnapshot) => {
+    if (!pageId) return;
+    setHistoryBusyKey(`preview:${snapshot.id}`);
+    await requestPreview(`/api/admin/pages/${pageId}/snapshots/${snapshot.id}/preview`);
+    setHistoryBusyKey(null);
+  }, [pageId, requestPreview]);
+
+  const restoreSnapshot = useCallback(async (snapshot: DraftSnapshot) => {
+    if (!pageId) return;
+    setHistoryBusyKey(`restore:${snapshot.id}`);
+    try {
+      await adminPostData(`/api/admin/pages/${pageId}/snapshots/${snapshot.id}/restore`, { mutationId: crypto.randomUUID() });
+      await Promise.all([loadDraft(pageId), loadHistory()]);
+      setBanner(null);
+    } catch (error) {
+      setBanner(adminRequestError(error));
+    } finally {
+      setHistoryBusyKey(null);
+    }
+  }, [loadDraft, loadHistory, pageId]);
+
+  const deleteSnapshot = useCallback(async (snapshot: DraftSnapshot) => {
+    if (!pageId) return;
+    setHistoryBusyKey(`delete:${snapshot.id}`);
+    try {
+      await adminDeleteData(`/api/admin/pages/${pageId}/snapshots/${snapshot.id}`);
+      await loadHistory();
+      setBanner(null);
+    } catch (error) {
+      setBanner(adminRequestError(error));
+    } finally {
+      setHistoryBusyKey(null);
+    }
+  }, [loadHistory, pageId]);
 
   // ---------- drawer helpers ----------
 
@@ -466,11 +623,11 @@ function StudioInner() {
               dropOn(block.id, event.clientY < event.currentTarget.getBoundingClientRect().top + event.currentTarget.getBoundingClientRect().height / 2 ? 'before' : 'after');
             }}
             onDragEnd={() => setDropTarget(null)}
-            onClick={() => setSelectedId(block.id)}
+            onClick={() => selectBlock(block.id)}
             role="button"
             tabIndex={0}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') setSelectedId(block.id);
+              if (event.key === 'Enter') selectBlock(block.id);
             }}
           >
             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -532,7 +689,7 @@ function StudioInner() {
           className={`hk-tree-row${node.id === pageId ? ' is-active' : ''}`}
           style={{ paddingLeft: 8 + depth * 14 }}
           onClick={() => {
-            if (node.node_type === 'page') router.replace(`/admin/studio?id=${node.id}`);
+            if (node.node_type === 'page') selectPage(node.id);
           }}
         >
           <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -563,10 +720,17 @@ function StudioInner() {
     <div className="hk-studio">
       <div className="hk-studio__topbar">
         <div>
-          <div className="hk-studio__title">{currentNode ? currentNode.title_zh || currentNode.slug : '頁面工作室'}</div>
+          <div className="hk-studio__heading">
+            <div className="hk-studio__title">{currentNode ? currentNode.title_zh || currentNode.slug : '頁面工作室'}</div>
+            {currentNode ? (
+              <span className={`hk-status-badge ${currentNode.is_published ? 'is-published' : 'is-unpublished'}`}>
+                {currentNode.is_published ? '已發佈' : '未發佈'}
+              </span>
+            ) : null}
+          </div>
           <div className="hk-studio__crumb">
             {currentNode ? currentNode.path : '未選擇頁面'}
-            {version ? ` · 草稿修訂 ${revisionRef.current}` : ''}
+            {version ? ` · 保存修訂 ${revisionRef.current}` : ''}
           </div>
         </div>
         <div className="hk-studio__spacer" />
@@ -591,7 +755,7 @@ function StudioInner() {
             EN
           </button>
         </div>
-        <button type="button" className="btn-secondary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={openPreview} disabled={!pageId || previewBusy}>
+        <button ref={previewButtonRef} type="button" className="btn-secondary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={openPreview} disabled={!pageId || previewBusy}>
           {previewBusy ? '產生中…' : '預覽'}
         </button>
         <button type="button" className="btn-accent" style={{ padding: '8px 16px', fontSize: 13 }} onClick={() => setPublishConfirm(true)} disabled={!pageId || publishing}>
@@ -605,6 +769,17 @@ function StudioInner() {
           <button type="button" style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer' }} onClick={() => setBanner(null)} aria-label="關閉提示">
             ✕
           </button>
+        </div>
+      ) : null}
+
+      {currentNode && version ? (
+        <div className="hk-studio-notice" role="status">
+          <span className="hk-studio-notice__dot" aria-hidden="true" />
+          <span>
+            {currentNode.is_published
+              ? '正在編輯草稿，線上版本不受影響；重新發佈後更新。'
+              : '此頁面尚未發佈，目前修改只保存在草稿中。'}
+          </span>
         </div>
       ) : null}
 
@@ -634,7 +809,10 @@ function StudioInner() {
         </div>
 
         <div className="hk-canvas-wrap" onClick={() => setSelectedId(null)}>
-          <div className={`hk-canvas${canvasWidth !== 'desktop' ? ` hk-canvas--${canvasWidth}` : ''}`} onClick={(event) => event.stopPropagation()}>
+          <div
+            className={`hk-canvas${canvasWidth !== 'desktop' ? ` hk-canvas--${canvasWidth}` : ''}${currentNode?.path === '/' ? ' hk-canvas--home' : ''}${currentNode?.path === '/join' ? ' hk-canvas--join' : ''}`}
+            onClick={(event) => event.stopPropagation()}
+          >
             {loadingDraft ? (
               <div className="hk-canvas-empty">載入草稿中…</div>
             ) : !pageId ? (
@@ -655,9 +833,58 @@ function StudioInner() {
                   </button>
                 </div>
               </div>
+            ) : currentNode?.path === '/' ? (
+              <div className="hk-studio-home-preview">
+                <div
+                  className={`hk-canvas-block hk-studio-home-preview__hero${selectedId === blocks[0]?.id ? ' is-selected' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="選擇首頁主視覺組件"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (blocks[0]) selectBlock(blocks[0].id);
+                  }}
+                  onKeyDown={(event) => {
+                    if ((event.key === 'Enter' || event.key === ' ') && blocks[0]) {
+                      event.preventDefault();
+                      selectBlock(blocks[0].id);
+                    }
+                  }}
+                >
+                  <HomeHero forceVisible langOverride={lang} />
+                  {blocks[0] ? <span className="hk-canvas-block__tag">{blocks[0].component_type}</span> : null}
+                </div>
+                <HomeMission forceVisible langOverride={lang} />
+                <div className="public-home-content">
+                  <BlockRenderer
+                    blocks={blocks[0]?.component_type === 'content.hero' ? blocks.slice(1) : blocks}
+                    lang={lang}
+                    media={mediaMap}
+                    news={newsCards}
+                    assoc={associationData}
+                    onSelect={selectBlock}
+                    selectedId={selectedId}
+                  />
+                </div>
+              </div>
             ) : (
-              <BlockRenderer blocks={blocks} lang={lang} media={mediaMap} onSelect={setSelectedId} selectedId={selectedId} />
+              <BlockRenderer
+                blocks={blocks}
+                lang={lang}
+                media={mediaMap}
+                news={newsCards}
+                assoc={associationData}
+                onSelect={selectBlock}
+                selectedId={selectedId}
+              />
             )}
+            {pageId && !loadingDraft ? (
+              <div className="hk-studio-footer-preview" aria-label="全站底部預覽">
+                <span className="hk-studio-footer-preview__label">全站底部</span>
+                <Footer preview langOverride={lang} />
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -668,7 +895,10 @@ function StudioInner() {
             title="屬性"
             aria-label="屬性"
             onClick={() => {
-              if (!selectedId && blocks.length) setSelectedId(blocks[0].id);
+              if (!selectedId && blocks.length) {
+                selectBlock(blocks[0].id);
+                return;
+              }
               toggleRight('props');
             }}
           >
@@ -677,7 +907,7 @@ function StudioInner() {
           <button type="button" className={`hk-rail__btn${rightPane === 'seo' ? ' is-active' : ''}`} title="頁面設置 SEO" aria-label="頁面設置" onClick={() => toggleRight('seo')}>
             {railIcon('M10.3 4.3a1.7 1.7 0 013.4 0 1.7 1.7 0 002.5 1 1.7 1.7 0 012.4 2.4 1.7 1.7 0 001 2.6 1.7 1.7 0 010 3.4 1.7 1.7 0 00-1 2.5 1.7 1.7 0 01-2.4 2.4 1.7 1.7 0 00-2.5 1 1.7 1.7 0 01-3.4 0 1.7 1.7 0 00-2.6-1 1.7 1.7 0 01-2.4-2.4 1.7 1.7 0 00-1-2.5 1.7 1.7 0 010-3.4 1.7 1.7 0 001-2.6 1.7 1.7 0 012.4-2.4 1.7 1.7 0 002.6-1z')}
           </button>
-          <button type="button" className={`hk-rail__btn${rightPane === 'history' ? ' is-active' : ''}`} title="版本歷史" aria-label="版本歷史" onClick={() => toggleRight('history')}>
+          <button type="button" className={`hk-rail__btn${rightPane === 'history' ? ' is-active' : ''}`} title="版本歷史" aria-label="版本歷史" onClick={openHistory}>
             {railIcon('M12 8v4l3 3m6-3a9 9 0 11-9-9 9 9 0 019 9z')}
           </button>
           <button type="button" className={`hk-rail__btn${rightPane === 'check' ? ' is-active' : ''}`} title="發佈檢查" aria-label="發佈檢查" onClick={() => toggleRight('check')}>
@@ -748,7 +978,7 @@ function StudioInner() {
         width={400}
       >
         {selectedBlock && selectedDefinition ? (
-          <PropertyForm definition={selectedDefinition} block={selectedBlock} lang={lang} onChange={(scope, key, value) => editBlock(selectedBlock.id, scope, key, value)} onPickMedia={openMediaPicker} />
+          <PropertyForm definition={selectedDefinition} block={selectedBlock} lang={lang} people={associationData?.people || []} onChange={(scope, key, value) => editBlock(selectedBlock.id, scope, key, value)} onPickMedia={openMediaPicker} />
         ) : (
           <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>在畫布或組件結構中選中一個組件後編輯其屬性。</div>
         )}
@@ -788,14 +1018,15 @@ function StudioInner() {
       </Drawer>
 
       <Drawer open={rightPane === 'history'} side="right" title="版本歷史" onClose={() => setRightPane(null)}>
-        <div style={{ fontSize: 12.5, color: 'var(--text-3)', lineHeight: 1.7 }}>
-          版本歷史列表端點將在後續里程碑提供；當前可通過 API 按修訂號回退。
-          {version ? (
-            <div style={{ marginTop: 10 }}>
-              當前草稿修訂：<code style={{ color: 'var(--cyan)' }}>{revisionRef.current}</code>
-            </div>
-          ) : null}
-        </div>
+        <StudioHistoryPanel
+          history={history}
+          loading={historyLoading}
+          busyKey={historyBusyKey}
+          onPreviewSnapshot={previewSnapshot}
+          onRestoreSnapshot={restoreSnapshot}
+          onDeleteSnapshot={deleteSnapshot}
+          onRestorePublished={restorePublishedVersion}
+        />
       </Drawer>
 
       <Drawer open={rightPane === 'check'} side="right" title="發佈檢查" subtitle={checkProblems.length ? `${checkProblems.length} 個待解決問題` : '最近一次的檢查結果'} onClose={() => setRightPane(null)} width={400}>
@@ -809,8 +1040,7 @@ function StudioInner() {
               className="hk-check-item"
               onClick={() => {
                 if (problem.blockId) {
-                  setSelectedId(problem.blockId);
-                  setRightPane('props');
+                  selectBlock(problem.blockId);
                 }
               }}
             >
@@ -843,14 +1073,17 @@ function StudioInner() {
           onDismiss={() => setUndoBlock(null)}
         />
       ) : null}
+      <StudioPreviewModal
+        session={previewSession}
+        title={currentNode?.title_zh || currentNode?.title_en || currentNode?.path || '頁面預覽'}
+        refreshing={previewBusy}
+        onRefresh={refreshPreview}
+        onClose={closePreview}
+      />
     </div>
   );
 }
 
 export default function StudioPage() {
-  return (
-    <Suspense fallback={<div style={{ padding: 40, color: 'var(--text-3)', fontSize: 13 }}>載入中…</div>}>
-      <StudioInner />
-    </Suspense>
-  );
+  return <StudioInner />;
 }

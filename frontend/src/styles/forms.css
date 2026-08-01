@@ -1,0 +1,65 @@
+/* Property form (schema-driven, §5.4). */
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text-1);
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color var(--motion-fast) var(--ease-out-quart),
+    background var(--motion-fast) var(--ease-out-quart),
+    box-shadow var(--motion-fast) var(--ease-out-quart);
+}
+.form-input:hover { border-color: #B9C4CE; }
+.form-input:focus {
+  border-color: rgba(11,127,140,0.58);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(11,127,140,0.12);
+}
+
+.hk-form { display: grid; gap: 14px; }
+.hk-form__group { border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px; display: grid; gap: 12px; }
+.hk-form__group-title { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.hk-field { display: grid; gap: 6px; }
+.hk-field__label { font-size: 12px; color: var(--text-2); font-weight: 600; }
+.hk-field__label small { color: var(--text-3); font-weight: 400; margin-left: 6px; }
+.hk-input, .hk-textarea, .hk-select {
+  width: 100%;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+  color: var(--text-1);
+  font-size: 13px;
+  padding: 9px 11px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+.hk-input:focus, .hk-textarea:focus, .hk-select:focus { border-color: rgba(11,127,140,0.5); box-shadow: 0 0 0 3px rgba(11,127,140,0.1); }
+.hk-textarea { min-height: 90px; resize: vertical; }
+.hk-segmented { display: inline-flex; border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; }
+.hk-segmented button {
+  border: none; background: transparent; color: var(--text-2); font-size: 12px; font-weight: 600;
+  padding: 7px 12px; cursor: pointer; transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+.hk-segmented button.is-active { background: rgba(11,127,140,0.10); color: var(--cyan); }
+.hk-lang-switch { display: inline-flex; border: 1px solid var(--border-subtle); border-radius: 999px; overflow: hidden; }
+.hk-lang-switch button { border: none; background: transparent; color: var(--text-2); font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; }
+.hk-lang-switch button.is-active { background: rgba(154,114,28,0.11); color: var(--gold); }
+.hk-tree-row {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  border: none; background: transparent; color: var(--text-2);
+  padding: 7px 8px; border-radius: 9px; font-size: 12.5px; cursor: pointer; text-align: left;
+}
+.hk-tree-row:hover { background: rgba(82,97,112,0.08); color: var(--text-1); }
+.hk-tree-row.is-active { background: rgba(154,114,28,0.10); color: var(--gold); }
+.hk-media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.hk-media-cell { border: 1.5px solid var(--border-subtle); border-radius: 10px; overflow: hidden; cursor: pointer; padding: 0; background: var(--surface-2); }
+.hk-media-cell.is-selected { border-color: var(--cyan); }
+.hk-media-cell img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.hk-check-item { display: flex; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); margin-bottom: 8px; font-size: 12.5px; color: var(--text-2); cursor: pointer; background: transparent; width: 100%; text-align: left; }
+.hk-check-item:hover { border-color: rgba(103,232,249,0.4); }
+.hk-check-item code { color: var(--warn); font-size: 11px; }

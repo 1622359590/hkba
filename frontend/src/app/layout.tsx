@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
+import PublicEffects from "@/components/webgl/PublicEffects";
 import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -17,7 +18,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-Hant" data-scroll-behavior="smooth">
-      <body style={{ background: '#09090b', color: '#fafafa' }}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      </head>
+      <body>
+        <PublicEffects />
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

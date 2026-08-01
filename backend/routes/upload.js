@@ -3,8 +3,12 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { authMiddleware } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/requirePermission');
+const { getDb } = require('../db/init');
+const { getStorageSettings } = require('../lib/storageSettings');
+const { putOssObject } = require('../lib/objectStorage');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -14,22 +18,8 @@ function getSafeSubdir(value) {
   return value;
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const sub = getSafeSubdir(req.query.dir);
-    const dir = path.join(uploadsDir, sub);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + ext;
-    cb(null, name);
-  }
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /\.(jpg|jpeg|png|gif|webp|svg|ico|pdf)$/i;
@@ -41,28 +31,50 @@ const upload = multer({
   }
 });
 
-router.post('/', authMiddleware, requirePermission('content.write'), upload.single('file'), (req, res) => {
+async function storeFile(file, sub) {
+  const settings = getStorageSettings(getDb());
+  const extension = path.extname(file.originalname).toLowerCase();
+  const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${extension}`;
+  if (settings.enabled && settings.provider === 'oss') {
+    const key = `${settings.objectPrefix}/${sub}/${filename}`;
+    const uploaded = await putOssObject(settings, { key, content: file.buffer, mimeType: file.mimetype });
+    return { url: uploaded.url, filename, size: file.size };
+  }
+  const key = `${sub}/${filename}`;
+  const absolute = path.join(uploadsDir, key);
+  fs.mkdirSync(path.dirname(absolute), { recursive: true });
+  fs.writeFileSync(absolute, file.buffer);
+  return { url: `/uploads/${key}`, filename, size: file.size };
+}
+
+router.post('/', authMiddleware, requirePermission('content.write'), upload.single('file'), async (req, res, next) => {
   if (!req.file) return res.status(400).json({ error: '未選擇檔案' });
   const sub = getSafeSubdir(req.query.dir);
-  const url = `/uploads/${sub}/${req.file.filename}`;
-  res.json({ url, filename: req.file.filename, size: req.file.size });
+  try {
+    res.json(await storeFile(req.file, sub));
+  } catch (error) {
+    next(error);
+  }
 });
 
 // 多文件上传
-router.post('/multiple', authMiddleware, requirePermission('content.write'), upload.array('files', 10), (req, res) => {
+router.post('/multiple', authMiddleware, requirePermission('content.write'), upload.array('files', 10), async (req, res, next) => {
   if (!req.files?.length) return res.status(400).json({ error: '未選擇檔案' });
   const sub = getSafeSubdir(req.query.dir);
-  const results = req.files.map(f => ({
-    url: `/uploads/${sub}/${f.filename}`,
-    filename: f.filename,
-    size: f.size,
-  }));
-  res.json(results);
+  try {
+    res.json(await Promise.all(req.files.map((file) => storeFile(file, sub))));
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.use((err, req, res, next) => {
   if (err?.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: '檔案大小不可超過 5MB' });
   if (err?.message === '不支援的檔案格式') return res.status(400).json({ error: err.message });
+  if (getStorageSettings(getDb()).enabled) {
+    console.error('legacy OSS upload failed:', err?.code || err?.name || 'unknown');
+    return res.status(502).json({ error: 'OSS 上傳失敗，請檢查儲存設置' });
+  }
   next(err);
 });
 

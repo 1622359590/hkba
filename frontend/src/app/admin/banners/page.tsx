@@ -73,7 +73,7 @@ export default function BannersAdmin() {
           <div key={item.id} className="admin-content-row">
             {item.image_url && <img src={item.image_url} alt="" style={{ width: 96, height: 48, objectFit: 'cover', borderRadius: 8 }} />}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title_zh || item.title_en}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title_zh || item.title_en}</div>
               <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>{item.subtitle_zh || item.subtitle_en}</div>
             </div>
             <span style={badge(!!item.is_active)}>{item.is_active ? '啟用' : '停用'}</span>

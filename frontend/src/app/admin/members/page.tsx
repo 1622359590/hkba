@@ -66,7 +66,7 @@ export default function MembersAdmin() {
         {items.map(item => (
           <div key={item.id} className="admin-panel admin-member-card">
             {item.logo_url && <img src={item.logo_url} alt={item.name} className="admin-member-logo" />}
-            <div style={{ width: '100%', fontSize: 13, color: '#fff', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
+            <div style={{ width: '100%', fontSize: 13, color: 'var(--text-1)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
               <button type="button" onClick={() => { setEditing(item); setForm(item); setShowForm(true); }} className="admin-action">編輯</button>
               <button type="button" onClick={() => setDeleteTarget(item)} className="admin-action is-danger">刪除</button>

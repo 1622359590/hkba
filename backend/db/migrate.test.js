@@ -20,6 +20,8 @@ const ALL_MIGRATIONS = [
   '010_mutation_owner.sql',
   '011_about_partner_carousel.sql',
   '012_home_partner_carousel.sql',
+  '013_oss_storage_settings.sql',
+  '014_page_draft_snapshots.sql',
 ];
 
 const BASELINE_TABLES = [

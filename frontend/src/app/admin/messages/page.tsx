@@ -83,11 +83,11 @@ export default function MessagesAdmin() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 12 }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <h2 style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>{item.subject || '無主旨'}</h2>
+                  <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-1)' }}>{item.subject || '無主旨'}</h2>
                   {!item.is_read && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>未讀</span>}
                 </div>
                 <div style={{ fontSize: 12, color: '#71717a' }}>
-                  {item.name} · <a href={`mailto:${item.email}`} style={{ color: '#818cf8', textDecoration: 'none' }}>{item.email}</a>
+                  {item.name} · <a href={`mailto:${item.email}`} style={{ color: 'var(--cyan)', textDecoration: 'none' }}>{item.email}</a>
                   {item.created_at && <> · {new Date(item.created_at).toLocaleString('zh-HK')}</>}
                 </div>
               </div>

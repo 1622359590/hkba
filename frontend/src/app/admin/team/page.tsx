@@ -60,9 +60,10 @@ export default function TeamAdmin() {
             <FormField label="分組"><Select value={form.group_name} onChange={v => setForm(f => ({...f, group_name: v}))} options={groups} /></FormField>
             <FormField label="排序"><Input type="number" value={String(form.sort_order)} onChange={v => setForm(f => ({...f, sort_order: +v}))} /></FormField>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <FormField label="Facebook"><Input value={form.social_facebook} onChange={v => setForm(f => ({...f, social_facebook: v}))} /></FormField>
-            <FormField label="LinkedIn"><Input value={form.social_linkedin} onChange={v => setForm(f => ({...f, social_linkedin: v}))} /></FormField>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+            <FormField label="Facebook"><Input value={form.social_facebook} onChange={v => setForm(f => ({...f, social_facebook: v}))} placeholder="https://facebook.com/..." /></FormField>
+            <FormField label="X / Twitter"><Input value={form.social_twitter} onChange={v => setForm(f => ({...f, social_twitter: v}))} placeholder="https://x.com/..." /></FormField>
+            <FormField label="LinkedIn"><Input value={form.social_linkedin} onChange={v => setForm(f => ({...f, social_linkedin: v}))} placeholder="https://linkedin.com/in/..." /></FormField>
           </div>
           <Toggle checked={!!form.is_active} onChange={v => setForm(f => ({...f, is_active: v ? 1 : 0}))} label="啟用" />
           <ActionButton type="button" onClick={handleSave} pending={saving} style={{ fontSize: 13, marginTop: 12 }}>保存</ActionButton>
@@ -75,7 +76,7 @@ export default function TeamAdmin() {
           <div key={item.id} className="admin-content-row">
             {item.avatar_url && <img src={item.avatar_url} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }} />}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{item.name_zh || item.name_en}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-1)' }}>{item.name_zh || item.name_en}</div>
               <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>{item.title_zh || item.title_en} · {groups.find(g => g.value === item.group_name)?.label || item.group_name}</div>
             </div>
             <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: item.is_active ? 'rgba(34,197,94,0.1)' : 'rgba(113,113,122,0.1)', color: item.is_active ? '#22c55e' : '#71717a' }}>{item.is_active ? '啟用' : '停用'}</span>

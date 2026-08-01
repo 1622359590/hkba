@@ -7,7 +7,7 @@ const path = require('path');
 process.env.HKBA_UPLOADS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'hkba-media-store-'));
 
 const { imageSize } = require('./imageSize');
-const { sanitizeSvg, storeUpload, MediaRejected, uploadsRoot } = require('./mediaStore');
+const { prepareUpload, sanitizeSvg, storeUpload, MediaRejected, uploadsRoot } = require('./mediaStore');
 
 test.after(() => {
   fs.rmSync(process.env.HKBA_UPLOADS_DIR, { recursive: true, force: true });
@@ -87,6 +87,13 @@ test('storeUpload validates, sanitizes, hashes and persists', () => {
   assert.equal(svg.mimeType, 'image/svg+xml');
   const saved = fs.readFileSync(path.join(uploadsRoot(), svg.storageKey), 'utf8');
   assert.ok(!/script|onload/i.test(saved));
+});
+
+test('prepareUpload validates media without writing to local disk', () => {
+  const prepared = prepareUpload({ buffer: pngBuffer(20, 10), originalFilename: 'oss.png' });
+  assert.equal(prepared.mimeType, 'image/png');
+  assert.ok(Buffer.isBuffer(prepared.content));
+  assert.equal(fs.existsSync(path.join(uploadsRoot(), prepared.storageKey)), false);
 });
 
 test('storeUpload rejects unknown types, empty files and oversize images', () => {

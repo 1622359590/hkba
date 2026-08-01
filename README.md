@@ -33,9 +33,9 @@ npm install
 Backend defaults:
 
 ```dotenv
-PORT=37900
+PORT=5002
 JWT_SECRET=replace-with-at-least-32-random-characters
-ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+ALLOWED_ORIGINS=http://localhost:5001,http://127.0.0.1:5001
 ```
 
 ## Development
@@ -47,7 +47,7 @@ cd backend
 npm run dev
 ```
 
-The backend listens on `http://localhost:37900`.
+The backend listens on `http://localhost:5002`.
 
 Start the frontend:
 
@@ -56,9 +56,9 @@ cd frontend
 npm run dev
 ```
 
-The frontend listens on `http://localhost:3000`.
+The frontend listens on `http://localhost:5001`.
 
-Browser API and uploaded-media requests use the same origin. Next.js forwards `/api/*` and `/uploads/*` internally to the backend on `127.0.0.1:37900`, so the frontend needs no environment file.
+Browser API and uploaded-media requests use the same origin. Next.js forwards `/api/*` and `/uploads/*` internally to the backend on `127.0.0.1:5002`, so the frontend needs no environment file.
 
 `npm run dev` uses Next.js with Webpack for local development. On the current macOS/Node setup, Next.js 16's default Turbopack dev server can stall while compiling `/` and emit noisy `MallocStackLogging` messages. To test Turbopack explicitly, run:
 
@@ -128,7 +128,7 @@ closeDatabase();
 NODE
 ```
 
-The two count pairs must be identical. A healthy backend responds at `http://localhost:37900/api/health` with a JSON object whose `status` is `ok`.
+The two count pairs must be identical. A healthy backend responds at `http://localhost:5002/api/health` with a JSON object whose `status` is `ok`.
 
 ## Routes
 
@@ -160,10 +160,10 @@ Admin pages:
 
 For the current Phase 1 app:
 
-- Run the backend with PM2 or another process manager on port `37900`.
-- Run the frontend with `npm run build` and `npm start` on port `3000`.
+- Run the backend with PM2 or another process manager on port `5002`.
+- Run the frontend with `npm run build` and `npm start` on port `5001`.
 - Put Nginx in front of the frontend only; Next.js proxies API and upload traffic internally.
-- Keep port `37900` private. `ALLOWED_ORIGINS` remains available for additional explicit origins.
+- Keep port `5002` private. `ALLOWED_ORIGINS` remains available for additional explicit origins.
 - Keep uploads backed up if using local disk storage.
 
 GitHub Actions auto-deploy for a Baota server is documented in `docs/BAOTA_AUTO_DEPLOY.md`.

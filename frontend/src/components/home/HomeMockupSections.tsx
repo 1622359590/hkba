@@ -46,8 +46,14 @@ const features = [
   },
 ];
 
-export function HomeHero() {
-  const { t } = useLang();
+type HomeSectionProps = {
+  forceVisible?: boolean;
+  langOverride?: 'zh' | 'en';
+};
+
+export function HomeHero({ forceVisible = false, langOverride }: HomeSectionProps = {}) {
+  const language = useLang();
+  const t = (zh: string, en: string) => (langOverride ?? language.lang) === 'en' ? en : zh;
 
   const moveGlassLight = (event: React.PointerEvent<HTMLDivElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -63,7 +69,7 @@ export function HomeHero() {
   };
 
   return (
-    <section className="hero">
+    <section className={`hero${forceVisible ? ' visible' : ''}`}>
       <div className="hero-bg" aria-hidden="true" />
       <div className="hero-content">
         <div className="hero-glass" onPointerMove={moveGlassLight} onPointerLeave={resetGlassLight}>
@@ -96,8 +102,10 @@ export function HomeHero() {
   );
 }
 
-export function HomeMission() {
-  const { lang, t } = useLang();
+export function HomeMission({ forceVisible = false, langOverride }: HomeSectionProps = {}) {
+  const language = useLang();
+  const lang = langOverride ?? language.lang;
+  const t = (zh: string, en: string) => lang === 'en' ? en : zh;
 
   return (
     <section className="mission">
@@ -108,7 +116,7 @@ export function HomeMission() {
       </p>
       <div className="feature-grid">
         {features.map(feature => (
-          <Link href={feature.href} className="feature-card" key={feature.titleEn}>
+          <Link href={feature.href} className={`feature-card${forceVisible ? ' visible' : ''}`} key={feature.titleEn}>
             <div className="feature-card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">{feature.icon}</svg>
             </div>

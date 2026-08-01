@@ -7,11 +7,11 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/seo';
 
-const API_INTERNAL = process.env.HKBA_API_INTERNAL || 'http://127.0.0.1:37900';
+const API_INTERNAL = process.env.HKBA_API_INTERNAL || 'http://127.0.0.1:5002';
 
 export const revalidate = 3600;
 
-const STATIC_ROUTES = ['/', '/about', '/news', '/events', '/members', '/team', '/contact'];
+const STATIC_ROUTES = ['/', '/about', '/news', '/events', '/members', '/join', '/team', '/contact'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = STATIC_ROUTES.map((path) => ({

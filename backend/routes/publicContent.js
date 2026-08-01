@@ -20,8 +20,9 @@ const { getDb } = require('../db/init');
 const { requestContext } = require('../lib/respond');
 const registry = require('../components/registry');
 const { extractMediaIds } = require('../lib/mediaReferences');
+const { mediaAssetUrl } = require('../lib/mediaAssetUrl');
 const { loadBlocks } = require('../lib/drafts');
-const { queryPublishedNews, getPublishedNewsBySlug, listPublishedYears } = require('../lib/newsQuery');
+const { queryPublishedNews, queryPublishedNewsByIds, getPublishedNewsBySlug, listPublishedYears } = require('../lib/newsQuery');
 
 router.use(requestContext);
 router.use((req, res, next) => {
@@ -56,11 +57,11 @@ function mediaMapFor(conn, parsedBlocks, extraIds = []) {
   if (!ids.size) return {};
   const list = [...ids];
   const rows = conn
-    .prepare(`SELECT id, storage_key, alt_zh, alt_en FROM media_assets WHERE status = 'active' AND id IN (${list.map(() => '?').join(',')})`)
+    .prepare(`SELECT id, storage_key, public_url, alt_zh, alt_en FROM media_assets WHERE status = 'active' AND id IN (${list.map(() => '?').join(',')})`)
     .all(...list);
   const map = {};
   for (const row of rows) {
-    map[row.id] = { url: `/uploads/${row.storage_key}`, altZh: row.alt_zh || '', altEn: row.alt_en || '' };
+    map[row.id] = { url: mediaAssetUrl(row), altZh: row.alt_zh || '', altEn: row.alt_en || '' };
   }
   return map;
 }
@@ -81,6 +82,24 @@ function taxonomyFor(conn, newsId) {
     )
     .all(newsId);
   return { categories, tags };
+}
+
+function newsListItemJson(conn, item) {
+  const cover = item.cover_media_id
+    ? conn.prepare("SELECT storage_key, public_url, alt_zh, alt_en FROM media_assets WHERE id = ? AND status = 'active'").get(item.cover_media_id)
+    : null;
+  return {
+    id: item.id,
+    slug: item.slug,
+    titleZh: item.title_zh,
+    titleEn: item.title_en,
+    summaryZh: item.summary_zh,
+    summaryEn: item.summary_en,
+    year: item.effective_year,
+    publishedAt: item.published_at,
+    cover: cover ? { url: mediaAssetUrl(cover), altZh: cover.alt_zh || '', altEn: cover.alt_en || '' } : null,
+    ...taxonomyFor(conn, item.id),
+  };
 }
 
 // ---------- pages ----------
@@ -121,23 +140,7 @@ router.get('/news', (req, res) => {
     page,
     pageSize,
   });
-  const items = result.items.map((item) => {
-    const cover = item.cover_media_id
-      ? conn.prepare("SELECT storage_key, alt_zh, alt_en FROM media_assets WHERE id = ? AND status = 'active'").get(item.cover_media_id)
-      : null;
-    return {
-      id: item.id,
-      slug: item.slug,
-      titleZh: item.title_zh,
-      titleEn: item.title_en,
-      summaryZh: item.summary_zh,
-      summaryEn: item.summary_en,
-      year: item.effective_year,
-      publishedAt: item.published_at,
-      cover: cover ? { url: `/uploads/${cover.storage_key}`, altZh: cover.alt_zh || '', altEn: cover.alt_en || '' } : null,
-      ...taxonomyFor(conn, item.id),
-    };
-  });
+  const items = result.items.map((item) => newsListItemJson(conn, item));
   res.ok({ items, total: result.total, page: result.page, pageSize: result.pageSize });
 });
 
@@ -155,6 +158,13 @@ router.get('/news/categories', (req, res) => {
        FROM news_categories c WHERE c.is_active = 1 ORDER BY c.sort_order, c.created_at`
     )
     .all();
+  res.ok({ items });
+});
+
+router.get('/news/by-ids', (req, res) => {
+  const conn = getDb();
+  const ids = String(req.query.ids || '').split(',');
+  const items = queryPublishedNewsByIds(conn, ids).map((item) => newsListItemJson(conn, item));
   res.ok({ items });
 });
 
@@ -260,13 +270,23 @@ router.get('/association', (req, res) => {
        FROM milestones WHERE is_active = 1 ORDER BY sort_order, id`
     )
     .all();
+  const events = conn
+    .prepare(
+      `SELECT id, title_zh AS titleZh, title_en AS titleEn,
+              description_zh AS descriptionZh, description_en AS descriptionEn,
+              event_date AS eventDate, end_date AS endDate,
+              location_zh AS locationZh, location_en AS locationEn,
+              cover_image AS coverUrl, registration_url AS registrationUrl
+       FROM events WHERE is_published = 1 ORDER BY event_date DESC, id DESC`
+    )
+    .all();
   const contact = {};
   for (const row of conn.prepare('SELECT key, value FROM contact_info').all()) {
     contact[row.key] = row.value;
   }
   // No structured resources table exists yet; the renderer shows a designed
   // empty state for association.resources.
-  res.ok({ partners, people, milestones, contact, resources: [] });
+  res.ok({ partners, people, milestones, events, contact, resources: [] });
 });
 
 module.exports = router;
