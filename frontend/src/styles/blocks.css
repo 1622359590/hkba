@@ -190,6 +190,52 @@
 .hk-partner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
 .hk-partner-grid--cards { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
 .hk-partner-carousel .partner-carousel__item { flex-basis: 170px; }
+.hk-partner-carousel {
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.72);
+  border-radius: 12px;
+  background: #f7f8fa;
+}
+
+.hk-partner-carousel::before {
+  background: linear-gradient(90deg, #f7f8fa 20%, rgba(247, 248, 250, 0));
+}
+
+.hk-partner-carousel::after {
+  background: linear-gradient(270deg, #f7f8fa 20%, rgba(247, 248, 250, 0));
+}
+
+.hk-partner-carousel .partner-carousel__viewport {
+  padding-block: 12px;
+}
+
+.hk-partner-carousel .hk-partner__tile {
+  height: 72px;
+  padding: 14px 24px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.hk-partner-carousel .hk-partner:hover .hk-partner__tile {
+  border-color: transparent;
+  background: transparent;
+}
+
+.hk-partner-carousel .hk-partner__initial {
+  color: #334155;
+}
+
+@media (max-width: 640px) {
+  .hk-partner-carousel .partner-carousel__viewport {
+    padding-block: 8px;
+  }
+
+  .hk-partner-carousel .hk-partner__tile {
+    height: 64px;
+    padding-inline: 18px;
+  }
+}
 .hk-partner-carousel .hk-partner { height: 100%; }
 .hk-partner {
   display: block;
