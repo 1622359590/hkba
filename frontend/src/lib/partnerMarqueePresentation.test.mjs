@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const css = readFileSync(new URL('../styles/blocks.css', import.meta.url), 'utf8');
 const aboutPage = readFileSync(new URL('../components/pages/AboutPageClient.tsx', import.meta.url), 'utf8');
+const homePage = readFileSync(new URL('../components/HomePageClient.tsx', import.meta.url), 'utf8');
 
 function ruleBody(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -46,4 +47,10 @@ test('legacy About fallback uses the same white strip and cardless partner tiles
   assert.match(aboutPage, /className="hk-partner"/);
   assert.match(aboutPage, /className="hk-partner__tile"/);
   assert.doesNotMatch(aboutPage, /member-logo-card/);
+});
+
+test('homepage uses the shared carousel instead of a wrapping partner list', () => {
+  assert.match(homePage, /<PartnerCarousel/);
+  assert.match(homePage, /className="home-partner-carousel"/);
+  assert.doesNotMatch(homePage, /flexWrap:\s*'wrap'[\s\S]*partners\.map/);
 });

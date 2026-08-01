@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/Feedback';
 import PublicPageSwitch from '@/components/PublicPageSwitch';
 import GlowCard from '@/components/ui/GlowCard';
 import ParallaxSection from '@/components/ui/ParallaxSection';
+import PartnerCarousel from '@/components/ui/PartnerCarousel';
 import { HomeHero, HomeMission } from '@/components/home/HomeMockupSections';
 
 /* ═══ Shared Styles ═══ */
@@ -229,30 +230,47 @@ export default function Home() {
               <div className="section-label">{t('合作夥伴', 'Partners')}</div>
               <h2 className="section-title">{t('攜手共建生態', 'Building Together')}</h2>
             </FadeIn>
-            {partners.length > 0 ? <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20 }}>
-              {partners.map((p, i) => {
-                const href = p.website_url || '/members';
-                const partnerName = isPlaceholderPartnerName(p.name) ? t('合作夥伴', 'Partner Organization') : p.name;
-                const card = (
-                  <div className="partner-card">
-                    <img className="partner-logo" src={imgUrl(p.logo_url)} alt={partnerName} />
-                  </div>
-                );
-                return (
-                  <FadeIn key={p.id} delay={i * 0.04}>
-                    {p.website_url ? (
-                      <a href={href} target="_blank" rel="noopener noreferrer" className="partner-link" aria-label={`${partnerName} website`}>
-                        {card}
-                      </a>
-                    ) : (
-                      <Link href={href} className="partner-link" aria-label={`${partnerName} member profile`}>
-                        {card}
-                      </Link>
-                    )}
-                  </FadeIn>
-                );
-              })}
-            </div> : <EmptyState title={t('合作夥伴資料正在整理中', 'Partner directory is being prepared')} description={t('歡迎聯絡協會了解合作方式。', 'Contact HKBA to learn about partnership opportunities.')} action={<Link href="/contact" className="btn-secondary">{t('聯絡我們', 'Contact HKBA')}</Link>} />}
+            {partners.length > 0 ? (
+              <PartnerCarousel
+                items={partners}
+                ariaLabel={t('合作夥伴', 'Partners')}
+                autoPlay
+                speed="slow"
+                direction="left"
+                pauseOnHover
+                className="home-partner-carousel"
+                renderItem={(partner, duplicate) => {
+                  const href = partner.website_url || '/members';
+                  const partnerName = isPlaceholderPartnerName(partner.name) ? t('合作夥伴', 'Partner Organization') : partner.name;
+                  const card = (
+                    <div className="partner-card">
+                      <img className="partner-logo" src={imgUrl(partner.logo_url)} alt={duplicate ? '' : partnerName} />
+                    </div>
+                  );
+                  return partner.website_url ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="partner-link"
+                      aria-label={duplicate ? undefined : `${partnerName} website`}
+                      tabIndex={duplicate ? -1 : undefined}
+                    >
+                      {card}
+                    </a>
+                  ) : (
+                    <Link
+                      href={href}
+                      className="partner-link"
+                      aria-label={duplicate ? undefined : `${partnerName} member profile`}
+                      tabIndex={duplicate ? -1 : undefined}
+                    >
+                      {card}
+                    </Link>
+                  );
+                }}
+              />
+            ) : <EmptyState title={t('合作夥伴資料正在整理中', 'Partner directory is being prepared')} description={t('歡迎聯絡協會了解合作方式。', 'Contact HKBA to learn about partnership opportunities.')} action={<Link href="/contact" className="btn-secondary">{t('聯絡我們', 'Contact HKBA')}</Link>} />}
           </div>
         </section>
       )}
