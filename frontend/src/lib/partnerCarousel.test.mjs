@@ -34,7 +34,7 @@ test('partner carousel settings use safe defaults and reject invalid values', ()
 });
 
 test('partner carousel speeds remain deliberately slow', () => {
-  assert.equal(partnerCarouselPixelsPerSecond('slow'), 18);
+  assert.equal(partnerCarouselPixelsPerSecond('slow'), 28);
   assert.equal(partnerCarouselPixelsPerSecond('normal'), 30);
   assert.equal(partnerCarouselPixelsPerSecond('fast'), 46);
 });

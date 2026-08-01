@@ -1,4 +1,4 @@
-const SPEEDS = Object.freeze({ slow: 18, normal: 30, fast: 46 });
+const SPEEDS = Object.freeze({ slow: 28, normal: 30, fast: 46 });
 
 /** @typedef {'slow' | 'normal' | 'fast'} PartnerCarouselSpeed */
 /** @typedef {'left' | 'right'} PartnerCarouselDirection */
