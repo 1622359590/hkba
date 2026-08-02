@@ -63,3 +63,20 @@ Manual browser verification will cover typing multiple Chinese characters contin
 ## Scope
 
 No API, database, public renderer, bilingual model, page schema, or Studio canvas behavior will change. This work is limited to the reusable drawer focus mechanism and the Studio rich-text property control.
+
+## Unified Property Controls
+
+The same interaction system applies to every schema-generated property field, not only rich text:
+
+- short strings use a 42px single-line input with character count when a maximum is defined;
+- long non-HTML strings use a resizable plain textarea;
+- integers and enums retain native number/select semantics with the shared focus treatment;
+- booleans use a labelled switch with explicit enabled/disabled copy;
+- media references use one drag-and-drop upload target with media-library and removal actions;
+- nested required objects remain expanded as a subtle compound field group;
+- nested optional objects stay collapsed while empty and expose an explicit enable switch;
+- repeated object arrays use individually removable rows and one clear add action.
+
+Top-level content and display settings are separated by headings and dividers instead of nested cards. Content sections identify the active language, while settings explain that they affect layout rather than editorial copy. These changes are presentation-only and continue to read every field from the registry schema.
+
+Direct media drops use the existing authenticated `/api/admin/media/uploads` route and write the returned media asset ID through the same field `onChange` callback. Supported formats and limits match the backend media pipeline: JPEG, PNG, WebP, AVIF and SVG up to 15MB; PDF up to 30MB.

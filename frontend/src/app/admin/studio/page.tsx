@@ -975,7 +975,7 @@ function StudioInner() {
         title={selectedDefinition ? selectedDefinition.name.zh : '屬性'}
         subtitle={selectedBlock ? selectedBlock.component_type : '未選中組件'}
         onClose={() => setRightPane(null)}
-        width={400}
+        width={460}
       >
         {selectedBlock && selectedDefinition ? (
           <PropertyForm definition={selectedDefinition} block={selectedBlock} lang={lang} people={associationData?.people || []} onChange={(scope, key, value) => editBlock(selectedBlock.id, scope, key, value)} onPickMedia={openMediaPicker} />

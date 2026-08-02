@@ -7,6 +7,9 @@
 // writes through onChange; the studio page owns debounce + persistence.
 
 import { AssocPerson, RenderBlock } from '@/components/blocks/BlockRenderer';
+import MediaField from '@/components/admin/studio/MediaField';
+import RichTextEditor from '@/components/admin/studio/RichTextEditor';
+import { useEffect, useState } from 'react';
 
 export type FieldDef = {
   type: 'string' | 'integer' | 'enum' | 'boolean' | 'array' | 'object';
@@ -126,13 +129,85 @@ function BoardMemberSelector({
   );
 }
 
+function hasObjectValue(record: Record<string, unknown>): boolean {
+  return Object.values(record).some((entry) => {
+    if (typeof entry === 'string') return entry.trim().length > 0;
+    if (Array.isArray(entry)) return entry.length > 0;
+    return entry !== undefined && entry !== null && entry !== false && entry !== '';
+  });
+}
+
+function ObjectField({
+  componentType,
+  fieldKey,
+  def,
+  record,
+  onChange,
+  onPickMedia,
+}: {
+  componentType: string;
+  fieldKey: string;
+  def: FieldDef;
+  record: Record<string, unknown>;
+  onChange: (value: unknown) => void;
+  onPickMedia: (apply: (mediaId: string | null) => void) => void;
+}) {
+  const fields = Object.entries(def.fields || {});
+  const optional = fields.length > 0 && fields.every(([, child]) => !child.required);
+  const populated = hasObjectValue(record);
+  const [enabled, setEnabled] = useState(!optional || populated);
+
+  useEffect(() => {
+    if (populated) setEnabled(true);
+  }, [populated]);
+
+  const toggle = () => {
+    const next = !enabled;
+    setEnabled(next);
+    if (!next) {
+      onChange(Object.fromEntries(fields.map(([key, child]) => [key, defaultFor(child)])));
+    }
+  };
+
+  return (
+    <div className="hk-field hk-object-field">
+      <div className="hk-object-field__head">
+        <div>
+          <span className="hk-field__label">{def.label || fieldKey}</span>
+          {optional ? <small>{enabled ? '已啟用' : '需要時再開啟'}</small> : null}
+        </div>
+        {optional ? (
+          <button type="button" className={`hk-switch${enabled ? ' is-on' : ''}`} role="switch" aria-checked={enabled} onClick={toggle} aria-label={`${enabled ? '停用' : '啟用'}${def.label || fieldKey}`}><span /></button>
+        ) : null}
+      </div>
+      {enabled ? (
+        <div className="hk-form__compound">
+          {fields.map(([subKey, subDef]) => (
+            <FieldInput
+              key={subKey}
+              componentType={componentType}
+              fieldKey={subKey}
+              def={subDef}
+              value={record[subKey]}
+              onChange={(next) => onChange({ ...record, [subKey]: next })}
+              onPickMedia={onPickMedia}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function FieldInput({
+  componentType,
   fieldKey,
   def,
   value,
   onChange,
   onPickMedia,
 }: {
+  componentType: string;
   fieldKey: string;
   def: FieldDef;
   value: unknown;
@@ -140,37 +215,22 @@ function FieldInput({
   onPickMedia: (apply: (mediaId: string | null) => void) => void;
 }) {
   const label = (
-    <span className="hk-field__label">
-      {def.label || fieldKey}
-      {def.required ? <small>必填</small> : null}
-    </span>
+    <span className="hk-field__label">{def.label || fieldKey}{def.required ? <small>必填</small> : null}</span>
   );
 
   if (def.media) {
     const current = typeof value === 'string' ? value : '';
     return (
-      <div className="hk-field">
-        {label}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input className="hk-input" value={current} readOnly placeholder="未選擇媒體" style={{ flex: 1, minWidth: 0 }} />
-          <button type="button" className="btn-secondary" style={{ padding: '8px 12px', fontSize: 12, whiteSpace: 'nowrap' }} onClick={() => onPickMedia((id) => onChange(id || ''))}>
-            選擇
-          </button>
-          {current ? (
-            <button type="button" className="btn-secondary" style={{ padding: '8px 10px', fontSize: 12 }} onClick={() => onChange('')} aria-label="清除媒體">
-              ✕
-            </button>
-          ) : null}
-        </div>
-      </div>
+      <MediaField value={current} onChange={onChange} label={def.label || fieldKey} required={def.required} onPickMedia={onPickMedia} />
     );
   }
 
   if (def.type === 'boolean') {
     return (
-      <label className="hk-field" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+      <label className="hk-toggle-field">
+        <span><strong>{def.label || fieldKey}</strong><small>{Boolean(value) ? '已啟用' : '已停用'}</small></span>
         <input type="checkbox" checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />
-        <span className="hk-field__label">{def.label || fieldKey}</span>
+        <i aria-hidden="true" />
       </label>
     );
   }
@@ -178,7 +238,7 @@ function FieldInput({
   if (def.type === 'integer') {
     return (
       <div className="hk-field">
-        {label}
+        <div className="hk-field__head">{label}</div>
         <input
           className="hk-input"
           type="number"
@@ -194,7 +254,7 @@ function FieldInput({
   if (def.type === 'enum') {
     return (
       <div className="hk-field">
-        {label}
+        <div className="hk-field__head">{label}</div>
         <select className="hk-select" value={String(value ?? def.default ?? '')} onChange={(event) => onChange(event.target.value)}>
           {(def.values || []).map((option) => (
             <option key={option} value={option}>
@@ -208,23 +268,7 @@ function FieldInput({
 
   if (def.type === 'object') {
     const record = (value || {}) as Record<string, unknown>;
-    return (
-      <div className="hk-field">
-        {label}
-        <div className="hk-form__group">
-          {Object.entries(def.fields || {}).map(([subKey, subDef]) => (
-            <FieldInput
-              key={subKey}
-              fieldKey={subKey}
-              def={subDef}
-              value={record[subKey]}
-              onChange={(next) => onChange({ ...record, [subKey]: next })}
-              onPickMedia={onPickMedia}
-            />
-          ))}
-        </div>
-      </div>
-    );
+    return <ObjectField componentType={componentType} fieldKey={fieldKey} def={def} record={record} onChange={onChange} onPickMedia={onPickMedia} />;
   }
 
   if (def.type === 'array') {
@@ -232,9 +276,9 @@ function FieldInput({
     if (def.item?.type === 'object') {
       return (
         <div className="hk-field">
-          {label}
+          <div className="hk-field__head">{label}<span className="hk-field__meta">{items.length} 項</span></div>
           {items.map((item, index) => (
-            <div className="hk-form__group" key={index}>
+            <div className="hk-form__repeat" key={index}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span className="hk-form__group-title">#{index + 1}</span>
                 <button
@@ -249,6 +293,7 @@ function FieldInput({
               {Object.entries(def.item?.fields || {}).map(([subKey, subDef]) => (
                 <FieldInput
                   key={subKey}
+                  componentType={componentType}
                   fieldKey={subKey}
                   def={subDef}
                   value={item[subKey]}
@@ -273,7 +318,7 @@ function FieldInput({
     const list = Array.isArray(value) ? (value as unknown[]).map(String) : [];
     return (
       <div className="hk-field">
-        {label}
+        <div className="hk-field__head">{label}<span className="hk-field__meta">以逗號分隔</span></div>
         <input
           className="hk-input"
           value={list.join(', ')}
@@ -294,9 +339,15 @@ function FieldInput({
   // Plain string (default).
   const text = typeof value === 'string' ? value : value == null ? '' : String(value);
   const long = (def.maxLength || 0) > 200;
+  if (componentType === 'content.rich-text' && fieldKey === 'html') {
+    return <RichTextEditor value={text} onChange={onChange} label={def.label || fieldKey} required={def.required} maxLength={def.maxLength} />;
+  }
   return (
     <div className="hk-field">
-      {label}
+      <div className="hk-field__head">
+        {label}
+        {def.maxLength ? <span className="hk-field__count">{text.length} / {def.maxLength}</span> : null}
+      </div>
       {long ? (
         <textarea className="hk-textarea" value={text} maxLength={def.maxLength} onChange={(event) => onChange(event.target.value)} />
       ) : (
@@ -334,16 +385,16 @@ export default function PropertyForm({
 
   return (
     <div className="hk-form">
-      <div className="hk-form__group">
-        <div className="hk-form__group-title">{lang === 'en' ? '內容（英文）' : '內容（中文）'}</div>
+      <section className="hk-form__section">
+        <div className="hk-form__section-head"><span>{lang === 'en' ? '內容' : '內容'}</span><small>{lang === 'en' ? 'English' : '繁體中文'}</small></div>
         {contentFields.length === 0 ? <div style={{ fontSize: 12, color: 'var(--text-3)' }}>此組件沒有內容欄位</div> : null}
         {contentFields.map(([key, def]) => (
-          <FieldInput key={`${block.id}:${scope}:${key}`} fieldKey={key} def={def} value={content[key]} onChange={(value) => onChange(scope, key, value)} onPickMedia={onPickMedia} />
+          <FieldInput key={`${block.id}:${scope}:${key}`} componentType={definition.type} fieldKey={key} def={def} value={content[key]} onChange={(value) => onChange(scope, key, value)} onPickMedia={onPickMedia} />
         ))}
-      </div>
+      </section>
       {settingsFields.length > 0 ? (
-        <div className="hk-form__group">
-          <div className="hk-form__group-title">設置</div>
+        <section className="hk-form__section">
+          <div className="hk-form__section-head"><span>顯示設定</span><small>只影響版面</small></div>
           {isBoard ? (
             <BoardMemberSelector
               people={people}
@@ -353,9 +404,9 @@ export default function PropertyForm({
             />
           ) : null}
           {settingsFields.map(([key, def]) => (
-            <FieldInput key={`${block.id}:settings:${key}`} fieldKey={key} def={def} value={settings[key]} onChange={(value) => onChange('settings', key, value)} onPickMedia={onPickMedia} />
+            <FieldInput key={`${block.id}:settings:${key}`} componentType={definition.type} fieldKey={key} def={def} value={settings[key]} onChange={(value) => onChange('settings', key, value)} onPickMedia={onPickMedia} />
           ))}
-        </div>
+        </section>
       ) : null}
     </div>
   );

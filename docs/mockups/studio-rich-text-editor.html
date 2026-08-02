@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HKBA 現代富文本編輯器原型</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --app-bg: #eef1f4;
+      --sidebar: #f8fafb;
+      --panel: #ffffff;
+      --panel-subtle: #f6f8fa;
+      --line: #dde3e9;
+      --line-strong: #cbd4de;
+      --ink: #152033;
+      --ink-2: #526174;
+      --ink-3: #8491a2;
+      --gold: #9a721c;
+      --gold-soft: #f7f0df;
+      --cyan: #0b7f8c;
+      --cyan-soft: #e8f5f6;
+      --success: #087a58;
+      --preview: #07101d;
+      --preview-line: #20344e;
+      --focus: 0 0 0 3px rgba(11, 127, 140, 0.13);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--app-bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, select { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 232px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      background: var(--sidebar);
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: #251b08;
+      background: #d9b656;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 14px 10px;
+    }
+
+    .nav-item {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      border-radius: 8px;
+      color: var(--ink-2);
+      font-size: 13px;
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      color: var(--ink-3);
+      font-size: 12px;
+    }
+
+    .nav-item.active {
+      color: #62470d;
+      background: var(--gold-soft);
+      font-weight: 680;
+    }
+
+    .nav-item.active .nav-icon { color: var(--gold); }
+
+    .workspace { min-width: 0; }
+
+    .topbar {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 0 28px;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .title-row { display: flex; align-items: center; gap: 12px; }
+    .topbar h1 { margin: 0; font-size: 20px; line-height: 1; }
+    .page-chip {
+      min-height: 26px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 9px;
+      border-radius: 999px;
+      color: var(--success);
+      background: #e9f7f1;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .save-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-right: 4px;
+      color: var(--ink-2);
+      font-size: 12px;
+    }
+    .save-dot { width: 7px; height: 7px; border-radius: 50%; background: #25a077; }
+
+    .ghost-button, .primary-button, .icon-button {
+      min-height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+    .ghost-button {
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 620;
+    }
+    .ghost-button:hover { background: var(--panel-subtle); }
+    .primary-button {
+      padding: 0 16px;
+      border: 1px solid #8c6818;
+      color: #fff;
+      background: #9a721c;
+      font-size: 13px;
+      font-weight: 680;
+    }
+    .primary-button:hover { background: #805e15; }
+    .ghost-button:active, .primary-button:active, .icon-button:active { transform: scale(.98); }
+
+    .canvas-wrap {
+      height: calc(100vh - 76px);
+      padding: 28px;
+      overflow: auto;
+    }
+
+    .canvas {
+      min-height: 760px;
+      padding: 44px;
+      color: #dce8f7;
+      background: var(--preview);
+      border: 1px solid var(--preview-line);
+      border-radius: 10px;
+    }
+
+    .canvas-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      color: #6f829a;
+      font-size: 11px;
+    }
+    .block-id { color: #67e8f9; }
+    .canvas-block {
+      max-width: 820px;
+      padding: 36px 38px;
+      background: #101b2d;
+      border: 1px solid #28415f;
+      border-radius: 10px;
+    }
+    .canvas-block h2 { margin: 0 0 12px; color: #e8edf5; font-size: 34px; line-height: 1.22; }
+    .canvas-block h3 { margin: 24px 0 10px; color: #e8edf5; font-size: 24px; }
+    .canvas-block p { max-width: 68ch; margin: 0 0 12px; color: #9babc0; line-height: 1.75; }
+    .canvas-block ul, .canvas-block ol { color: #9babc0; line-height: 1.75; }
+    .canvas-block a { color: #67e8f9; }
+
+    .backdrop {
+      position: fixed;
+      inset: 0 472px 0 232px;
+      z-index: 10;
+      background: rgba(22, 30, 42, 0.18);
+      backdrop-filter: blur(1.5px);
+      pointer-events: none;
+    }
+
+    .drawer {
+      position: fixed;
+      inset: 0 0 0 auto;
+      z-index: 20;
+      width: 472px;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
+      border-left: 1px solid var(--line-strong);
+      box-shadow: -8px 0 24px rgba(20, 31, 45, 0.08);
+    }
+
+    .drawer-head {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 18px 0 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .drawer-title { font-size: 15px; font-weight: 760; }
+    .drawer-subtitle { margin-top: 5px; color: var(--ink-3); font-size: 11px; }
+
+    .icon-button {
+      width: 40px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      background: transparent;
+      color: var(--ink-2);
+      font-size: 20px;
+    }
+    .icon-button:hover { background: var(--panel-subtle); }
+
+    .drawer-body {
+      flex: 1;
+      min-height: 0;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    .component-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      margin-bottom: 24px;
+      padding: 3px;
+      border-radius: 8px;
+      background: #eef2f5;
+    }
+    .component-switch button {
+      min-height: 36px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--ink-2);
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .component-switch button.is-active {
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(20, 31, 45, 0.09);
+    }
+    .property-panel[hidden] { display: none; }
+
+    .form-section + .form-section {
+      margin-top: 26px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .section-title { font-size: 13px; font-weight: 760; }
+    .section-note { color: var(--ink-3); font-size: 11px; }
+
+    .field + .field { margin-top: 17px; }
+    .field-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 7px;
+    }
+    .field-count { color: var(--ink-3); font-size: 10px; }
+    .input, .textarea, .select {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fff;
+      font: inherit;
+      font-size: 13px;
+      transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+    }
+    .input, .select { min-height: 42px; padding: 0 12px; }
+    .textarea { min-height: 88px; resize: vertical; padding: 10px 12px; line-height: 1.6; }
+    .input:hover, .textarea:hover, .select:hover { border-color: #aeb9c5; }
+    .input:focus, .textarea:focus, .select:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: var(--focus);
+    }
+    .input::placeholder, .textarea::placeholder { color: #97a3b2; }
+    .input-with-prefix { position: relative; }
+    .input-prefix {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      translate: 0 -50%;
+      color: var(--ink-3);
+      font-size: 12px;
+      pointer-events: none;
+    }
+    .input-with-prefix .input { padding-left: 34px; }
+
+    .media-dropzone {
+      min-height: 112px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border: 1px dashed #aebbc8;
+      border-radius: 9px;
+      background: #fafbfc;
+      cursor: pointer;
+      transition: border-color 150ms ease, background 150ms ease;
+    }
+    .media-dropzone:hover, .media-dropzone.is-dragging {
+      border-color: var(--cyan);
+      background: var(--cyan-soft);
+    }
+    .media-preview {
+      width: 74px;
+      height: 74px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 7px;
+      color: #6e7c8d;
+      background: #e9edf1;
+      font-size: 22px;
+    }
+    .media-copy { min-width: 0; flex: 1; }
+    .media-copy strong { display: block; font-size: 12px; }
+    .media-copy span { display: block; margin-top: 5px; color: var(--ink-3); font-size: 11px; line-height: 1.45; }
+    .media-action {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .compound {
+      margin-top: 10px;
+      padding: 14px;
+      border-radius: 9px;
+      background: var(--panel-subtle);
+    }
+    .compound .field + .field { margin-top: 13px; }
+
+    .toggle-row {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .toggle-copy strong { display: block; font-size: 12px; }
+    .toggle-copy span { display: block; margin-top: 4px; color: var(--ink-3); font-size: 10px; }
+    .switch {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      flex: 0 0 auto;
+      border: 0;
+      border-radius: 999px;
+      background: #ccd4dc;
+      cursor: pointer;
+      transition: background 150ms ease;
+    }
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(20, 31, 45, 0.2);
+      transition: transform 150ms ease;
+    }
+    .switch[aria-checked="true"] { background: var(--cyan); }
+    .switch[aria-checked="true"]::after { transform: translateX(16px); }
+
+    .range-row { display: grid; grid-template-columns: 1fr 58px; gap: 10px; align-items: center; }
+    .range { width: 100%; accent-color: var(--cyan); }
+    .number-box {
+      min-height: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: #fff;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .field-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .field-label { font-size: 13px; font-weight: 700; }
+    .required { margin-left: 4px; color: var(--gold); font-size: 11px; font-weight: 560; }
+    .language {
+      color: var(--ink-3);
+      font-size: 11px;
+    }
+
+    .editor-shell {
+      background: #fff;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+    .editor-shell:focus-within {
+      border-color: var(--cyan);
+      box-shadow: var(--focus);
+    }
+
+    .toolbar {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 6px;
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+    }
+    .tool, .format-select {
+      height: 34px;
+      flex: 0 0 auto;
+      border: 0;
+      border-radius: 6px;
+      color: #435167;
+      background: transparent;
+      cursor: pointer;
+    }
+    .tool {
+      min-width: 34px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 8px;
+      font-size: 13px;
+      font-weight: 620;
+    }
+    .tool:hover, .format-select:hover { background: #eef2f5; }
+    .tool.is-active { color: var(--cyan); background: var(--cyan-soft); }
+    .format-select { min-width: 88px; padding: 0 8px; font-size: 12px; }
+    .divider { width: 1px; height: 20px; flex: 0 0 auto; margin: 0 4px; background: var(--line); }
+
+    .editor {
+      min-height: 310px;
+      max-height: calc(100vh - 300px);
+      overflow: auto;
+      padding: 24px 22px;
+      color: #28364a;
+      font-size: 14px;
+      line-height: 1.75;
+      caret-color: var(--cyan);
+    }
+    .editor:focus { outline: none; }
+    .editor h2 { margin: 0 0 12px; color: var(--ink); font-size: 25px; line-height: 1.3; }
+    .editor h3 { margin: 22px 0 9px; color: var(--ink); font-size: 20px; }
+    .editor h4 { margin: 20px 0 8px; color: var(--ink); font-size: 16px; }
+    .editor p { margin: 0 0 12px; }
+    .editor ul, .editor ol { padding-left: 22px; }
+    .editor a { color: var(--cyan); }
+    .editor:empty::before { content: "輸入內容，或按 / 插入區塊"; color: #9aa6b5; }
+
+    .editor-foot {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-top: 1px solid var(--line);
+      color: var(--ink-3);
+      font-size: 11px;
+    }
+    .save-state { display: inline-flex; align-items: center; gap: 6px; color: var(--success); }
+    .save-state::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .editor-help {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 12px;
+      color: var(--ink-3);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+    .help-key {
+      min-width: 22px;
+      height: 22px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 5px;
+      color: var(--ink-2);
+      background: var(--panel-subtle);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .drawer-footer {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 18px 12px 22px;
+      border-top: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+    .drawer-footer-note { color: var(--ink-3); font-size: 11px; }
+
+    :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 76px minmax(0, 1fr); }
+      .brand { justify-content: center; padding: 0; }
+      .brand > span:last-child, .nav-item > span:last-child { display: none; }
+      .nav-item { justify-content: center; padding: 0; }
+      .backdrop { left: 76px; }
+    }
+    @media (max-width: 720px) {
+      body { overflow: auto; }
+      .app { display: block; }
+      .sidebar, .workspace, .backdrop { display: none; }
+      .drawer { position: static; width: 100%; min-height: 100vh; }
+      .drawer-body { padding: 18px 14px; }
+      .editor { min-height: 56vh; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar" aria-label="後台導覽">
+      <div class="brand"><span class="brand-mark">H</span><span>HKBA CMS</span></div>
+      <nav class="nav">
+        <div class="nav-item"><span class="nav-icon">⌂</span><span>儀表板</span></div>
+        <div class="nav-item"><span class="nav-icon">▤</span><span>新聞</span></div>
+        <div class="nav-item"><span class="nav-icon">□</span><span>活動</span></div>
+        <div class="nav-item"><span class="nav-icon">▧</span><span>頁面</span></div>
+        <div class="nav-item active"><span class="nav-icon">✎</span><span>工作室</span></div>
+        <div class="nav-item"><span class="nav-icon">▣</span><span>媒體庫</span></div>
+        <div class="nav-item"><span class="nav-icon">○</span><span>留言</span></div>
+      </nav>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div class="title-row"><h1>首頁</h1><span class="page-chip">已發佈</span></div>
+        <div class="top-actions">
+          <span class="save-indicator"><span class="save-dot"></span>草稿已儲存</span>
+          <button class="ghost-button" type="button">預覽</button>
+          <button class="primary-button" type="button">發佈</button>
+        </div>
+      </header>
+      <div class="canvas-wrap">
+        <div class="canvas">
+          <div class="canvas-meta"><span class="block-id">content.hero</span><span>點擊內容即可編輯</span></div>
+          <div class="canvas-block" id="canvasPreview">
+            <h2>香港區塊鏈協會 HKBA.club</h2>
+            <p>HongKongBlockchain.org</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <aside class="drawer" role="dialog" aria-label="富文本屬性">
+    <header class="drawer-head">
+      <div>
+        <div class="drawer-title" id="drawerTitle">編輯主視覺</div>
+        <div class="drawer-subtitle" id="drawerSubtitle">content.hero</div>
+      </div>
+      <button class="icon-button" type="button" aria-label="關閉面板" title="關閉">×</button>
+    </header>
+
+    <div class="drawer-body">
+      <div class="component-switch" aria-label="原型元件切換">
+        <button type="button" class="is-active" data-panel-target="hero">主視覺表單</button>
+        <button type="button" data-panel-target="rich">富文本表單</button>
+      </div>
+
+      <div class="property-panel" data-panel="hero">
+        <section class="form-section">
+          <div class="section-heading">
+            <span class="section-title">內容</span>
+            <span class="section-note">繁體中文</span>
+          </div>
+
+          <div class="field">
+            <div class="field-top">
+              <label class="field-label" for="heroTitle">標題<span class="required">必填</span></label>
+              <span class="field-count" id="titleCount">18 / 120</span>
+            </div>
+            <input class="input" id="heroTitle" value="香港區塊鏈協會 HKBA.club" maxlength="120">
+          </div>
+
+          <div class="field">
+            <div class="field-top">
+              <label class="field-label" for="heroSubtitle">副標題</label>
+              <span class="field-count" id="subtitleCount">22 / 300</span>
+            </div>
+            <textarea class="textarea" id="heroSubtitle" maxlength="300">HongKongBlockchain.org</textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-top">
+              <span class="field-label">背景媒體</span>
+              <span class="section-note">選填</span>
+            </div>
+            <div class="media-dropzone" id="mediaDropzone" tabindex="0" role="button" aria-label="拖放或選擇背景媒體">
+              <div class="media-preview">▧</div>
+              <div class="media-copy">
+                <strong>拖放圖片或影片到這裡</strong>
+                <span>JPG、PNG、WebP 或 MP4，最大 20 MB</span>
+              </div>
+              <button class="media-action" type="button">媒體庫</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-heading">
+            <span class="section-title">主要按鈕</span>
+            <span class="section-note">訪客主要操作</span>
+          </div>
+          <div class="compound">
+            <div class="field">
+              <div class="field-top"><label class="field-label" for="primaryLabel">按鈕文字<span class="required">必填</span></label></div>
+              <input class="input" id="primaryLabel" value="了解更多" maxlength="40">
+            </div>
+            <div class="field">
+              <div class="field-top"><label class="field-label" for="primaryUrl">連結<span class="required">必填</span></label></div>
+              <div class="input-with-prefix"><span class="input-prefix">↗</span><input class="input" id="primaryUrl" value="https://Link1.in/HKBA" inputmode="url"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="toggle-row">
+            <div class="toggle-copy">
+              <strong>次要按鈕</strong>
+              <span>需要第二個操作入口時再開啟</span>
+            </div>
+            <button class="switch" id="secondaryToggle" type="button" role="switch" aria-checked="false" aria-label="啟用次要按鈕"></button>
+          </div>
+          <div class="compound" id="secondaryFields" hidden>
+            <div class="field">
+              <div class="field-top"><label class="field-label" for="secondaryLabel">按鈕文字</label></div>
+              <input class="input" id="secondaryLabel" placeholder="例如：加入我們" maxlength="40">
+            </div>
+            <div class="field">
+              <div class="field-top"><label class="field-label" for="secondaryUrl">連結</label></div>
+              <div class="input-with-prefix"><span class="input-prefix">↗</span><input class="input" id="secondaryUrl" placeholder="https:// 或 /站內路徑" inputmode="url"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-heading">
+            <span class="section-title">顯示設定</span>
+            <span class="section-note">只影響版面</span>
+          </div>
+          <div class="field">
+            <div class="field-top"><label class="field-label" for="variant">版面變體</label></div>
+            <select class="select" id="variant">
+              <option>完整背景</option><option>靠左排列</option><option>置中排列</option><option>左右分欄</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="field-top"><label class="field-label" for="overlay">遮罩強度</label></div>
+            <div class="range-row">
+              <input class="range" id="overlay" type="range" min="0" max="100" value="40">
+              <output class="number-box" id="overlayValue">40%</output>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="property-panel" data-panel="rich" hidden>
+        <div class="field-heading">
+          <div class="field-label">內容<span class="required">必填</span></div>
+          <div class="language">繁體中文</div>
+        </div>
+
+        <div class="editor-shell">
+          <div class="toolbar" role="toolbar" aria-label="文字格式">
+            <select class="format-select" id="format" aria-label="段落格式">
+              <option value="p">正文</option><option value="h2">標題 2</option><option value="h3">標題 3</option><option value="h4">標題 4</option>
+            </select>
+            <span class="divider" aria-hidden="true"></span>
+            <button class="tool" type="button" data-command="bold" aria-label="粗體" title="粗體"><strong>B</strong></button>
+            <button class="tool" type="button" data-command="italic" aria-label="斜體" title="斜體"><em>I</em></button>
+            <button class="tool" type="button" id="linkButton" aria-label="加入連結" title="加入連結">↗</button>
+            <span class="divider" aria-hidden="true"></span>
+            <button class="tool" type="button" data-command="insertUnorderedList" aria-label="項目列表" title="項目列表">•≡</button>
+            <button class="tool" type="button" data-command="insertOrderedList" aria-label="編號列表" title="編號列表">1≡</button>
+            <span class="divider" aria-hidden="true"></span>
+            <button class="tool" type="button" data-command="undo" aria-label="復原" title="復原">↶</button>
+            <button class="tool" type="button" data-command="redo" aria-label="重做" title="重做">↷</button>
+          </div>
+          <div id="editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="富文本內容" spellcheck="true"><h2>成為會員</h2><p>加入香港區塊鏈協會，與業界精英共同推動區塊鏈技術發展。</p></div>
+          <div class="editor-foot"><span id="count">31 個字</span><span class="save-state" id="saveState">已儲存</span></div>
+        </div>
+        <div class="editor-help"><span class="help-key">/</span><span>在空白行輸入斜線，可快速插入標題、列表和連結。</span></div>
+      </div>
+    </div>
+
+    <footer class="drawer-footer">
+      <span class="drawer-footer-note">變更會自動儲存到草稿</span>
+      <button class="primary-button" type="button">完成</button>
+    </footer>
+  </aside>
+
+  <script>
+    const editor = document.querySelector('#editor');
+    const preview = document.querySelector('#canvasPreview');
+    const count = document.querySelector('#count');
+    const saveState = document.querySelector('#saveState');
+    const drawerTitle = document.querySelector('#drawerTitle');
+    const drawerSubtitle = document.querySelector('#drawerSubtitle');
+    const blockId = document.querySelector('.block-id');
+    const heroTitle = document.querySelector('#heroTitle');
+    const heroSubtitle = document.querySelector('#heroSubtitle');
+    let saveTimer;
+
+    function sync() {
+      preview.innerHTML = editor.innerHTML;
+      count.textContent = `${editor.innerText.trim().length} 個字`;
+      saveState.textContent = '儲存中';
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveState.textContent = '已儲存'; }, 420);
+    }
+
+    document.querySelectorAll('[data-command]').forEach((button) => {
+      button.addEventListener('mousedown', (event) => event.preventDefault());
+      button.addEventListener('click', () => {
+        document.execCommand(button.dataset.command, false);
+        editor.focus();
+        sync();
+      });
+    });
+
+    document.querySelector('#format').addEventListener('change', (event) => {
+      document.execCommand('formatBlock', false, event.target.value);
+      editor.focus();
+      sync();
+    });
+
+    document.querySelector('#linkButton').addEventListener('mousedown', (event) => event.preventDefault());
+    document.querySelector('#linkButton').addEventListener('click', () => {
+      const url = window.prompt('請輸入連結地址（https://…）');
+      if (!url) return editor.focus();
+      if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) {
+        window.alert('請輸入 https:// 開頭或站內 / 開頭的連結');
+        return editor.focus();
+      }
+      document.execCommand('createLink', false, url);
+      editor.focus();
+      sync();
+    });
+
+    editor.addEventListener('input', sync);
+    editor.addEventListener('paste', () => setTimeout(sync));
+
+    document.querySelectorAll('[data-panel-target]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const target = button.dataset.panelTarget;
+        document.querySelectorAll('[data-panel-target]').forEach((item) => item.classList.toggle('is-active', item === button));
+        document.querySelectorAll('[data-panel]').forEach((panel) => { panel.hidden = panel.dataset.panel !== target; });
+        const isHero = target === 'hero';
+        drawerTitle.textContent = isHero ? '編輯主視覺' : '編輯富文本';
+        drawerSubtitle.textContent = isHero ? 'content.hero' : 'content.rich-text';
+        blockId.textContent = isHero ? 'content.hero' : 'content.rich-text';
+        preview.innerHTML = isHero
+          ? `<h2>${heroTitle.value}</h2><p>${heroSubtitle.value}</p>`
+          : editor.innerHTML;
+      });
+    });
+
+    function syncHero() {
+      document.querySelector('#titleCount').textContent = `${heroTitle.value.length} / 120`;
+      document.querySelector('#subtitleCount').textContent = `${heroSubtitle.value.length} / 300`;
+      preview.innerHTML = `<h2>${heroTitle.value || '未命名主視覺'}</h2><p>${heroSubtitle.value}</p>`;
+    }
+    heroTitle.addEventListener('input', syncHero);
+    heroSubtitle.addEventListener('input', syncHero);
+
+    const secondaryToggle = document.querySelector('#secondaryToggle');
+    secondaryToggle.addEventListener('click', () => {
+      const checked = secondaryToggle.getAttribute('aria-checked') !== 'true';
+      secondaryToggle.setAttribute('aria-checked', String(checked));
+      document.querySelector('#secondaryFields').hidden = !checked;
+    });
+
+    const overlay = document.querySelector('#overlay');
+    overlay.addEventListener('input', () => { document.querySelector('#overlayValue').textContent = `${overlay.value}%`; });
+
+    const dropzone = document.querySelector('#mediaDropzone');
+    ['dragenter', 'dragover'].forEach((eventName) => dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.add('is-dragging');
+    }));
+    ['dragleave', 'drop'].forEach((eventName) => dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('is-dragging');
+    }));
+  </script>
+</body>
+</html>
