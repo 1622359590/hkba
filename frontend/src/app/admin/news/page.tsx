@@ -16,6 +16,7 @@ import Drawer from '@/components/admin/shell/Drawer';
 import SaveStatus, { SaveState } from '@/components/admin/shell/SaveStatus';
 import { ConfirmBar } from '@/components/admin/shell/ConfirmBar';
 import PropertyForm, { Definition } from '../studio/PropertyForm';
+import { createNewsSlug } from '@/lib/newsSlug.mjs';
 
 type NewsRow = {
   id: string;
@@ -278,8 +279,9 @@ export default function NewsCenterPage() {
   const createNews = useCallback(async () => {
     setActing(true);
     try {
+      const slug = meta.slug.trim();
       const data = await adminPostData<{ news: { id: string } }>('/api/admin/news', {
-        slug: meta.slug.trim(),
+        ...(slug ? { slug } : {}),
         titleZh: meta.titleZh,
         titleEn: meta.titleEn,
         summaryZh: meta.summaryZh,
@@ -382,7 +384,7 @@ export default function NewsCenterPage() {
         {banner ? <div style={{ padding: '9px 14px', marginBottom: 14, fontSize: 12.5, color: 'var(--warn)', background: 'rgba(240,140,90,0.08)', borderRadius: 10 }}>{banner}</div> : null}
         <div className="hk-form">
           <div className="hk-field">
-            <span className="hk-field__label">slug<small>必填，小寫字母數字連字符</small></span>
+            <span className="hk-field__label">slug<small>已自動生成，可修改；僅小寫字母、數字和連字符</small></span>
             <input className="hk-input" value={meta.slug} onChange={(event) => setMeta({ ...meta, slug: event.target.value })} placeholder="2026-annual-conference" />
           </div>
           <div className="hk-field">
@@ -397,7 +399,7 @@ export default function NewsCenterPage() {
             <span className="hk-field__label">摘要（中文）</span>
             <textarea className="hk-textarea" value={meta.summaryZh} onChange={(event) => setMeta({ ...meta, summaryZh: event.target.value })} />
           </div>
-          <button type="button" className="btn-accent" style={{ padding: '10px 18px', fontSize: 13 }} disabled={acting || !meta.slug.trim() || !meta.titleZh.trim()} onClick={createNews}>
+          <button type="button" className="btn-accent" style={{ padding: '10px 18px', fontSize: 13 }} disabled={acting || !meta.titleZh.trim()} onClick={createNews}>
             {acting ? '建立中…' : '建立並進入編輯器'}
           </button>
         </div>
@@ -654,7 +656,21 @@ export default function NewsCenterPage() {
           缺英文
         </label>
         <span style={{ flex: 1 }} />
-        <button type="button" className="btn-accent" style={{ padding: '9px 16px', fontSize: 13 }} onClick={() => { setMeta(EMPTY_META); setEditingId('new'); }}>
+        <button
+          type="button"
+          className="btn-accent"
+          style={{ padding: '9px 16px', fontSize: 13 }}
+          onClick={() => {
+            setMeta({
+              ...EMPTY_META,
+              slug: createNewsSlug(),
+              categoryIds: [],
+              tagIds: [],
+              seo: { ...EMPTY_META.seo },
+            });
+            setEditingId('new');
+          }}
+        >
           新建新聞
         </button>
       </div>
