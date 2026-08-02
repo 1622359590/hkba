@@ -10,6 +10,7 @@
 // surfaces the 422 check report as clickable problems.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { adminGetData, adminPostData, adminPatchData, adminDeleteData, adminRequestError } from '@/lib/adminApi';
 import BlockRenderer, { RenderBlock, MediaMap } from '@/components/blocks/BlockRenderer';
 import Drawer from '@/components/admin/shell/Drawer';
@@ -76,6 +77,8 @@ function toRenderBlock(block: any): RenderBlock {
 }
 
 export default function NewsCenterPage() {
+  const searchParams = useSearchParams();
+  const requestedNewsId = searchParams.get('id');
   // ---- list state ----
   const [rows, setRows] = useState<NewsRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -113,6 +116,7 @@ export default function NewsCenterPage() {
   const [acting, setActing] = useState(false);
 
   const revisionRef = useRef(0);
+  const openedIntentRef = useRef<string | null>(null);
 
   // ---- data loading ----
 
@@ -183,6 +187,12 @@ export default function NewsCenterPage() {
       setBanner(adminRequestError(error));
     }
   }, []);
+
+  useEffect(() => {
+    if (!requestedNewsId || openedIntentRef.current === requestedNewsId) return;
+    openedIntentRef.current = requestedNewsId;
+    void openEditor(requestedNewsId);
+  }, [openEditor, requestedNewsId]);
 
   // ---- editor mutations (local, saved explicitly) ----
 
