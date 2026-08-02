@@ -22,6 +22,7 @@ const ALL_MIGRATIONS = [
   '012_home_partner_carousel.sql',
   '013_oss_storage_settings.sql',
   '014_page_draft_snapshots.sql',
+  '015_restore_home_partner_carousel.sql',
 ];
 
 const BASELINE_TABLES = [
