@@ -6,8 +6,9 @@
 // arrays of objects (FAQ/stat items) and media reference pickers. Editing
 // writes through onChange; the studio page owns debounce + persistence.
 
-import { AssocPerson, RenderBlock } from '@/components/blocks/BlockRenderer';
+import { AssocGroup, AssocPerson, RenderBlock } from '@/components/blocks/BlockRenderer';
 import MediaField from '@/components/admin/studio/MediaField';
+import MemberRoleSelector from '@/components/admin/studio/MemberRoleSelector';
 import RichTextEditor from '@/components/admin/studio/RichTextEditor';
 import { useEffect, useState } from 'react';
 
@@ -52,7 +53,7 @@ function defaultFor(def: FieldDef): unknown {
   return '';
 }
 
-function BoardMemberSelector({
+function MemberSelector({
   people,
   lang,
   value,
@@ -364,6 +365,8 @@ export default function PropertyForm({
   onChange,
   onPickMedia,
   people = [],
+  groups = [],
+  contentFallback = {},
 }: {
   definition: Definition;
   block: RenderBlock;
@@ -371,16 +374,23 @@ export default function PropertyForm({
   onChange: (scope: 'contentZh' | 'contentEn' | 'settings', key: string, value: unknown) => void;
   onPickMedia: (apply: (mediaId: string | null) => void) => void;
   people?: AssocPerson[];
+  groups?: AssocGroup[];
+  contentFallback?: Record<string, unknown>;
 }) {
   const scope = lang === 'en' ? 'contentEn' : 'contentZh';
-  const content = block[scope] as Record<string, unknown>;
+  const content = { ...contentFallback, ...(block[scope] as Record<string, unknown>) };
   const settings = block.settings as Record<string, unknown>;
   const contentFields = Object.entries(definition.schema.content.fields);
-  const isBoard = definition.type === 'association.board';
-  const hasSelectedMembers = isBoard && Array.isArray(settings.selectedMemberIds) && settings.selectedMemberIds.length > 0;
+  const isPeopleComponent = definition.type === 'association.board' || definition.type === 'association.members';
+  const hasSelectedMembers = isPeopleComponent && Array.isArray(settings.selectedMemberIds) && settings.selectedMemberIds.length > 0;
   const automaticBoardFields = new Set(['term', 'roles', 'status', 'limit']);
+  const legacyMemberFields = new Set(['memberType', 'industry', 'letter']);
+  const managedMemberFields = new Set(['roles', 'roleOrder']);
   const settingsFields = Object.entries(definition.schema.settings.fields).filter(([key]) => (
-    (!isBoard || key !== 'selectedMemberIds') && (!hasSelectedMembers || !automaticBoardFields.has(key))
+    (!isPeopleComponent || key !== 'selectedMemberIds')
+    && (definition.type !== 'association.members' || !legacyMemberFields.has(key))
+    && (definition.type !== 'association.members' || !managedMemberFields.has(key))
+    && (!hasSelectedMembers || !automaticBoardFields.has(key))
   ));
 
   return (
@@ -395,12 +405,23 @@ export default function PropertyForm({
       {settingsFields.length > 0 ? (
         <section className="hk-form__section">
           <div className="hk-form__section-head"><span>顯示設定</span><small>只影響版面</small></div>
-          {isBoard ? (
-            <BoardMemberSelector
+          {isPeopleComponent ? (
+            <MemberSelector
               people={people}
               lang={lang}
               value={settings.selectedMemberIds}
               onChange={(value) => onChange('settings', 'selectedMemberIds', value)}
+            />
+          ) : null}
+          {definition.type === 'association.members' && !hasSelectedMembers ? (
+            <MemberRoleSelector
+              groups={groups}
+              selected={settings.roles}
+              order={settings.roleOrder}
+              onChange={(roles, roleOrder) => {
+                onChange('settings', 'roles', roles);
+                onChange('settings', 'roleOrder', roleOrder);
+              }}
             />
           ) : null}
           {settingsFields.map(([key, def]) => (

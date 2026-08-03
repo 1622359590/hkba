@@ -268,7 +268,7 @@ test('association endpoint serves structured partners, people, milestones, event
 
   const res = await publicGet('/association');
   assert.equal(res.status, 200);
-  const { partners, people, milestones, events, contact, resources } = res.body.data;
+  const { partners, people, groups, milestones, events, contact, resources } = res.body.data;
 
   const partner = partners.find((entry) => entry.name === 'Assoc Partner');
   assert.ok(partner);
@@ -283,6 +283,12 @@ test('association endpoint serves structured partners, people, milestones, event
   assert.equal(person.titleZh, '會長');
   assert.equal(person.avatarUrl, '/uploads/a.png');
   assert.equal(person.group, 'chairman');
+  assert.equal(person.sortOrder, 99);
+
+  assert.deepEqual(groups.slice(0, 5).map((entry) => entry.code), ['honorary_chairman', 'chairman', 'vice_chairman', 'committee', 'advisor']);
+  assert.deepEqual(groups.find((entry) => entry.code === 'chairman'), {
+    code: 'chairman', labelZh: '會長', labelEn: 'Chairman', sortOrder: 20, memberCount: 1,
+  });
 
   assert.ok(milestones.length >= 1);
   assert.ok(milestones.every((entry) => entry.year && entry.titleZh !== undefined));

@@ -12,11 +12,12 @@ import PartnerCarousel from '@/components/ui/PartnerCarousel';
 import LeadershipGlassCard from '@/components/ui/LeadershipGlassCard';
 import { partnerShowsDetails, resolvePartnerCarouselOptions } from '@/lib/partnerCarousel.mjs';
 import { newsCardClassName, shouldShowMediaPlaceholder } from '@/lib/publicMediaPresentation.mjs';
-import { selectBoardMembers } from '@/lib/selectBoardMembers.mjs';
+import { groupPeopleByRole, selectBoardMembers, selectPeopleByRoles } from '@/lib/selectBoardMembers.mjs';
 import NewsHero from '@/components/news/NewsHero';
 import FeaturedNews from '@/components/news/FeaturedNews';
 import NewsFeed from '@/components/news/NewsFeed';
 import NewsFilters from '@/components/news/NewsFilters';
+import { HomeMission } from '@/components/home/HomeMockupSections';
 import { selectNewsLayout } from '@/components/news/newsViewModel.mjs';
 import type { NewsViewItem } from '@/components/news/newsTypes';
 
@@ -65,11 +66,13 @@ export type AssocPerson = {
   bioEn: string;
   avatarUrl: string;
   group: string;
+  sortOrder: number;
   facebook: string;
   twitter: string;
   linkedin: string;
   instagram: string;
 };
+export type AssocGroup = { code: string; labelZh: string; labelEn: string; sortOrder: number; memberCount: number };
 export type AssocMilestone = { id: number; year: string; titleZh: string; titleEn: string; descriptionZh: string; descriptionEn: string };
 export type AssocEvent = {
   id: number;
@@ -87,6 +90,7 @@ export type AssocEvent = {
 export type AssocData = {
   partners: AssocPartner[];
   people: AssocPerson[];
+  groups: AssocGroup[];
   milestones: AssocMilestone[];
   events: AssocEvent[];
   contact: Record<string, string>;
@@ -239,6 +243,7 @@ const GROUP_LABELS: Record<string, { zh: string; en: string }> = {
   industry_expert: { zh: '業界專家顧問', en: 'Industry Expert' },
   ambassador: { zh: '協會大使', en: 'HKBA Ambassador' },
   secretary_general: { zh: '聯席秘書長', en: 'Secretary General' },
+  committee: { zh: '委員', en: 'Committee Member' },
   advisor: { zh: '顧問', en: 'Advisor' },
   member: { zh: '成員', en: 'Member' },
 };
@@ -247,6 +252,12 @@ function groupLabel(group: string, lang: Lang): string {
   const entry = GROUP_LABELS[group];
   if (entry) return lang === 'en' ? entry.en : entry.zh;
   return group || (lang === 'en' ? 'Member' : '成員');
+}
+
+function managedGroupLabel(group: string, lang: Lang, groups: AssocGroup[]): string {
+  const managed = groups.find((entry) => entry.code === group);
+  if (managed) return lang === 'en' ? managed.labelEn || managed.labelZh : managed.labelZh || managed.labelEn;
+  return groupLabel(group, lang);
 }
 
 function personName(person: AssocPerson, lang: Lang): string {
@@ -381,7 +392,23 @@ function AssocPartners({ block, lang, settings, assoc }: { block: RenderBlock; l
 }
 
 function AssocTimeline({ block, lang, settings, assoc }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData }) {
-  const items = [...assoc.milestones];
+  const scope = localizedContent(block, lang);
+  const configured = Array.isArray(scope.items)
+    ? scope.items as Array<{ year?: string; title?: string; description?: string }>
+    : [];
+  const items = configured.length
+    ? configured.map((item, index) => ({
+        id: `configured-${index}`,
+        year: String(item.year || ''),
+        title: String(item.title || ''),
+        description: String(item.description || ''),
+      }))
+    : assoc.milestones.map((milestone) => ({
+        id: milestone.id,
+        year: milestone.year,
+        title: (lang === 'en' ? milestone.titleEn || milestone.titleZh : milestone.titleZh || milestone.titleEn) || '',
+        description: (lang === 'en' ? milestone.descriptionEn || milestone.descriptionZh : milestone.descriptionZh || milestone.descriptionEn) || '',
+      }));
   if (String(settings.order) === 'desc') items.reverse();
   if (!items.length) return <AssocEmpty lang={lang} kind="timeline" />;
   return (
@@ -391,10 +418,8 @@ function AssocTimeline({ block, lang, settings, assoc }: { block: RenderBlock; l
         {items.map((milestone) => (
           <div key={milestone.id} className="hk-timeline__item">
             <div className="hk-timeline__year">{milestone.year}</div>
-            <div className="hk-timeline__title">{(lang === 'en' ? milestone.titleEn || milestone.titleZh : milestone.titleZh || milestone.titleEn) || ''}</div>
-            {(lang === 'en' ? milestone.descriptionEn || milestone.descriptionZh : milestone.descriptionZh || milestone.descriptionEn) ? (
-              <div className="hk-timeline__desc">{lang === 'en' ? milestone.descriptionEn || milestone.descriptionZh : milestone.descriptionZh || milestone.descriptionEn}</div>
-            ) : null}
+            <div className="hk-timeline__title">{milestone.title}</div>
+            {milestone.description ? <div className="hk-timeline__desc">{milestone.description}</div> : null}
           </div>
         ))}
       </div>
@@ -404,18 +429,41 @@ function AssocTimeline({ block, lang, settings, assoc }: { block: RenderBlock; l
 
 function AssocPeople({ block, lang, settings, assoc, board }: { block: RenderBlock; lang: Lang; settings: Record<string, unknown>; assoc: AssocData; board: boolean }) {
   const [activePersonId, setActivePersonId] = useState<number | null>(null);
-  const items = board ? selectBoardMembers(assoc.people, settings) as AssocPerson[] : assoc.people;
+  const items = (board ? selectBoardMembers(assoc.people, settings) : selectPeopleByRoles(assoc.people, settings, assoc.groups || [])) as AssocPerson[];
   if (!items.length) return <AssocEmpty lang={lang} kind="people" />;
-  const showBio = board && settings.showBio !== false;
-  const showSocial = board && settings.showSocial !== false;
+  const showBio = board ? settings.showBio !== false : settings.showBio === true;
+  const showSocial = board ? settings.showSocial !== false : settings.showSocial === true;
+  const configuredRoleOrder = Array.isArray(settings.roleOrder) ? settings.roleOrder.map(String) : [];
+  const globalRoleOrder = (assoc.groups || []).map((group) => group.code);
+  const groups = !board && settings.groupByRole !== false ? groupPeopleByRole(items, configuredRoleOrder.length ? configuredRoleOrder : globalRoleOrder) as Array<{ role: string; people: AssocPerson[] }> : [{ role: '', people: items }];
+  const renderCompactPerson = (person: AssocPerson) => {
+    const name = personName(person, lang);
+    return (
+      <div key={person.id} className="hk-person hk-person--compact">
+        <PersonAvatar src={person.avatarUrl} name={name} />
+        <div className="hk-person__copy">
+          <div className="hk-person__name">{name}</div>
+          <div className="hk-person__title">{personTitle(person, lang)}</div>
+          {showBio && personBio(person, lang) ? <div className="hk-person__bio">{personBio(person, lang)}</div> : null}
+          {showSocial ? (
+            <div className="hk-person__socials">
+              <SocialLink kind="facebook" url={person.facebook} />
+              <SocialLink kind="twitter" url={person.twitter} />
+              <SocialLink kind="linkedin" url={person.linkedin} />
+              <SocialLink kind="instagram" url={person.instagram} />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
   return (
     <>
       <AssocHead block={block} lang={lang} />
-      <div className={`hk-people-grid${board ? ' hk-people-grid--board' : ''}`}>
+      {board ? <div className="hk-people-grid hk-people-grid--board">
         {items.map((person) => {
           const name = personName(person, lang);
-          if (board) {
-            return (
+          return (
               <LeadershipGlassCard
                 key={person.id}
                 personId={person.id}
@@ -426,7 +474,7 @@ function AssocPeople({ block, lang, settings, assoc, board }: { block: RenderBlo
                 <div className="hk-person__portrait">
                   <PersonAvatar src={person.avatarUrl} name={name} large />
                 </div>
-                <span className="hk-person__badge">{groupLabel(person.group, lang)}</span>
+                <span className="hk-person__badge">{managedGroupLabel(person.group, lang, assoc.groups || [])}</span>
                 <div className="hk-person__name">{name}</div>
                 <div className="hk-person__title">{personTitle(person, lang)}</div>
                 {showBio && personBio(person, lang) ? <div className="hk-person__bio">{personBio(person, lang)}</div> : null}
@@ -439,19 +487,16 @@ function AssocPeople({ block, lang, settings, assoc, board }: { block: RenderBlo
                   </div>
                 ) : null}
               </LeadershipGlassCard>
-            );
-          }
-          return (
-            <div key={person.id} className="hk-person hk-person--compact">
-              <PersonAvatar src={person.avatarUrl} name={name} />
-              <div>
-                <div className="hk-person__name">{name}</div>
-                <div className="hk-person__title">{personTitle(person, lang)}</div>
-              </div>
-            </div>
           );
         })}
-      </div>
+      </div> : <div className="hk-people-directory">
+        {groups.map((group) => (
+          <section className="hk-people-group" key={group.role || 'all'}>
+            {group.role ? <h3 className="hk-people-group__title">{managedGroupLabel(group.role, lang, assoc.groups || [])}</h3> : null}
+            <div className="hk-people-grid">{group.people.map(renderCompactPerson)}</div>
+          </section>
+        ))}
+      </div>}
     </>
   );
 }
@@ -849,6 +894,8 @@ function renderBlock(block: RenderBlock, lang: Lang, media: MediaMap, children: 
         </BlockShell>
       );
     }
+    case 'content.mission':
+      return <BlockShell block={block}><HomeMission block={block} langOverride={lang} forceVisible /></BlockShell>;
     case 'content.membership-plans':
       return <MembershipPlans block={block} lang={lang} settings={settings} />;
     case 'content.contact-form':

@@ -45,6 +45,13 @@ module.exports = [
     name: { zh: '會員名錄', en: 'Member Directory' },
     description: '首期只展示公開字段；聯繫信息默認不公開。',
     settingsFields: {
+      roles: { type: 'array', item: { type: 'string' }, default: [], label: '角色篩選' },
+      roleOrder: { type: 'array', item: { type: 'string' }, default: [], label: '身份排序' },
+      selectedMemberIds: { type: 'array', item: { type: 'integer' }, default: [], label: '指定展示成員' },
+      groupByRole: { type: 'boolean', default: true, label: '按身份分組' },
+      showBio: { type: 'boolean', default: false, label: '顯示簡介' },
+      showSocial: { type: 'boolean', default: false, label: '顯示社交連結' },
+      limit: { type: 'integer', min: 0, max: 100, default: 0, label: '顯示數量（0 為全部）' },
       memberType: { type: 'string', maxLength: 40, default: '', label: '會員類型' },
       industry: { type: 'string', maxLength: 40, default: '', label: '行業' },
       letter: { type: 'string', maxLength: 1, default: '', label: '首字母' },
@@ -67,6 +74,22 @@ module.exports = [
     type: 'association.timeline',
     name: { zh: '發展歷程', en: 'Timeline' },
     description: '年份、標題、說明、圖片和連結；支持順序和倒序。',
+    contentFields: {
+      items: {
+        type: 'array',
+        minItems: 1,
+        maxItems: 30,
+        label: '歷程條目',
+        item: {
+          type: 'object',
+          fields: {
+            year: { type: 'string', maxLength: 20, required: true, label: '年份' },
+            title: { type: 'string', maxLength: 120, required: true, label: '事件標題' },
+            description: { type: 'string', maxLength: 500, default: '', label: '事件說明' },
+          },
+        },
+      },
+    },
     settingsFields: {
       order: { type: 'enum', values: ['asc', 'desc'], default: 'asc', label: '排序' },
     },
