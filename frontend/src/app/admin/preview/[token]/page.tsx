@@ -140,9 +140,9 @@ export default function PreviewTokenPage() {
               {isHome ? (
                 <>
                   <HomeHero />
-                  <HomeMission />
+                  <HomeMission block={presentation.blocks.find((block) => block.component_type === 'content.mission')} />
                   <div className="public-home-content">
-                    <BlockRenderer blocks={presentation.blocks.slice(1)} lang={lang} media={mediaMap} news={news} assoc={association} />
+                    <BlockRenderer blocks={presentation.blocks.filter((block) => block.component_type !== 'content.hero' && block.component_type !== 'content.mission')} lang={lang} media={mediaMap} news={news} assoc={association} />
                   </div>
                 </>
               ) : (

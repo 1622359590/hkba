@@ -114,6 +114,28 @@ module.exports = [
     },
   }),
   contentComponent({
+    type: 'content.mission',
+    name: { zh: '首頁使命', en: 'Home Mission' },
+    description: '首頁使命標題、說明與四項核心能力卡片。',
+    contentFields: {
+      overline: { type: 'string', maxLength: 40, default: 'OUR MISSION', label: '眉題' },
+      title: { type: 'string', maxLength: 120, required: true, label: '標題' },
+      description: { type: 'string', maxLength: 500, default: '', label: '說明' },
+      items: {
+        type: 'array', minItems: 1, maxItems: 6, required: true, label: '使命卡片',
+        item: {
+          type: 'object',
+          fields: {
+            title: { type: 'string', maxLength: 60, required: true, label: '卡片標題' },
+            description: { type: 'string', maxLength: 240, default: '', label: '卡片說明' },
+            href: { type: 'string', maxLength: 300, default: '/about', label: '跳轉連結' },
+            icon: { type: 'enum', values: ['link', 'shield', 'globe', 'store'], default: 'link', label: '圖標' },
+          },
+        },
+      },
+    },
+  }),
+  contentComponent({
     type: 'content.membership-plans',
     name: { zh: '會員方案', en: 'Membership Plans' },
     description: '可編輯會籍名稱、年費、權益與申請表下載連結。',

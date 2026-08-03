@@ -111,11 +111,13 @@ export type PublicPerson = {
   bioEn: string;
   avatarUrl: string;
   group: string;
+  sortOrder: number;
   facebook: string;
   twitter: string;
   linkedin: string;
   instagram: string;
 };
+export type PublicTeamGroup = { code: string; labelZh: string; labelEn: string; sortOrder: number; memberCount: number };
 export type PublicMilestone = { id: number; year: string; titleZh: string; titleEn: string; descriptionZh: string; descriptionEn: string };
 export type PublicEvent = {
   id: number;
@@ -133,6 +135,7 @@ export type PublicEvent = {
 export type PublicAssociation = {
   partners: PublicPartner[];
   people: PublicPerson[];
+  groups: PublicTeamGroup[];
   milestones: PublicMilestone[];
   events: PublicEvent[];
   contact: Record<string, string>;

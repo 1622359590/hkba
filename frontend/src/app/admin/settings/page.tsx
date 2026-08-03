@@ -37,6 +37,8 @@ export default function SettingsAdmin() {
   }, []);
 
   const updateOss = (key: keyof typeof oss, value: string | boolean) => setOss((current) => ({ ...current, [key]: value }));
+  const endpointHost = oss.endpoint.trim().replace(/^https?:\/\//, '').replace(/\/$/, '') || `${oss.region.trim() || 'oss-cn-hongkong'}.aliyuncs.com`;
+  const publicBaseUrl = oss.customDomain.trim().replace(/\/$/, '') || (oss.bucket.trim() ? `https://${oss.bucket.trim()}.${endpointHost}` : '');
 
   const ossPayload = () => ({
     enabled: oss.enabled,
@@ -112,7 +114,7 @@ export default function SettingsAdmin() {
               <div className="admin-storage-fields">
                 <FormField label="Region" required><Input value={oss.region} onChange={(value) => updateOss('region', value)} placeholder="oss-cn-hongkong" /></FormField>
                 <FormField label="Bucket" required><Input value={oss.bucket} onChange={(value) => updateOss('bucket', value)} placeholder="hkba-media" /></FormField>
-                <FormField label="Endpoint"><Input value={oss.endpoint} onChange={(value) => updateOss('endpoint', value)} placeholder="留空使用 Region 默認地址" /></FormField>
+                <FormField label="外網 Endpoint"><Input value={oss.endpoint} onChange={(value) => updateOss('endpoint', value)} placeholder="https://oss-cn-hongkong.aliyuncs.com" /></FormField>
                 <FormField label="自訂 CDN 域名"><Input value={oss.customDomain} onChange={(value) => updateOss('customDomain', value)} placeholder="https://cdn.hkba.club" /></FormField>
                 <FormField label="AccessKey ID" required>
                   <Input type="password" value={oss.accessKeyId} onChange={(value) => updateOss('accessKeyId', value)} placeholder={oss.accessKeyIdMasked || '輸入 AccessKey ID'} />
@@ -121,6 +123,11 @@ export default function SettingsAdmin() {
                   <Input type="password" value={oss.accessKeySecret} onChange={(value) => updateOss('accessKeySecret', value)} placeholder={oss.accessKeySecretMasked || '輸入 AccessKey Secret'} />
                 </FormField>
                 <FormField label="儲存目錄"><Input value={oss.objectPrefix} onChange={(value) => updateOss('objectPrefix', value)} placeholder="hkba/media" /></FormField>
+                <div className="admin-storage-public-url">
+                  <span>OSS 外網訪問地址</span>
+                  <strong>{publicBaseUrl || '填寫 Bucket 後自動生成'}</strong>
+                  <small>上傳後的公開文件將使用此域名；配置 CDN 時會優先使用 CDN 域名。</small>
+                </div>
               </div>
               <div className="admin-storage-actions">
                 <ActionButton type="button" variant="secondary" pending={ossTesting} onClick={handleTestOss}>測試連接</ActionButton>

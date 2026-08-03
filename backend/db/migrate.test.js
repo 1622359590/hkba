@@ -23,6 +23,7 @@ const ALL_MIGRATIONS = [
   '013_oss_storage_settings.sql',
   '014_page_draft_snapshots.sql',
   '015_restore_home_partner_carousel.sql',
+  '016_team_member_groups.sql',
 ];
 
 const BASELINE_TABLES = [
@@ -32,6 +33,7 @@ const BASELINE_TABLES = [
   'announcements',
   'partners',
   'team_members',
+  'team_member_groups',
   'news',
   'events',
   'pages',
@@ -76,6 +78,32 @@ test('applies the real baseline from scratch on a fresh database', (t) => {
   const recorded = conn.prepare('SELECT name, applied_at FROM schema_migrations ORDER BY name').all();
   assert.deepEqual(recorded.map((row) => row.name), ALL_MIGRATIONS);
   assert.ok(recorded.every((row) => !Number.isNaN(Date.parse(row.applied_at))), 'applied_at must be a timestamp');
+  assert.deepEqual(
+    conn.prepare('SELECT code FROM team_member_groups ORDER BY sort_order, code').all().map((row) => row.code),
+    ['honorary_chairman', 'chairman', 'vice_chairman', 'committee', 'advisor']
+  );
+});
+
+test('preserves existing non-default team identities as active legacy groups', (t) => {
+  const dir = makeTempDir(t);
+  const conn = openTempDb(t, dir);
+  const stagedMigrations = path.join(dir, 'migrations');
+  fs.mkdirSync(stagedMigrations);
+  for (const name of ALL_MIGRATIONS.slice(0, -1)) {
+    fs.copyFileSync(path.join(__dirname, 'migrations', name), path.join(stagedMigrations, name));
+  }
+  migrate(conn, { migrationsDir: stagedMigrations });
+  conn.prepare(`
+    INSERT INTO team_members (name_zh, avatar_url, group_name)
+    VALUES ('Legacy Patron', '/legacy.png', 'custom_patron')
+  `).run();
+
+  migrate(conn);
+
+  assert.deepEqual(
+    conn.prepare('SELECT code, label_zh, label_en, is_active, is_legacy FROM team_member_groups WHERE code = ?').get('custom_patron'),
+    { code: 'custom_patron', label_zh: 'custom_patron', label_en: 'custom_patron', is_active: 1, is_legacy: 1 }
+  );
 });
 
 test('records the baseline as applied without executing it on a legacy database', (t) => {
@@ -89,7 +117,11 @@ test('records the baseline as applied without executing it on a legacy database'
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
+    );
+    CREATE TABLE team_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      group_name TEXT NOT NULL DEFAULT 'committee'
+    );
   `);
   conn.prepare('INSERT INTO admins (username, password) VALUES (?, ?)').run('legacy-admin', 'hash');
 

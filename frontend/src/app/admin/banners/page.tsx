@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { adminGet, adminPost, adminPut, adminDelete, adminRequestError, notifyAdminDataChanged } from '@/lib/adminApi';
-import { FormField, Input, BilingualField, ImageField, Toggle, AdminCard } from '@/components/admin/FormControls';
+import { FormField, Input, BilingualField, Toggle } from '@/components/admin/FormControls';
+import BannerImageUpload from '@/components/admin/BannerImageUpload';
 import { ActionButton } from '@/components/admin/ActionButton';
 import { ConfirmDialog, EmptyState, ErrorState, LoadingState, Toast } from '@/components/ui/Feedback';
 
@@ -17,21 +18,61 @@ export default function BannersAdmin() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Banner | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const openerRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const locked = saving || uploading;
   const load = async () => {
     setLoading(true); setError('');
     try { setItems(await adminGet<Banner[]>('/api/banners/all')); } catch (requestError) { setError(adminRequestError(requestError)); } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
+  const openEditor = (opener: HTMLButtonElement, banner?: Banner) => {
+    openerRef.current = opener;
+    setEditing(banner || null);
+    setForm(banner || empty);
+    setUploading(false);
+    setShowForm(true);
+  };
+
+  const closeEditor = useCallback(() => {
+    if (saving || uploading) return;
+    const opener = openerRef.current;
+    setShowForm(false);
+    setEditing(null);
+    setForm(empty);
+    requestAnimationFrame(() => opener?.focus());
+  }, [saving, uploading]);
+
+  useEffect(() => {
+    if (!showForm) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => closeButtonRef.current?.focus());
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [showForm]);
+
+  useEffect(() => {
+    if (!showForm) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !locked) closeEditor();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showForm, locked, closeEditor]);
+
   const handleSave = async () => {
+    if (locked) return;
     setSaving(true);
     try {
       if (editing) await adminPut(`/api/banners/${editing.id}`, form); else await adminPost('/api/banners', form);
-      setShowForm(false); setEditing(null); setForm(empty); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: 'Banner 已保存。' }); await load();
+      const opener = openerRef.current;
+      setShowForm(false); setEditing(null); setForm(empty); notifyAdminDataChanged('content-updated'); setToast({ tone: 'success', message: 'Banner 已保存。' }); await load(); requestAnimationFrame(() => opener?.focus());
     } catch (requestError) { setToast({ tone: 'error', message: adminRequestError(requestError) }); } finally { setSaving(false); }
   };
 
@@ -47,24 +88,41 @@ export default function BannersAdmin() {
     <div>
       <div className="admin-page-heading">
         <h1 className="admin-page-title">Banner 管理</h1>
-        <button onClick={() => { setEditing(null); setForm(empty); setShowForm(true); }} className="btn-accent" style={{ fontSize: 13 }}>+ 新增</button>
+        <button type="button" onClick={(event) => openEditor(event.currentTarget)} className="btn-accent" style={{ fontSize: 13 }}>+ 新增</button>
       </div>
       {showForm && (
-        <AdminCard title={editing ? '編輯 Banner' : '新增 Banner'} actions={<button type="button" onClick={() => { setShowForm(false); setEditing(null); }} className="admin-action is-muted">取消</button>}>
-          <BilingualField label="標題" valueZh={form.title_zh} valueEn={form.title_en} onChangeZh={v => setForm(f => ({...f, title_zh: v}))} onChangeEn={v => setForm(f => ({...f, title_en: v}))} />
-          <BilingualField label="副標題" valueZh={form.subtitle_zh} valueEn={form.subtitle_en} onChangeZh={v => setForm(f => ({...f, subtitle_zh: v}))} onChangeEn={v => setForm(f => ({...f, subtitle_en: v}))} />
-          <BilingualField label="描述" type="textarea" valueZh={form.description_zh} valueEn={form.description_en} onChangeZh={v => setForm(f => ({...f, description_zh: v}))} onChangeEn={v => setForm(f => ({...f, description_en: v}))} />
-          <ImageField value={form.image_url} onChange={v => setForm(f => ({...f, image_url: v}))} label="Banner 圖片" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <FormField label="連結 URL"><Input value={form.link_url} onChange={v => setForm(f => ({...f, link_url: v}))} /></FormField>
-            <FormField label="視頻 URL"><Input value={form.video_url} onChange={v => setForm(f => ({...f, video_url: v}))} /></FormField>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <FormField label="排序"><Input type="number" value={String(form.sort_order)} onChange={v => setForm(f => ({...f, sort_order: +v}))} /></FormField>
-            <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 16 }}><Toggle checked={!!form.is_active} onChange={v => setForm(f => ({...f, is_active: v ? 1 : 0}))} label="啟用" /></div>
-          </div>
-          <ActionButton type="button" onClick={handleSave} pending={saving} style={{ fontSize: 13, marginTop: 8 }}>保存</ActionButton>
-        </AdminCard>
+        <div className="admin-editor-modal" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !locked) closeEditor(); }}>
+          <section className="admin-editor-modal__dialog admin-banner-modal" role="dialog" aria-modal="true" aria-labelledby="banner-editor-title" aria-busy={locked}>
+            <header className="admin-editor-modal__header">
+              <div>
+                <span className="admin-editor-modal__eyebrow">BANNER CONTENT</span>
+                <h2 id="banner-editor-title">{editing ? '編輯 Banner' : '新增 Banner'}</h2>
+              </div>
+              <button ref={closeButtonRef} type="button" className="admin-editor-modal__close" onClick={closeEditor} aria-label="關閉 Banner 編輯視窗" disabled={locked}>×</button>
+            </header>
+            <div className="admin-editor-modal__body">
+              <BannerImageUpload value={form.image_url} onChange={(url) => setForm(f => ({...f, image_url: url}))} disabled={saving} onUploadingChange={setUploading} />
+              <BilingualField label="標題" valueZh={form.title_zh} valueEn={form.title_en} onChangeZh={v => setForm(f => ({...f, title_zh: v}))} onChangeEn={v => setForm(f => ({...f, title_en: v}))} />
+              <BilingualField label="副標題" valueZh={form.subtitle_zh} valueEn={form.subtitle_en} onChangeZh={v => setForm(f => ({...f, subtitle_zh: v}))} onChangeEn={v => setForm(f => ({...f, subtitle_en: v}))} />
+              <BilingualField label="描述" type="textarea" rows={3} valueZh={form.description_zh} valueEn={form.description_en} onChangeZh={v => setForm(f => ({...f, description_zh: v}))} onChangeEn={v => setForm(f => ({...f, description_en: v}))} />
+              <div className="admin-editor-modal__grid">
+                <FormField label="連結 URL"><Input value={form.link_url} onChange={v => setForm(f => ({...f, link_url: v}))} /></FormField>
+                <FormField label="視頻 URL"><Input value={form.video_url} onChange={v => setForm(f => ({...f, video_url: v}))} /></FormField>
+              </div>
+              <div className="admin-editor-modal__grid">
+                <FormField label="排序"><Input type="number" value={String(form.sort_order)} onChange={v => setForm(f => ({...f, sort_order: +v}))} /></FormField>
+                <div className="admin-banner-modal__toggle"><Toggle checked={!!form.is_active} onChange={v => setForm(f => ({...f, is_active: v ? 1 : 0}))} label="啟用" /></div>
+              </div>
+            </div>
+            <footer className="admin-editor-modal__footer">
+              <span className="admin-banner-modal__hint">上傳的圖片會自動進入媒體庫</span>
+              <div className="admin-banner-modal__actions">
+                <button type="button" onClick={closeEditor} className="btn-secondary" disabled={locked}>取消</button>
+                <ActionButton type="button" onClick={handleSave} pending={saving} disabled={uploading}>保存 Banner</ActionButton>
+              </div>
+            </footer>
+          </section>
+        </div>
       )}
       {loading && <LoadingState label="正在載入 Banner..." />}
       {!loading && error && <ErrorState message={error} onRetry={load} />}
@@ -77,11 +135,11 @@ export default function BannersAdmin() {
               <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>{item.subtitle_zh || item.subtitle_en}</div>
             </div>
             <span style={badge(!!item.is_active)}>{item.is_active ? '啟用' : '停用'}</span>
-            <button type="button" onClick={() => { setEditing(item); setForm(item); setShowForm(true); }} className="admin-action">編輯</button>
+            <button type="button" onClick={(event) => openEditor(event.currentTarget, item)} className="admin-action">編輯</button>
             <button type="button" onClick={() => setDeleteTarget(item)} className="admin-action is-danger">刪除</button>
           </div>
         ))}
-        {items.length === 0 && <EmptyState title="暫無 Banner" description="新增首頁主視覺後，內容會顯示在前台首頁。" action={<button type="button" onClick={() => { setEditing(null); setForm(empty); setShowForm(true); }} className="btn-secondary">新增 Banner</button>} />}
+        {items.length === 0 && <EmptyState title="暫無 Banner" description="新增首頁主視覺後，內容會顯示在前台首頁。" action={<button type="button" onClick={(event) => openEditor(event.currentTarget)} className="btn-secondary">新增 Banner</button>} />}
       </div>}
       {deleteTarget && <ConfirmDialog title="刪除這個 Banner？" description={`刪除「${deleteTarget.title_zh || deleteTarget.title_en || '未命名 Banner'}」後將無法復原。`} onCancel={() => setDeleteTarget(null)} onConfirm={remove} pending={deleting} />}
       {toast && <Toast tone={toast.tone} message={toast.message} onDismiss={() => setToast(null)} />}

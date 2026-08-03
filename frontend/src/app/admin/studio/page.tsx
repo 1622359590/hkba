@@ -22,7 +22,7 @@ import { ConfirmBar, UndoToast } from '@/components/admin/shell/ConfirmBar';
 import StudioPreviewModal, { StudioPreviewSession } from '@/components/admin/StudioPreviewModal';
 import StudioHistoryPanel, { DraftSnapshot, PublishedVersion, StudioHistory } from '@/components/admin/StudioHistoryPanel';
 import Footer from '@/components/Footer';
-import { HomeHero, HomeMission } from '@/components/home/HomeMockupSections';
+import { HOME_MISSION_EN, HOME_MISSION_ZH, HomeHero, HomeMission } from '@/components/home/HomeMockupSections';
 import { selectStudioBlock } from '@/lib/studioSelection.mjs';
 import { selectStudioPage } from '@/lib/studioPageNavigation.mjs';
 import { fetchPublicAssociation, fetchPublicNews, PublicNewsListItem } from '@/lib/publicContent';
@@ -237,6 +237,20 @@ function StudioInner() {
     () => (selectedBlock ? definitions.find((definition) => definition.type === selectedBlock.component_type) || null : null),
     [definitions, selectedBlock]
   );
+  const homeHeroBlock = useMemo(() => blocks.find((block) => block.component_type === 'content.hero'), [blocks]);
+  const homeMissionBlock = useMemo(() => blocks.find((block) => block.component_type === 'content.mission'), [blocks]);
+  const selectedContentFallback = useMemo<Record<string, unknown>>(() => {
+    if (selectedBlock?.component_type !== 'association.timeline') return {};
+    return {
+      title: lang === 'en' ? 'Timeline' : '發展歷程',
+      description: lang === 'en' ? 'Key milestones in the development of HKBA.' : '回顧香港區塊鏈協會的重要發展里程碑。',
+      items: (associationData?.milestones || []).map((milestone) => ({
+        year: milestone.year,
+        title: lang === 'en' ? milestone.titleEn || milestone.titleZh : milestone.titleZh || milestone.titleEn,
+        description: lang === 'en' ? milestone.descriptionEn || milestone.descriptionZh : milestone.descriptionZh || milestone.descriptionEn,
+      })),
+    };
+  }, [associationData?.milestones, lang, selectedBlock?.component_type]);
 
   // ---------- serialized mutation queue ----------
 
@@ -836,29 +850,49 @@ function StudioInner() {
             ) : currentNode?.path === '/' ? (
               <div className="hk-studio-home-preview">
                 <div
-                  className={`hk-canvas-block hk-studio-home-preview__hero${selectedId === blocks[0]?.id ? ' is-selected' : ''}`}
+                  className={`hk-canvas-block hk-studio-home-preview__hero${selectedId === homeHeroBlock?.id ? ' is-selected' : ''}`}
                   role="button"
                   tabIndex={0}
                   aria-label="選擇首頁主視覺組件"
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    if (blocks[0]) selectBlock(blocks[0].id);
+                    if (homeHeroBlock) selectBlock(homeHeroBlock.id);
                   }}
                   onKeyDown={(event) => {
-                    if ((event.key === 'Enter' || event.key === ' ') && blocks[0]) {
+                    if ((event.key === 'Enter' || event.key === ' ') && homeHeroBlock) {
                       event.preventDefault();
-                      selectBlock(blocks[0].id);
+                      selectBlock(homeHeroBlock.id);
                     }
                   }}
                 >
                   <HomeHero forceVisible langOverride={lang} />
-                  {blocks[0] ? <span className="hk-canvas-block__tag">{blocks[0].component_type}</span> : null}
+                  {homeHeroBlock ? <span className="hk-canvas-block__tag">{homeHeroBlock.component_type}</span> : null}
                 </div>
-                <HomeMission forceVisible langOverride={lang} />
+                <div
+                  className={`hk-canvas-block hk-studio-home-preview__mission${selectedId === homeMissionBlock?.id ? ' is-selected' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="選擇首頁使命組件"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (homeMissionBlock) selectBlock(homeMissionBlock.id);
+                    else addBlock('content.mission', { contentZh: HOME_MISSION_ZH, contentEn: HOME_MISSION_EN, settings: {} });
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    if (homeMissionBlock) selectBlock(homeMissionBlock.id);
+                    else addBlock('content.mission', { contentZh: HOME_MISSION_ZH, contentEn: HOME_MISSION_EN, settings: {} });
+                  }}
+                >
+                  <HomeMission block={homeMissionBlock} forceVisible langOverride={lang} />
+                  <span className="hk-canvas-block__tag">content.mission</span>
+                </div>
                 <div className="public-home-content">
                   <BlockRenderer
-                    blocks={blocks[0]?.component_type === 'content.hero' ? blocks.slice(1) : blocks}
+                    blocks={blocks.filter((block) => block.component_type !== 'content.hero' && block.component_type !== 'content.mission')}
                     lang={lang}
                     media={mediaMap}
                     news={newsCards}
@@ -978,7 +1012,7 @@ function StudioInner() {
         width={460}
       >
         {selectedBlock && selectedDefinition ? (
-          <PropertyForm definition={selectedDefinition} block={selectedBlock} lang={lang} people={associationData?.people || []} onChange={(scope, key, value) => editBlock(selectedBlock.id, scope, key, value)} onPickMedia={openMediaPicker} />
+          <PropertyForm definition={selectedDefinition} block={selectedBlock} lang={lang} people={associationData?.people || []} groups={associationData?.groups || []} contentFallback={selectedContentFallback} onChange={(scope, key, value) => editBlock(selectedBlock.id, scope, key, value)} onPickMedia={openMediaPicker} />
         ) : (
           <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>在畫布或組件結構中選中一個組件後編輯其屬性。</div>
         )}
