@@ -4,13 +4,13 @@ const assert = require('node:assert/strict');
 const registry = require('./index');
 const { definitions } = registry;
 
-test('registers the full component catalog (34 components)', () => {
-  assert.equal(definitions.length, 34);
+test('registers the full component catalog (35 components)', () => {
+  assert.equal(definitions.length, 35);
   const byCategory = definitions.reduce((acc, d) => {
     acc[d.category] = (acc[d.category] || 0) + 1;
     return acc;
   }, {});
-  assert.deepEqual(byCategory, { news: 6, content: 15, association: 8, layout: 5 });
+  assert.deepEqual(byCategory, { news: 6, content: 16, association: 8, layout: 5 });
 });
 
 test('every definition is well-formed', () => {
@@ -130,6 +130,12 @@ test('official-site content components expose editable structured fields', () =>
   assert.equal(imageText.schema.content.fields.externalMediaUrl.type, 'string');
   const stats = registry.getDefinition('content.stats');
   assert.deepEqual(stats.schema.settings.fields.variant.values, ['metrics', 'features']);
+  const mission = registry.getDefinition('content.mission');
+  assert.equal(mission.schema.content.fields.items.item.fields.icon.type, 'enum');
+
+  const timeline = registry.getDefinition('association.timeline');
+  assert.equal(timeline.schema.content.fields.items.type, 'array');
+  assert.equal(timeline.schema.content.fields.items.item.fields.year.required, true);
 });
 
 test('partner carousel exposes validated playback settings', () => {
@@ -191,7 +197,7 @@ test('migrateConfig chains pure migration functions', () => {
 
 test('listDefinitions strips migration functions from metadata', () => {
   const listed = registry.listDefinitions();
-  assert.equal(listed.length, 34);
+  assert.equal(listed.length, 35);
   for (const entry of listed) {
     assert.equal(typeof entry.migrationsDeclared, 'boolean');
     assert.equal(entry.migrations, undefined);

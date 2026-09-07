@@ -82,7 +82,7 @@ test('GET definitions returns the registry in the unified envelope', async () =>
   const body = await res.json();
   assert.equal(body.success, true);
   assert.ok(body.meta.requestId);
-  assert.equal(body.data.definitions.length, 34);
+  assert.equal(body.data.definitions.length, 35);
   const hero = body.data.definitions.find((d) => d.type === 'content.hero');
   assert.equal(hero.version, 1);
   assert.ok(hero.schema.content.fields.title.required);

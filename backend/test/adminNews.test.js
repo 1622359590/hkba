@@ -139,6 +139,15 @@ test('create builds revision 1 with a header block and maps', async () => {
   assert.equal(detail.data.blocks[0].contentZh.title, news.title_zh);
   assert.equal(detail.data.news.missing_en, true);
 
+  const generated = await post('/api/admin/news', { titleZh: '自動 Slug 新聞' });
+  assert.equal(generated.status, 201);
+  const generatedBody = await generated.json();
+  assert.match(generatedBody.data.news.slug, /^news-[0-9]{8}-[a-z0-9]{6}$/);
+  assert.equal(
+    db.prepare('SELECT slug FROM news_items WHERE id = ?').get(generatedBody.data.news.id).slug,
+    generatedBody.data.news.slug,
+  );
+
   const bad = await createNews({ slug: 'Bad Slug!' });
   assert.equal(bad.res.status, 400);
   const dupe = await createNews({ slug: news.slug });

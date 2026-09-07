@@ -18,6 +18,7 @@ import { useLang } from '@/lib/useLang';
 import { resolvePublicPagePresentation } from '@/lib/publicPagePresentation';
 import LeadershipIntro from '@/components/pages/LeadershipIntro';
 import PublishedNewsExperience, { hasPremiumNewsBlocks } from '@/components/news/PublishedNewsExperience';
+import { loadPublicPageBundle } from '@/lib/publicPageBundle.mjs';
 
 
 function toCard(item: PublicNewsListItem, lang: 'zh' | 'en'): NewsCardData {
@@ -42,13 +43,15 @@ export default function PublicPageSwitch({ path, children }: { path: string; chi
 
   useEffect(() => {
     let cancelled = false;
-    fetchPublicPage(path).then(async (data) => {
-      if (cancelled || !data) return;
-      setPage(data);
-      const [list, association] = await Promise.all([fetchPublicNews({ pageSize: 12 }), fetchPublicAssociation()]);
-      if (cancelled) return;
-      if (list) setNews(list.items.map((item) => toCard(item, lang)));
-      if (association) setAssoc(association);
+    loadPublicPageBundle(path, {
+      fetchPage: fetchPublicPage,
+      fetchNews: () => fetchPublicNews({ pageSize: 12 }),
+      fetchAssociation: fetchPublicAssociation,
+    }).then((bundle) => {
+      if (cancelled || !bundle) return;
+      setNews(bundle.news ? bundle.news.items.map((item: PublicNewsListItem) => toCard(item, lang)) : []);
+      setAssoc(bundle.association || undefined);
+      setPage(bundle.page);
     });
     return () => {
       cancelled = true;
@@ -64,13 +67,14 @@ export default function PublicPageSwitch({ path, children }: { path: string; chi
   const isHome = path === '/';
   const pageClass = path === '/' ? 'home' : path.replace(/^\//, '').replace(/[^a-z0-9-]/gi, '-') || 'page';
   const presentation = resolvePublicPagePresentation(path, page.blocks);
-  const firstBlock = isHome ? presentation.blocks.slice(0, 1) : presentation.blocks;
-  const remainingBlocks = isHome ? presentation.blocks.slice(1) : [];
+  const firstBlock = isHome ? presentation.blocks.filter((block) => block.component_type === 'content.hero').slice(0, 1) : presentation.blocks;
+  const missionBlock = isHome ? presentation.blocks.find((block) => block.component_type === 'content.mission') : undefined;
+  const remainingBlocks = isHome ? presentation.blocks.filter((block) => block.component_type !== 'content.hero' && block.component_type !== 'content.mission') : [];
 
   return (
     <div className={`public-blocks public-page--${pageClass}`}>
       {presentation.intro === 'leadership' ? <LeadershipIntro /> : null}
-      {isHome ? <><HomeHero /><HomeMission /></> : presentation.intro ? (
+      {isHome ? <><HomeHero /><HomeMission block={missionBlock} /></> : presentation.intro ? (
         <div className="public-page__body">
           <div className="team-directory__heading">
             <h2>{lang === 'en' ? 'Committee members' : '委員會成員'}</h2>

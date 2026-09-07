@@ -258,9 +258,16 @@ router.get('/association', (req, res) => {
     .prepare(
       `SELECT id, name_zh AS nameZh, name_en AS nameEn, title_zh AS titleZh, title_en AS titleEn,
               bio_zh AS bioZh, bio_en AS bioEn, avatar_url AS avatarUrl, group_name AS "group",
-              social_facebook AS facebook, social_twitter AS twitter,
+              sort_order AS sortOrder, social_facebook AS facebook, social_twitter AS twitter,
               social_linkedin AS linkedin, social_instagram AS instagram
        FROM team_members WHERE is_active = 1 ORDER BY sort_order, id`
+    )
+    .all();
+  const groups = conn
+    .prepare(
+      `SELECT groups.code, groups.label_zh AS labelZh, groups.label_en AS labelEn, groups.sort_order AS sortOrder,
+              (SELECT COUNT(*) FROM team_members AS members WHERE members.group_name = groups.code AND members.is_active = 1) AS memberCount
+       FROM team_member_groups AS groups WHERE groups.is_active = 1 ORDER BY groups.sort_order, groups.code`
     )
     .all();
   const milestones = conn
@@ -286,7 +293,7 @@ router.get('/association', (req, res) => {
   }
   // No structured resources table exists yet; the renderer shows a designed
   // empty state for association.resources.
-  res.ok({ partners, people, milestones, events, contact, resources: [] });
+  res.ok({ partners, people, groups, milestones, events, contact, resources: [] });
 });
 
 module.exports = router;

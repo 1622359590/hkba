@@ -23,6 +23,7 @@ const { syncBlockReferences, clearBlockReferences } = require('../../lib/mediaRe
 const { checkNews } = require('../../lib/publishChecks');
 const { createPreviewToken } = require('../../lib/previewTokens');
 const { recordPublish, pruneNewsRevisions } = require('../../lib/publish');
+const { generateUniqueNewsSlug } = require('../../lib/newsSlug');
 const registry = require('../../components/registry');
 const { applyDefaults } = require('../../components/validate');
 const { EFFECTIVE_YEAR_SQL } = require('../../lib/newsQuery');
@@ -331,15 +332,24 @@ router.get('/:id', ...read, (req, res) => {
 router.post('/', ...write, (req, res) => {
   const conn = getDb();
   const body = req.body || {};
-  const fields = [...validateMetadata(body), ...validateTaxonomyIds(conn, body)];
-  if (body.slug && slugTaken(conn, body.slug)) {
+  let slug = typeof body.slug === 'string' ? body.slug.trim() : body.slug;
+  if (!slug) {
+    try {
+      slug = generateUniqueNewsSlug({ isTaken: (candidate) => slugTaken(conn, candidate) });
+    } catch {
+      return res.fail('INTERNAL_ERROR', '無法產生新聞識別碼');
+    }
+  }
+  const createBody = { ...body, slug };
+  const fields = [...validateMetadata(createBody), ...validateTaxonomyIds(conn, createBody)];
+  if (createBody.slug && slugTaken(conn, createBody.slug)) {
     fields.push({ field: 'slug', code: 'duplicate', message: 'slug 已被使用' });
   }
   if (fields.length) return res.fail('VALIDATION_FAILED', '新聞參數不完整', fields);
 
-  const categoryIds = body.categoryIds || [];
-  const tagIds = body.tagIds || [];
-  const snapshot = snapshotOf(body, categoryIds, tagIds);
+  const categoryIds = createBody.categoryIds || [];
+  const tagIds = createBody.tagIds || [];
+  const snapshot = snapshotOf(createBody, categoryIds, tagIds);
   const id = crypto.randomUUID();
 
   conn.transaction(() => {
@@ -351,7 +361,7 @@ router.post('/', ...write, (req, res) => {
       )
       .run(
         id,
-        body.slug,
+        createBody.slug,
         snapshot.titleZh,
         snapshot.titleEn,
         snapshot.summaryZh,
@@ -395,7 +405,7 @@ router.post('/', ...write, (req, res) => {
     action: 'news.create',
     objectType: 'news_item',
     objectId: id,
-    detail: { slug: body.slug, titleZh: snapshot.titleZh },
+    detail: { slug: createBody.slug, titleZh: snapshot.titleZh },
   }));
   res.ok({ news: newsJson(conn, getNews(conn, id)), revision: 1 }, 201);
 });

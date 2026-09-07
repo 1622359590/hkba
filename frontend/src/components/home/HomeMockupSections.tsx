@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useLang } from '@/lib/useLang';
 import AnimatedStat from '@/components/home/AnimatedStat';
 import HeroScanWordmark from '@/components/home/HeroScanWordmark';
+import type { RenderBlock } from '@/components/blocks/BlockRenderer';
 
 const ArrowIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -11,44 +12,41 @@ const ArrowIcon = () => (
   </svg>
 );
 
-const features = [
-  {
-    href: '/join',
-    titleZh: '連接生態',
-    titleEn: 'Connect Ecosystems',
-    descZh: '連接全球區塊鏈項目、企業、投資者與技術專家，構建強大生態網絡。',
-    descEn: 'Connect global blockchain projects, enterprises, investors and experts in a strong ecosystem.',
-    icon: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></>,
-  },
-  {
-    href: '/join',
-    titleZh: '行業賦能',
-    titleEn: 'Empower Industry',
-    descZh: '提供政策解讀、資源對接、培訓支持，助力會員成長與行業發展。',
-    descEn: 'Provide policy insight, resource matching and training to help members and the industry grow.',
-    icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
-  },
-  {
-    href: '/about',
-    titleZh: '國際合作',
-    titleEn: 'Global Collaboration',
-    descZh: '促進國際交流與合作，推動香港區塊鏈技術與全球標準接軌。',
-    descEn: 'Promote international exchange and align Hong Kong blockchain innovation with global standards.',
-    icon: <><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>,
-  },
-  {
-    href: '/about',
-    titleZh: '合規發展',
-    titleEn: 'Responsible Growth',
-    descZh: '推動行業自律與合規建設，促進區塊鏈行業健康可持續發展。',
-    descEn: 'Advance industry standards and responsible practices for healthy, sustainable growth.',
-    icon: <><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4" /><path d="M5 21V10.87M19 21V10.87" /></>,
-  },
-];
+export const HOME_MISSION_ZH = {
+  overline: 'OUR MISSION',
+  title: '推動香港成為全球區塊鏈創新樞鈕',
+  description: 'HKBA 致力於連接政府、企業、投資者與技術社群，推動區塊鏈技術在各行各業的應用與發展，構建開放、協作、共贏的區塊鏈生態系統。',
+  items: [
+    { href: '/join', title: '連接生態', description: '連接全球區塊鏈項目、企業、投資者與技術專家，構建強大生態網絡。', icon: 'link' },
+    { href: '/join', title: '行業賦能', description: '提供政策解讀、資源對接、培訓支持，助力會員成長與行業發展。', icon: 'shield' },
+    { href: '/about', title: '國際合作', description: '促進國際交流與合作，推動香港區塊鏈技術與全球標準接軌。', icon: 'globe' },
+    { href: '/about', title: '合規發展', description: '推動行業自律與合規建設，促進區塊鏈行業健康可持續發展。', icon: 'store' },
+  ],
+};
+
+export const HOME_MISSION_EN = {
+  overline: 'OUR MISSION',
+  title: 'Advancing Hong Kong as a Global Blockchain Hub',
+  description: 'HKBA connects government, enterprises, investors and technology communities to advance blockchain adoption and build an open, collaborative ecosystem.',
+  items: [
+    { href: '/join', title: 'Connect Ecosystems', description: 'Connect global blockchain projects, enterprises, investors and experts in a strong ecosystem.', icon: 'link' },
+    { href: '/join', title: 'Empower Industry', description: 'Provide policy insight, resource matching and training to help members and the industry grow.', icon: 'shield' },
+    { href: '/about', title: 'Global Collaboration', description: 'Promote international exchange and align Hong Kong blockchain innovation with global standards.', icon: 'globe' },
+    { href: '/about', title: 'Responsible Growth', description: 'Advance industry standards and responsible practices for healthy, sustainable growth.', icon: 'store' },
+  ],
+};
+
+const featureIcons: Record<string, React.ReactNode> = {
+  link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></>,
+  shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+  globe: <><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>,
+  store: <><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4" /><path d="M5 21V10.87M19 21V10.87" /></>,
+};
 
 type HomeSectionProps = {
   forceVisible?: boolean;
   langOverride?: 'zh' | 'en';
+  block?: RenderBlock;
 };
 
 export function HomeHero({ forceVisible = false, langOverride }: HomeSectionProps = {}) {
@@ -102,26 +100,34 @@ export function HomeHero({ forceVisible = false, langOverride }: HomeSectionProp
   );
 }
 
-export function HomeMission({ forceVisible = false, langOverride }: HomeSectionProps = {}) {
+export function HomeMission({ forceVisible = false, langOverride, block }: HomeSectionProps = {}) {
   const language = useLang();
   const lang = langOverride ?? language.lang;
-  const t = (zh: string, en: string) => lang === 'en' ? en : zh;
+  const defaults = lang === 'en' ? HOME_MISSION_EN : HOME_MISSION_ZH;
+  const scope = block ? (lang === 'en' ? block.contentEn : block.contentZh) : defaults;
+  const fallbackScope = block ? (lang === 'en' ? block.contentZh : block.contentEn) : defaults;
+  const contentText = (key: 'overline' | 'title' | 'description') => {
+    const current = scope[key];
+    if (typeof current === 'string' && current.trim()) return current;
+    const fallback = fallbackScope[key];
+    return typeof fallback === 'string' && fallback.trim() ? fallback : defaults[key];
+  };
+  const configuredItems = Array.isArray(scope.items) ? scope.items : Array.isArray(fallbackScope.items) ? fallbackScope.items : defaults.items;
+  const missionItems = configuredItems.length ? configuredItems as Array<Record<string, unknown>> : defaults.items;
 
   return (
     <section className="mission">
-      <div className="mission-overline">OUR MISSION</div>
-      <h2 className="mission-title">{t('推動香港成為全球區塊鏈創新樞鈕', 'Advancing Hong Kong as a Global Blockchain Hub')}</h2>
-      <p className="mission-desc">
-        {t('HKBA 致力於連接政府、企業、投資者與技術社群，推動區塊鏈技術在各行各業的應用與發展，構建開放、協作、共贏的區塊鏈生態系統。', 'HKBA connects government, enterprises, investors and technology communities to advance blockchain adoption and build an open, collaborative ecosystem.')}
-      </p>
+      <div className="mission-overline">{contentText('overline')}</div>
+      <h2 className="mission-title">{contentText('title')}</h2>
+      <p className="mission-desc">{contentText('description')}</p>
       <div className="feature-grid">
-        {features.map(feature => (
-          <Link href={feature.href} className={`feature-card${forceVisible ? ' visible' : ''}`} key={feature.titleEn}>
+        {missionItems.map((feature, index) => (
+          <Link href={String(feature.href || '/about')} className={`feature-card${forceVisible ? ' visible' : ''}`} key={`${String(feature.title || '')}-${index}`}>
             <div className="feature-card-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">{feature.icon}</svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">{featureIcons[String(feature.icon || 'link')] || featureIcons.link}</svg>
             </div>
-            <div className="feature-card-title">{lang === 'en' ? feature.titleEn : feature.titleZh}</div>
-            <div className="feature-card-desc">{lang === 'en' ? feature.descEn : feature.descZh}</div>
+            <div className="feature-card-title">{String(feature.title || '')}</div>
+            <div className="feature-card-desc">{String(feature.description || '')}</div>
             <div className="feature-card-arrow"><ArrowIcon /></div>
           </Link>
         ))}

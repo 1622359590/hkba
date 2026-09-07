@@ -5,6 +5,27 @@ const SYSTEM_PAGES = [
     path: '/', slug: 'home', titleZh: '首頁', titleEn: 'Home',
     blocks: [
       ['content.hero', { title: '香港區塊鏈協會', subtitle: '推動香港區塊鏈生態發展' }, { title: 'Hong Kong Blockchain Association', subtitle: 'Advancing Hong Kong\'s blockchain ecosystem' }, { variant: 'full', overlay: 40 }],
+      ['content.mission', {
+        overline: 'OUR MISSION',
+        title: '推動香港成為全球區塊鏈創新樞鈕',
+        description: 'HKBA 致力於連接政府、企業、投資者與技術社群，推動區塊鏈技術在各行各業的應用與發展，構建開放、協作、共贏的區塊鏈生態系統。',
+        items: [
+          { title: '連接生態', description: '連接全球區塊鏈項目、企業、投資者與技術專家，構建強大生態網絡。', href: '/join', icon: 'link' },
+          { title: '行業賦能', description: '提供政策解讀、資源對接、培訓支持，助力會員成長與行業發展。', href: '/join', icon: 'shield' },
+          { title: '國際合作', description: '促進國際交流與合作，推動香港區塊鏈技術與全球標準接軌。', href: '/about', icon: 'globe' },
+          { title: '合規發展', description: '推動行業自律與合規建設，促進區塊鏈行業健康可持續發展。', href: '/about', icon: 'store' },
+        ],
+      }, {
+        overline: 'OUR MISSION',
+        title: 'Advancing Hong Kong as a Global Blockchain Hub',
+        description: 'HKBA connects government, enterprises, investors and technology communities to advance blockchain adoption and build an open, collaborative ecosystem.',
+        items: [
+          { title: 'Connect Ecosystems', description: 'Connect global blockchain projects, enterprises, investors and experts in a strong ecosystem.', href: '/join', icon: 'link' },
+          { title: 'Empower Industry', description: 'Provide policy insight, resource matching and training to help members and the industry grow.', href: '/join', icon: 'shield' },
+          { title: 'Global Collaboration', description: 'Promote international exchange and align Hong Kong blockchain innovation with global standards.', href: '/about', icon: 'globe' },
+          { title: 'Responsible Growth', description: 'Advance industry standards and responsible practices for healthy, sustainable growth.', href: '/about', icon: 'store' },
+        ],
+      }, {}],
     ],
   },
   {

@@ -34,7 +34,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
 export function BilingualField({ label, valueZh, valueEn, onChangeZh, onChangeEn, type = 'text', rows = 4, required }: { label: string; valueZh: string; valueEn: string; onChangeZh: (v: string) => void; onChangeEn: (v: string) => void; type?: 'text' | 'textarea'; rows?: number; required?: boolean }) {
   return (
     <FormField label={label} required={required}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div className="bilingual-field-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div><span style={{ fontSize: 10, color: 'var(--text-3)', display: 'block', marginBottom: 4 }}>繁中</span>{type === 'textarea' ? <Textarea id={`${label}-zh`} ariaLabel={`${label} 繁中`} value={valueZh} onChange={onChangeZh} rows={rows} /> : <Input id={`${label}-zh`} ariaLabel={`${label} 繁中`} value={valueZh} onChange={onChangeZh} />}</div>
         <div><span style={{ fontSize: 10, color: 'var(--text-3)', display: 'block', marginBottom: 4 }}>English</span>{type === 'textarea' ? <Textarea id={`${label}-en`} ariaLabel={`${label} English`} value={valueEn} onChange={onChangeEn} rows={rows} /> : <Input id={`${label}-en`} ariaLabel={`${label} English`} value={valueEn} onChange={onChangeEn} />}</div>
       </div>
